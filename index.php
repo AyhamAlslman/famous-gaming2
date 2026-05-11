@@ -11,6 +11,7 @@ include 'includes/header.php';
         <p>State-of-the-Art Consoles - VIP Rooms - Professional Service</p>
     </div>
 </section>
+<h1>hello<h1>
 <section class="content">
     <div class="container">
         <h2 class="section-title">Our Premium Rooms</h2>
