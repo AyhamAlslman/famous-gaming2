@@ -3,14 +3,14 @@ include 'includes/config.php';
 $page_title = 'About Us - FAMOUS GAMING';
 include 'includes/header.php';
 ?>
-
+jfgjgh
 <section class="hero">
     <div class="container">
         <h1>About FAMOUS GAMING</h1>
         <p>Your destination for the ultimate gaming experience</p>
     </div>
 </section>
-
+<h1>oeuagidguaihdoashdiaohd</h1>
 <section class="content">
     <div class="container">
         <h2 class="section-title">Who We Are</h2>
