@@ -413,29 +413,6 @@ body {
     z-index: 1;
 }
 
-.arena-status-strip {
-    display: flex;
-    justify-content: center;
-    gap: 0.8rem;
-    flex-wrap: wrap;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(90deg, rgba(255, 59, 48, 0.16), rgba(39, 211, 255, 0.16));
-    border-bottom: 1px solid rgba(137, 175, 255, 0.18);
-}
-
-.arena-status-strip span {
-    color: #f8fbff;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.08rem;
-    text-transform: uppercase;
-    padding: 0.35rem 0.85rem;
-    border: 1px solid rgba(122, 230, 255, 0.25);
-    background: rgba(9, 14, 28, 0.62);
-}
-
-
 /* ========================================
    BUTTONS - MODERN ROUNDED DESIGN
    ======================================== */

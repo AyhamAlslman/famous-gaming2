@@ -11,11 +11,7 @@ include 'includes/header.php';
         <p>State-of-the-Art Consoles - VIP Rooms - Professional Service</p>
     </div>
 </section>
-<div class="arena-status-strip" aria-label="Arena highlights">
-    <span>Open daily</span>
-    <span>Premium VIP rooms</span>
-    <span>Fast booking</span>
-</div>
+<h1>hello<h1>
 <section class="content">
     <div class="container">
         <h2 class="section-title">Our Premium Rooms</h2>
