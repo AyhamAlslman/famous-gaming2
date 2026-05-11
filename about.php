@@ -10,7 +10,7 @@ jfgjgh
         <p>Your destination for the ultimate gaming experience</p>
     </div>
 </section>
-<h1>oeuagidguaihdoashdiaohd</h1>
+
 <section class="content">
     <div class="container">
         <h2 class="section-title">Who We Are</h2>
