@@ -1,0 +1,32 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="176" y1="110" x2="1024" y2="790" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08101B"/>
+      <stop offset="1" stop-color="#111F34"/>
+    </linearGradient>
+    <linearGradient id="controller" x1="372" y1="280" x2="826" y2="612" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#242D3F"/>
+      <stop offset="1" stop-color="#0E1521"/>
+    </linearGradient>
+    <linearGradient id="line" x1="469" y1="425" x2="745" y2="475" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#77E1FF"/>
+      <stop offset="1" stop-color="#7E8CFF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="36" fill="url(#bg)"/>
+  <ellipse cx="606" cy="708" rx="304" ry="56" fill="#040811" fill-opacity="0.72"/>
+  <path d="M420 339C465 300 529 278 600 278C671 278 735 300 780 339C829 381 858 440 858 501C858 555 825 601 775 618C741 630 708 621 680 592L629 540C621 532 611 528 600 528C589 528 579 532 571 540L520 592C492 621 459 630 425 618C375 601 342 555 342 501C342 440 371 381 420 339Z" fill="url(#controller)"/>
+  <rect x="463" y="361" width="274" height="156" rx="48" fill="#1B2535"/>
+  <rect x="526" y="392" width="148" height="63" rx="16" fill="#0B1423"/>
+  <rect x="466" y="430" width="82" height="18" rx="9" fill="#DFEEFF"/>
+  <rect x="498" y="398" width="18" height="82" rx="9" fill="#DFEEFF"/>
+  <circle cx="711" cy="412" r="16" fill="#E85B6D"/>
+  <circle cx="747" cy="446" r="16" fill="#74D7FF"/>
+  <circle cx="675" cy="446" r="16" fill="#9886FF"/>
+  <circle cx="711" cy="480" r="16" fill="#74D995"/>
+  <circle cx="530" cy="560" r="54" fill="#131B29"/>
+  <circle cx="670" cy="560" r="54" fill="#131B29"/>
+  <rect x="530" y="326" width="140" height="16" rx="8" fill="url(#line)"/>
+  <text x="120" y="760" fill="#EDF8FF" font-family="Segoe UI, Arial, sans-serif" font-size="76" font-weight="700">DualShock 4 Controller</text>
+  <text x="122" y="820" fill="#83DBFF" font-family="Segoe UI, Arial, sans-serif" font-size="32" letter-spacing="6">PS4 ESSENTIAL</text>
+</svg>

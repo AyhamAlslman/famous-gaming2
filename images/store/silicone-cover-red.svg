@@ -1,0 +1,25 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="100" x2="1040" y2="800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#09111F"/>
+      <stop offset="1" stop-color="#111F34"/>
+    </linearGradient>
+    <linearGradient id="cover" x1="408" y1="300" x2="787" y2="621" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF7F7F"/>
+      <stop offset="1" stop-color="#B83048"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="36" fill="url(#bg)"/>
+  <ellipse cx="600" cy="710" rx="300" ry="52" fill="#050912" fill-opacity="0.72"/>
+  <path d="M430 335C476 296 536 278 600 278C664 278 724 296 770 335C822 379 854 439 854 506C854 561 820 607 771 621C736 631 707 620 679 592L625 537C618 529 609 525 600 525C591 525 582 529 575 537L521 592C493 620 464 631 429 621C380 607 346 561 346 506C346 439 378 379 430 335Z" fill="url(#cover)"/>
+  <rect x="482" y="404" width="88" height="20" rx="10" fill="#FCEEEF"/>
+  <rect x="516" y="370" width="20" height="88" rx="10" fill="#FCEEEF"/>
+  <circle cx="720" cy="398" r="16" fill="#FFE4A0"/>
+  <circle cx="756" cy="432" r="16" fill="#B9F0FF"/>
+  <circle cx="684" cy="432" r="16" fill="#C8B7FF"/>
+  <circle cx="720" cy="466" r="16" fill="#C2FFC8"/>
+  <circle cx="530" cy="562" r="58" fill="#A6273E"/>
+  <circle cx="670" cy="562" r="58" fill="#A6273E"/>
+  <text x="120" y="772" fill="#EDF8FF" font-family="Segoe UI, Arial, sans-serif" font-size="76" font-weight="700">Silicone Controller Cover</text>
+  <text x="122" y="830" fill="#FF9FA9" font-family="Segoe UI, Arial, sans-serif" font-size="32" letter-spacing="6">CRIMSON EDITION</text>
+</svg>

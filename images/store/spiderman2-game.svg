@@ -1,0 +1,29 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="154" y1="106" x2="1046" y2="794" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A111C"/>
+      <stop offset="1" stop-color="#111F33"/>
+    </linearGradient>
+    <linearGradient id="case" x1="362" y1="176" x2="838" y2="724" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BFE7FF"/>
+      <stop offset="1" stop-color="#8AD1FF"/>
+    </linearGradient>
+    <linearGradient id="red" x1="424" y1="292" x2="778" y2="612" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF5C5C"/>
+      <stop offset="1" stop-color="#8B1E2C"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="36" fill="url(#bg)"/>
+  <ellipse cx="600" cy="712" rx="282" ry="48" fill="#050912" fill-opacity="0.7"/>
+  <rect x="360" y="160" width="480" height="560" rx="24" fill="url(#case)"/>
+  <rect x="386" y="214" width="428" height="468" rx="18" fill="#0E1827"/>
+  <rect x="386" y="160" width="428" height="72" rx="18" fill="#D7F0FF"/>
+  <text x="426" y="208" fill="#0A1730" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="700">PS5</text>
+  <rect x="444" y="284" width="312" height="306" rx="26" fill="url(#red)"/>
+  <path d="M599 338C637 338 667 363 667 397C667 432 637 460 599 468C561 460 531 432 531 397C531 363 561 338 599 338Z" fill="#F8FAFE"/>
+  <path d="M557 468H641L664 541H618L600 501L582 541H536L557 468Z" fill="#F8FAFE"/>
+  <path d="M528 396C507 419 494 446 490 477" stroke="#F8FAFE" stroke-width="12" stroke-linecap="round"/>
+  <path d="M670 396C691 419 704 446 708 477" stroke="#F8FAFE" stroke-width="12" stroke-linecap="round"/>
+  <text x="116" y="772" fill="#EDF8FF" font-family="Segoe UI, Arial, sans-serif" font-size="76" font-weight="700">Marvel's Spider-Man 2</text>
+  <text x="118" y="830" fill="#84E0FF" font-family="Segoe UI, Arial, sans-serif" font-size="32" letter-spacing="6">PLAYSTATION GAME DISC</text>
+</svg>

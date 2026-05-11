@@ -1,0 +1,30 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="140" y1="120" x2="1060" y2="780" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#09111F"/>
+      <stop offset="1" stop-color="#111E33"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="330" y1="260" x2="960" y2="650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7AE2FF"/>
+      <stop offset="1" stop-color="#8C83FF"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F7FBFF"/>
+      <stop offset="1" stop-color="#C9D7EC"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="36" fill="url(#bg)"/>
+  <circle cx="916" cy="172" r="122" fill="#132744"/>
+  <circle cx="916" cy="172" r="122" fill="url(#glow)" fill-opacity="0.12"/>
+  <ellipse cx="615" cy="712" rx="338" ry="54" fill="#050A12" fill-opacity="0.65"/>
+  <path d="M430 218C468 184 531 170 585 190L558 672C550 696 526 712 499 712H409C376 712 351 685 352 651L365 354C366 300 387 254 430 218Z" fill="url(#panel)"/>
+  <path d="M746 182C799 155 865 159 911 196C951 228 971 274 971 324V652C971 686 943 714 909 714H822C792 714 766 693 762 663L698 205C715 198 731 190 746 182Z" fill="#F9FBFE"/>
+  <path d="M588 209H698L762 663C766 693 792 714 822 714H748C718 714 692 693 688 663L637 314L558 672C550 696 526 712 499 712H567C594 712 618 696 626 672L698 205H588V209Z" fill="#DDE6F1"/>
+  <rect x="574" y="252" width="48" height="373" rx="24" fill="#0B1424"/>
+  <rect x="631" y="252" width="18" height="373" rx="9" fill="url(#glow)"/>
+  <rect x="600" y="282" width="8" height="241" rx="4" fill="#7AE2FF"/>
+  <path d="M380 680C386 694 399 704 414 710H908C932 710 953 695 962 672L968 654H374L380 680Z" fill="#0D1625"/>
+  <rect x="501" y="714" width="178" height="20" rx="10" fill="#132744"/>
+  <text x="120" y="760" fill="#EAF5FF" font-family="Segoe UI, Arial, sans-serif" font-size="78" font-weight="700">PlayStation 5 Slim</text>
+  <text x="122" y="820" fill="#7FDFFF" font-family="Segoe UI, Arial, sans-serif" font-size="32" letter-spacing="6">NEXT-GEN CONSOLE</text>
+</svg>

@@ -1,0 +1,24 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="170" y1="130" x2="1010" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08111E"/>
+      <stop offset="1" stop-color="#0F1D32"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="372" y1="339" x2="854" y2="561" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6EE4FF"/>
+      <stop offset="1" stop-color="#6F86FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="36" fill="url(#bg)"/>
+  <circle cx="255" cy="187" r="108" fill="#142846"/>
+  <circle cx="255" cy="187" r="108" fill="#6EE4FF" fill-opacity="0.12"/>
+  <ellipse cx="618" cy="700" rx="348" ry="52" fill="#040810" fill-opacity="0.72"/>
+  <path d="M368 316L735 232C760 226 785 240 792 264L878 586C884 610 871 635 848 645L486 800C460 811 432 796 424 769L337 374C331 350 344 323 368 316Z" fill="#111A28"/>
+  <path d="M475 289L806 218C829 213 851 227 858 249L941 548C948 572 935 598 912 609L578 764C555 775 528 762 520 738L438 438C431 414 445 390 468 382L724 293L475 289Z" fill="#172436"/>
+  <path d="M429 348L802 263C823 258 844 270 851 291L920 541C926 562 914 584 894 592L515 749C493 758 469 745 463 723L394 401C388 380 401 354 422 349H429Z" fill="#1B2B42"/>
+  <rect x="432" y="462" width="430" height="10" rx="5" fill="url(#blue)"/>
+  <rect x="533" y="338" width="174" height="18" rx="9" fill="#0B1423" fill-opacity="0.78"/>
+  <rect x="564" y="342" width="110" height="10" rx="5" fill="#263E62"/>
+  <text x="120" y="760" fill="#EDF7FF" font-family="Segoe UI, Arial, sans-serif" font-size="78" font-weight="700">PlayStation 4</text>
+  <text x="122" y="820" fill="#85D9FF" font-family="Segoe UI, Arial, sans-serif" font-size="32" letter-spacing="6">CLASSIC CONSOLE</text>
+</svg>

@@ -1,0 +1,28 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="172" y1="98" x2="1028" y2="802" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#09111E"/>
+      <stop offset="1" stop-color="#122034"/>
+    </linearGradient>
+    <linearGradient id="band" x1="426" y1="230" x2="776" y2="422" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#D5E1F0"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="402" y1="444" x2="790" y2="582" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7CE4FF"/>
+      <stop offset="1" stop-color="#8B83FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="36" fill="url(#bg)"/>
+  <ellipse cx="600" cy="712" rx="302" ry="50" fill="#040811" fill-opacity="0.72"/>
+  <path d="M403 498C403 334 490 220 600 220C710 220 797 334 797 498V523H737V498C737 367 676 290 600 290C524 290 463 367 463 498V523H403V498Z" fill="url(#band)"/>
+  <rect x="364" y="450" width="132" height="202" rx="56" fill="#FAFCFF"/>
+  <rect x="704" y="450" width="132" height="202" rx="56" fill="#FAFCFF"/>
+  <rect x="390" y="477" width="80" height="148" rx="34" fill="#101A2A"/>
+  <rect x="730" y="477" width="80" height="148" rx="34" fill="#101A2A"/>
+  <rect x="430" y="516" width="24" height="70" rx="12" fill="url(#accent)"/>
+  <rect x="746" y="516" width="24" height="70" rx="12" fill="url(#accent)"/>
+  <path d="M785 575C855 575 894 620 894 676H850C850 644 826 623 785 623V575Z" fill="#D7E3F1"/>
+  <text x="120" y="772" fill="#EDF8FF" font-family="Segoe UI, Arial, sans-serif" font-size="76" font-weight="700">Pulse 3D Wireless Headset</text>
+  <text x="122" y="830" fill="#83DFFF" font-family="Segoe UI, Arial, sans-serif" font-size="32" letter-spacing="6">PLAYSTATION ACCESSORY</text>
+</svg>
