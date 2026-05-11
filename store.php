@@ -52,6 +52,7 @@ include 'includes/header.php';
         </div>
     </div>
 </section>
+<h1>f;ugasddfgadsgasdafdaboguuidsgdsgdsuifsufdfgduifdguisfgsdifusdguisdfsiduf</h1>
 
 <section class="content store-content">
     <div class="container">
