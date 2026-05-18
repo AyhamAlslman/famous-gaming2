@@ -78,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
             mysqli_stmt_close($stmt);
         } elseif ($action === 'edit') {
             $id = intval($_POST['id']);
+            $remove_image = isset($_POST['remove_image']) && $_POST['remove_image'] === '1';
 
             $current_stmt = mysqli_prepare($conn, "SELECT image_path FROM store_products WHERE id = ?");
             mysqli_stmt_bind_param($current_stmt, "i", $id);
@@ -114,6 +115,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
                         } else {
                             $success_message = 'Store product updated, but image upload failed: ' . $upload_result['message'];
                         }
+                    } elseif ($remove_image && !empty($current_product['image_path'])) {
+                        delete_image($current_product['image_path']);
+
+                        $img_stmt = mysqli_prepare($conn, "UPDATE store_products SET image_path = NULL WHERE id = ?");
+                        mysqli_stmt_bind_param($img_stmt, "i", $id);
+                        mysqli_stmt_execute($img_stmt);
+                        mysqli_stmt_close($img_stmt);
+
+                        $success_message = 'Store product updated and image removed successfully.';
                     } else {
                         $success_message = 'Store product updated successfully.';
                     }
@@ -413,8 +423,16 @@ include 'includes/header.php';
             </div>
 
             <div class="form-group">
+                <label>
+                    <input type="checkbox" name="remove_image" id="edit_remove_image" value="1">
+                    Remove current image
+                </label>
+                <small>Use this to delete the current image and restore the default placeholder.</small>
+            </div>
+
+            <div class="form-group">
                 <label>Replace Image</label>
-                <input type="file" name="product_image" accept="image/jpeg,image/png,image/gif">
+                <input type="file" name="product_image" id="edit_product_image" accept="image/jpeg,image/png,image/gif">
                 <small>Upload a new image only if you want to replace the current one.</small>
             </div>
 
@@ -431,6 +449,16 @@ include 'includes/header.php';
 </form>
 
 <script>
+    function renderEditProductImage(imagePath) {
+        const imageContainer = document.getElementById('edit_current_image');
+
+        if (imagePath) {
+            imageContainer.innerHTML = '<img src="../' + imagePath + '" alt="Current product image"><span>Current product image</span>';
+        } else {
+            imageContainer.innerHTML = '<div class="admin-store-thumb admin-store-thumb-placeholder">FG</div><span>No image uploaded</span>';
+        }
+    }
+
     function openAddModal() {
         document.getElementById('addModal').style.display = 'block';
     }
@@ -447,13 +475,11 @@ include 'includes/header.php';
         document.getElementById('edit_stock_quantity').value = product.stock_quantity;
         document.getElementById('edit_status').value = product.status;
         document.getElementById('edit_description').value = product.description || '';
+        document.getElementById('edit_remove_image').checked = false;
+        document.getElementById('edit_product_image').value = '';
 
-        const imageContainer = document.getElementById('edit_current_image');
-        if (product.image_path) {
-            imageContainer.innerHTML = '<img src="../' + product.image_path + '" alt="Current product image">';
-        } else {
-            imageContainer.innerHTML = '<div class="admin-store-thumb admin-store-thumb-placeholder">FG</div><span>No image uploaded</span>';
-        }
+        document.getElementById('edit_current_image').dataset.imagePath = product.image_path || '';
+        renderEditProductImage(product.image_path || '');
 
         document.getElementById('editModal').style.display = 'block';
     }
@@ -481,6 +507,11 @@ include 'includes/header.php';
             closeEditModal();
         }
     };
+
+    document.getElementById('edit_remove_image').addEventListener('change', function() {
+        const currentImagePath = document.getElementById('edit_current_image').dataset.imagePath || '';
+        renderEditProductImage(this.checked ? '' : currentImagePath);
+    });
 </script>
 <?php endif; ?>
 

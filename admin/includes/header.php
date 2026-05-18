@@ -19,9 +19,9 @@
                 <li><a href="bookings_full_crud.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'bookings_full_crud.php' || basename($_SERVER['PHP_SELF']) == 'booking_details.php') ? 'class="active"' : ''; ?>>Bookings</a></li>
                 <li><a href="customer_tickets.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'customer_tickets.php') ? 'class="active"' : ''; ?>>Customer Tickets</a></li>
                 <li><a href="rooms_full_crud.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'rooms_full_crud.php') ? 'class="active"' : ''; ?>>Rooms</a></li>
+                <?php if (function_exists('isAdmin') && isAdmin()): ?>
                 <li><a href="menu_items.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'menu_items.php') ? 'class="active"' : ''; ?>>Menu Items</a></li>
                 <li><a href="store_products.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'store_products.php') ? 'class="active"' : ''; ?>>Store Products</a></li>
-                <?php if (function_exists('isAdmin') && isAdmin()): ?>
                 <li><a href="employees.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'employees.php') ? 'class="active"' : ''; ?>>Employees</a></li>
                 <?php endif; ?>
                 <li><a href="complaints_full_crud.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'complaints_full_crud.php') ? 'class="active"' : ''; ?>>Complaints</a></li>

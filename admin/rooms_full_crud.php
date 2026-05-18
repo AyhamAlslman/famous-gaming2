@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $room_type = sanitize_input($_POST['room_type']);
             $price_per_hour = floatval($_POST['price_per_hour']);
             $status = sanitize_input($_POST['status']);
+            $remove_image = isset($_POST['remove_image']) && $_POST['remove_image'] === '1';
 
             // Get current room data for old image
             $current_stmt = mysqli_prepare($conn, "SELECT image_path FROM rooms WHERE id = ?");
@@ -87,6 +88,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     } else {
                         $success_message = 'Room updated, but image upload failed: ' . $upload_result['message'];
                     }
+                } elseif ($remove_image && !empty($old_image)) {
+                    delete_image($old_image);
+
+                    $img_stmt = mysqli_prepare($conn, "UPDATE rooms SET image_path = NULL, image_uploaded_at = NULL WHERE id = ?");
+                    mysqli_stmt_bind_param($img_stmt, "i", $id);
+                    mysqli_stmt_execute($img_stmt);
+                    mysqli_stmt_close($img_stmt);
+
+                    $success_message = 'Room updated and image removed successfully';
                 } else {
                     $success_message = 'Room updated successfully';
                 }
@@ -271,7 +281,11 @@ include 'includes/header.php';
                 <div class="form-group">
                     <label>Room Image (Optional)</label>
                     <div id="edit_current_image" style="margin-bottom: 0.5rem;"></div>
-                    <input type="file" name="room_image" accept="image/jpeg,image/png,image/gif">
+                    <label style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <input type="checkbox" name="remove_image" id="edit_remove_image" value="1">
+                        Remove current image
+                    </label>
+                    <input type="file" name="room_image" id="edit_room_image" accept="image/jpeg,image/png,image/gif">
                     <small style="color: #888; display: block; margin-top: 0.5rem;">Upload new image to replace current one. Max size: 5MB</small>
                 </div>
 
@@ -301,6 +315,16 @@ include 'includes/header.php';
     </form>
 
     <script>
+        function renderEditRoomImage(imagePath) {
+            const imageDiv = document.getElementById('edit_current_image');
+
+            if (imagePath) {
+                imageDiv.innerHTML = '<img src="../' + imagePath + '" alt="Current room image" style="max-width: 200px; max-height: 150px; border-radius: 5px; border: 2px solid #0f3460;"><div style="margin-top: 0.5rem; color: #bfc8d9;">Current room image</div>';
+            } else {
+                imageDiv.innerHTML = '<span style="color: #888;">No image uploaded</span>';
+            }
+        }
+
         function openAddModal() {
             document.getElementById('addModal').style.display = 'block';
         }
@@ -315,14 +339,11 @@ include 'includes/header.php';
             document.getElementById('edit_room_type').value = room.room_type;
             document.getElementById('edit_price_per_hour').value = room.price_per_hour;
             document.getElementById('edit_status').value = room.status;
+            document.getElementById('edit_remove_image').checked = false;
+            document.getElementById('edit_room_image').value = '';
 
-            // Display current image if exists
-            const imageDiv = document.getElementById('edit_current_image');
-            if (room.image_path) {
-                imageDiv.innerHTML = '<img src="../' + room.image_path + '" alt="Current room image" style="max-width: 200px; max-height: 150px; border-radius: 5px; border: 2px solid #0f3460;">';
-            } else {
-                imageDiv.innerHTML = '<span style="color: #888;">No image uploaded</span>';
-            }
+            document.getElementById('edit_current_image').dataset.imagePath = room.image_path || '';
+            renderEditRoomImage(room.image_path || '');
 
             document.getElementById('editModal').style.display = 'block';
         }
@@ -345,7 +366,12 @@ include 'includes/header.php';
             if (event.target == document.getElementById('editModal')) {
                 closeEditModal();
             }
-        }
+        };
+
+        document.getElementById('edit_remove_image').addEventListener('change', function() {
+            const currentImagePath = document.getElementById('edit_current_image').dataset.imagePath || '';
+            renderEditRoomImage(this.checked ? '' : currentImagePath);
+        });
     </script>
 
 <?php
