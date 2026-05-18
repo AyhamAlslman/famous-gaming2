@@ -1,13 +1,84 @@
 document.addEventListener('DOMContentLoaded', function() {
     const phoneInputs = document.querySelectorAll('input[name="phone"]');
     phoneInputs.forEach(function(input) {
-        input.addEventListener('blur', function() {
-            const phone = this.value;
-            if (phone && !phone.match(/^07[0-9]{8}$/)) {
-                alert('Phone number must start with 07 and be 10 digits (Jordan format)');
-                this.focus();
+        const error = document.createElement('small');
+        error.className = 'phone-validation-error';
+        error.textContent = 'Please enter a valid phone number';
+        error.hidden = true;
+        input.insertAdjacentElement('afterend', error);
+
+        function validatePhone(showWhenEmpty) {
+            const originalValue = input.value;
+            const digitsOnly = originalValue.replace(/\D/g, '').slice(0, 10);
+
+            if (originalValue !== digitsOnly) {
+                input.value = digitsOnly;
             }
+
+            const hasValue = digitsOnly.length > 0;
+            const isValid = /^07[0-9]{8}$/.test(digitsOnly);
+            const shouldShowError = (hasValue || showWhenEmpty) && !isValid;
+
+            input.classList.toggle('is-invalid', shouldShowError);
+            input.setAttribute('aria-invalid', shouldShowError ? 'true' : 'false');
+            error.hidden = !shouldShowError;
+
+            if (input.required && shouldShowError) {
+                input.setCustomValidity('Please enter a valid phone number');
+            } else {
+                input.setCustomValidity('');
+            }
+
+            return isValid || (!input.required && !hasValue);
+        }
+
+        input.setAttribute('maxlength', '10');
+        input.setAttribute('inputmode', 'numeric');
+        input.setAttribute('pattern', '07[0-9]{8}');
+
+        input.addEventListener('input', function() {
+            validatePhone(false);
         });
+
+        input.addEventListener('blur', function() {
+            validatePhone(false);
+        });
+
+        if (input.form) {
+            input.form.addEventListener('submit', function(e) {
+                if (!validatePhone(true)) {
+                    e.preventDefault();
+                    input.reportValidity();
+                }
+            });
+        }
+    });
+
+    document.addEventListener('paste', function(e) {
+        const input = e.target;
+        if (input instanceof HTMLInputElement && input.name === 'phone') {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            input.value = text.replace(/\D/g, '').slice(0, 10);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        const input = e.target;
+        if (input instanceof HTMLInputElement && input.name === 'phone') {
+            const allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+            const isShortcut = e.ctrlKey || e.metaKey;
+
+            if (allowedKeys.includes(e.key) || isShortcut) {
+                return;
+            }
+
+            if (!/^[0-9]$/.test(e.key)) {
+                e.preventDefault();
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
     });
 
     const deleteLinks = document.querySelectorAll('a[href*="delete"]');

@@ -880,6 +880,24 @@ body {
     box-shadow: 0 0 0 4px rgba(137, 175, 255, 0.18);
 }
 
+.form-control.is-invalid,
+.form-control.is-invalid:focus {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 4px rgba(255, 77, 90, 0.14);
+}
+
+.phone-validation-error {
+    display: block;
+    margin-top: 0.45rem;
+    color: #ff9aa3;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.phone-validation-error[hidden] {
+    display: none;
+}
+
 /* Bootstrap form text helpers */
 .form-text {
     color: var(--gray-text);
