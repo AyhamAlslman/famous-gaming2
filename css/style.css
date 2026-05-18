@@ -1803,7 +1803,7 @@ table tr:last-child td,
    ======================================== */
 
 .contact-main-container {
-    max-width: 1000px;
+    max-width: 1120px;
     margin: 0 auto;
 }
 
@@ -1819,79 +1819,175 @@ table tr:last-child td,
 }
 
 .contact-info-card {
-    background: var(--black-card);
-    padding: 2rem;
-    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(8, 13, 25, 0.96)),
+        radial-gradient(circle at top right, rgba(39, 211, 255, 0.18), transparent 34%);
+    padding: 2.25rem 2rem;
+    border-radius: 22px;
     text-align: center;
-    border: 1px solid rgba(44, 199, 203, 0.2);
-    transition: all 0.3s ease;
+    border: 1px solid rgba(137, 175, 255, 0.2);
+    box-shadow: var(--shadow-arena);
+    transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
     width: 100%;
 }
 
+.contact-info-card::before,
+.contact-social-link::before,
+.contact-hours-container::before,
+.contact-cta-container::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0));
+    pointer-events: none;
+}
+
+.contact-info-card::after,
+.contact-social-link::after {
+    content: '';
+    position: absolute;
+    inset: auto -30% -65% auto;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(39, 211, 255, 0.24) 0%, rgba(39, 211, 255, 0) 72%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+
 .contact-info-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--cyan);
-    box-shadow: 0 8px 30px rgba(44, 199, 203, 0.2);
+    transform: translateY(-8px);
+    border-color: rgba(39, 211, 255, 0.44);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(39, 211, 255, 0.12);
+}
+
+.contact-info-card:hover::after,
+.contact-social-link:hover::after {
+    opacity: 1;
+}
+
+.contact-info-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
 }
 
 .contact-icon {
+    position: relative;
+    z-index: 1;
+    width: 78px;
+    height: 78px;
+    margin: 0 auto 1.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 3rem;
-    margin-bottom: 1rem;
-    filter: drop-shadow(0 0 10px rgba(44, 199, 203, 0.5));
+    border-radius: 22px;
+    background:
+        linear-gradient(145deg, rgba(255, 59, 48, 0.2), rgba(39, 211, 255, 0.22)),
+        rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(137, 175, 255, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 26px rgba(0, 0, 0, 0.26);
+    filter: drop-shadow(0 0 14px rgba(39, 211, 255, 0.28));
 }
 
 .contact-card-title {
+    position: relative;
+    z-index: 1;
     color: var(--cyan);
-    margin-bottom: 1rem;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 600;
+    margin-bottom: 0.9rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
 }
 
 .contact-card-text {
+    position: relative;
+    z-index: 1;
     font-size: 1.1rem;
     color: var(--white-text);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.45rem;
+}
+
+.contact-card-link {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto 0.6rem;
+    color: var(--white-text);
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: color 0.25s ease, transform 0.25s ease, text-shadow 0.25s ease;
+}
+
+.contact-card-link:hover {
+    color: var(--cyan-light);
+    transform: translateY(-1px);
+    text-shadow: 0 0 16px rgba(39, 211, 255, 0.32);
 }
 
 .contact-card-hint {
+    position: relative;
+    z-index: 1;
     color: var(--gray-text);
-    font-size: 0.9rem;
-    margin-top: 1rem;
+    font-size: 0.95rem;
+    margin-top: 0.95rem;
 }
 
 .contact-hours-container {
-    background: var(--black-card);
-    padding: 2rem;
-    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(9, 14, 28, 0.94)),
+        radial-gradient(circle at top left, rgba(255, 59, 48, 0.12), transparent 30%);
+    padding: 2.2rem;
+    border-radius: 24px;
     margin-bottom: 3rem;
-    border: 1px solid rgba(44, 199, 203, 0.2);
+    border: 1px solid rgba(137, 175, 255, 0.18);
+    box-shadow: var(--shadow-arena);
 }
 
 .contact-hours-title {
     color: var(--cyan);
     text-align: center;
     margin-bottom: 1.5rem;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 1.6rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.04em;
 }
 
 .contact-hours-list {
-    max-width: 500px;
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
     margin: 0 auto;
 }
 
 .contact-hours-item {
     display: flex;
     justify-content: space-between;
-    padding: 1rem;
-    border-bottom: 1px solid rgba(44, 199, 203, 0.1);
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid rgba(137, 175, 255, 0.1);
     color: var(--gray-text);
+    background: rgba(255, 255, 255, 0.015);
+    border-radius: 16px;
+    margin-bottom: 0.75rem;
 }
 
 .contact-hours-item:last-child {
     border-bottom: none;
+    margin-bottom: 0;
 }
 
 .contact-hours-day {
@@ -1908,82 +2004,156 @@ table tr:last-child td,
 }
 
 .contact-social-container {
-    background: var(--black-card);
-    padding: 2rem;
-    border-radius: 16px;
-    border: 1px solid rgba(44, 199, 203, 0.2);
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(8, 13, 25, 0.96)),
+        radial-gradient(circle at top center, rgba(255, 59, 48, 0.12), transparent 30%);
+    padding: 2.2rem;
+    border-radius: 24px;
+    border: 1px solid rgba(137, 175, 255, 0.18);
     margin-bottom: 3rem;
+    box-shadow: var(--shadow-arena);
 }
 
 .contact-social-title {
+    position: relative;
+    z-index: 1;
     color: var(--cyan);
     text-align: center;
     margin-bottom: 1.5rem;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 1.6rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.04em;
 }
 
 .contact-social-grid {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
 }
 
 .contact-social-link {
+    position: relative;
+    overflow: hidden;
     text-decoration: none;
     color: var(--white-text);
     text-align: center;
-    transition: all 0.3s ease;
-    padding: 1rem;
-    border-radius: 12px;
+    transition: transform 0.35s ease, background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+    padding: 1.35rem 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(137, 175, 255, 0.14);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+    min-height: 168px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .contact-social-link:hover {
-    transform: translateY(-5px);
-    background: rgba(44, 199, 203, 0.1);
+    transform: translateY(-8px);
+    background: linear-gradient(180deg, rgba(39, 211, 255, 0.12), rgba(255, 255, 255, 0.03));
+    border-color: rgba(39, 211, 255, 0.34);
+    box-shadow: 0 22px 44px rgba(0, 0, 0, 0.32);
 }
 
 .contact-social-icon {
+    position: relative;
+    z-index: 1;
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-    filter: drop-shadow(0 0 8px rgba(44, 199, 203, 0.4));
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(39, 211, 255, 0.16), rgba(255, 59, 48, 0.15));
+    border: 1px solid rgba(137, 175, 255, 0.16);
+    filter: drop-shadow(0 0 10px rgba(39, 211, 255, 0.18));
 }
 
 .contact-social-name {
+    position: relative;
+    z-index: 1;
     color: var(--white-text);
-    margin-bottom: 0.3rem;
-    font-weight: 500;
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
 }
 
 .contact-social-handle {
+    position: relative;
+    z-index: 1;
     color: var(--cyan);
-    font-size: 0.9rem;
+    font-size: 0.96rem;
+    word-break: break-word;
 }
 
 .contact-cta-container {
+    position: relative;
+    overflow: hidden;
     margin-top: 3rem;
-    padding: 2rem;
-    background: linear-gradient(135deg, rgba(44, 199, 203, 0.2) 0%, rgba(44, 199, 203, 0.05) 100%);
-    border-radius: 16px;
+    padding: 2.3rem;
+    background:
+        linear-gradient(135deg, rgba(255, 59, 48, 0.18) 0%, rgba(39, 211, 255, 0.12) 55%, rgba(39, 211, 255, 0.05) 100%);
+    border-radius: 24px;
     color: var(--white-text);
     text-align: center;
-    border: 1px solid rgba(44, 199, 203, 0.3);
+    border: 1px solid rgba(39, 211, 255, 0.24);
+    box-shadow: var(--shadow-arena);
 }
 
 .contact-cta-title {
+    position: relative;
+    z-index: 1;
     margin-bottom: 1rem;
     color: var(--cyan);
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Orbitron', sans-serif;
     font-size: 1.8rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.04em;
 }
 
 .contact-cta-text {
+    position: relative;
+    z-index: 1;
     margin-bottom: 1.5rem;
     font-size: 1.1rem;
     color: var(--gray-text);
+}
+
+@media (max-width: 991.98px) {
+    .contact-social-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .contact-main-container {
+        max-width: 100%;
+    }
+
+    .contact-info-card,
+    .contact-hours-container,
+    .contact-social-container,
+    .contact-cta-container {
+        border-radius: 20px;
+    }
+
+    .contact-hours-item {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .contact-social-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ========================================

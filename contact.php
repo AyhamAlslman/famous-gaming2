@@ -17,32 +17,33 @@ include 'includes/header.php';
             <div class="row g-4 contact-info-grid">
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="contact-info-card h-100">
-                        <div class="contact-icon">📞</div>
+                        <div class="contact-icon" aria-hidden="true">&#128222;</div>
                         <h3 class="contact-card-title">Phone</h3>
-                        <p class="contact-card-text">+962 6 123 4567</p>
-                        <p class="contact-card-text">+962 79 123 4567</p>
+                        <a href="tel:+96261234567" class="contact-card-link">+962 6 123 4567</a>
+                        <a href="tel:+962791234567" class="contact-card-link">+962 79 123 4567</a>
                         <p class="contact-card-hint">Daily: 9:00 AM - 12:00 AM</p>
                     </div>
                 </div>
 
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="contact-info-card h-100">
-                        <div class="contact-icon">📧</div>
+                        <div class="contact-icon" aria-hidden="true">&#128231;</div>
                         <h3 class="contact-card-title">Email</h3>
-                        <p class="contact-card-text">info@famousgaming.jo</p>
-                        <p class="contact-card-text">bookings@famousgaming.jo</p>
+                        <a href="mailto:info@famousgaming.jo" class="contact-card-link">info@famousgaming.jo</a>
+                        <a href="mailto:bookings@famousgaming.jo" class="contact-card-link">bookings@famousgaming.jo</a>
                         <p class="contact-card-hint">We reply within 24 hours</p>
                     </div>
                 </div>
 
                 <div class="col-12 col-md-6 col-lg-4">
-                    <div class="contact-info-card h-100">
-                        <div class="contact-icon">📍</div>
+                    <a href="https://www.google.com/maps/search/?api=1&amp;query=Jabal+Amman,+Jordan" class="contact-info-card contact-info-card-link h-100" target="_blank" rel="noopener noreferrer" aria-label="Open Jabal Amman, Jordan in Google Maps">
+                        <div class="contact-icon" aria-hidden="true">&#128205;</div>
                         <h3 class="contact-card-title">Location</h3>
                         <p class="contact-card-text">Rainbow Street</p>
                         <p class="contact-card-text">Jabal Amman</p>
                         <p class="contact-card-text">Amman, Jordan</p>
-                    </div>
+                        <p class="contact-card-hint">Tap to open Google Maps</p>
+                    </a>
                 </div>
             </div>
 
@@ -71,23 +72,23 @@ include 'includes/header.php';
             <div class="contact-social-container">
                 <h3 class="contact-social-title">Social Media</h3>
                 <div class="contact-social-grid">
-                    <a href="#" class="contact-social-link">
-                        <div class="contact-social-icon">📱</div>
+                    <a href="https://instagram.com/ayham_alslmann" class="contact-social-link" target="_blank" rel="noopener noreferrer" aria-label="Visit our Instagram page">
+                        <div class="contact-social-icon" aria-hidden="true">&#128241;</div>
                         <div class="contact-social-name">Instagram</div>
-                        <div class="contact-social-handle">@famousgaming</div>
+                        <div class="contact-social-handle">@ayham_alslmann</div>
                     </a>
-                    <a href="#" class="contact-social-link">
-                        <div class="contact-social-icon">💬</div>
+                    <a href="#" class="contact-social-link" aria-label="View our Twitter page">
+                        <div class="contact-social-icon" aria-hidden="true">&#128172;</div>
                         <div class="contact-social-name">Twitter</div>
                         <div class="contact-social-handle">@famousgaming</div>
                     </a>
-                    <a href="#" class="contact-social-link">
-                        <div class="contact-social-icon">📘</div>
+                    <a href="#" class="contact-social-link" aria-label="View our Facebook page">
+                        <div class="contact-social-icon" aria-hidden="true">&#128216;</div>
                         <div class="contact-social-name">Facebook</div>
                         <div class="contact-social-handle">FAMOUS GAMING</div>
                     </a>
-                    <a href="#" class="contact-social-link">
-                        <div class="contact-social-icon">🎮</div>
+                    <a href="#" class="contact-social-link" aria-label="View our TikTok page">
+                        <div class="contact-social-icon" aria-hidden="true">&#127918;</div>
                         <div class="contact-social-name">TikTok</div>
                         <div class="contact-social-handle">@famousgaming</div>
                     </a>
