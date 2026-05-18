@@ -83,19 +83,19 @@ mysqli_close($conn);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Admin Panel</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>Login - FAMOUS GAMING Admin</title>
+    <link rel="stylesheet" href="css/admin.css?v=2.0">
 </head>
-<body>
-    <section class="content">
-        <div class="container">
+<body class="admin-body admin-login-page">
+    <section class="content admin-login-content">
+        <div class="container admin-login-container">
             <h2 class="section-title">Admin Panel</h2>
 
             <?php if (!empty($error_message)): ?>
                 <div class="message error"><?php echo $error_message; ?></div>
             <?php endif; ?>
 
-            <div class="form-container">
+            <div class="form-container admin-login-card">
                 <h3 style="text-align: center; margin-bottom: 1.5rem;">Login</h3>
 
                 <form method="POST" action="">
@@ -115,7 +115,7 @@ mysqli_close($conn);
                 </form>
 
                 <div style="text-align: center; margin-top: 1.5rem;">
-                    <a href="../index.php" style="color: #e94560;">Back to Main Site</a>
+                    <a href="../index.php" class="admin-login-link">Back to Main Site</a>
                 </div>
             </div>
         </div>
@@ -123,7 +123,7 @@ mysqli_close($conn);
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 PlayStation PlayRoom - Admin Panel</p>
+            <p>&copy; 2025 FAMOUS GAMING - Admin Panel</p>
         </div>
     </footer>
 </body>

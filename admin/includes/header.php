@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?>FAMOUS GAMING - Admin Panel</title>
-    <link rel="stylesheet" href="css/admin.css?v=1.1">
+    <link rel="stylesheet" href="css/admin.css?v=2.0">
 
     <link rel="icon" type="image/x-icon" href="../images/favicon.png">
 </head>
-<body>
+<body class="admin-body">
     <nav class="navbar">
         <div class="container">
             <div class="logo">
