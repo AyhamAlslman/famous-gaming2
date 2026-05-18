@@ -1,12 +1,16 @@
 <?php
 require_once 'auth_check.php';
 include '../includes/config.php';
+require_once '../includes/functions.php';
+
+ensure_booking_confirmation_schema($conn);
 
 $stats = [];
 $stats['total_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms"))['count'];
 $stats['available_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms WHERE status = 'Available'"))['count'];
 $stats['total_bookings'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM bookings"))['count'];
 $stats['pending_bookings'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM bookings WHERE status = 'Pending'"))['count'];
+$stats['customer_tickets'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM bookings WHERE booking_code IS NOT NULL OR customer_session_token IS NOT NULL"))['count'];
 $stats['total_complaints'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM complaints"))['count'];
 $stats['total_admins'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM admins"))['count'];
 
@@ -50,6 +54,10 @@ include 'includes/header.php';
                     <h3>Pending Bookings</h3>
                     <div class="stat-number"><?php echo $stats['pending_bookings']; ?></div>
                 </div>
+                <a href="customer_tickets.php" class="stat-card admin-stat-link">
+                    <h3>Customer Tickets</h3>
+                    <div class="stat-number"><?php echo $stats['customer_tickets']; ?></div>
+                </a>
                 <div class="stat-card">
                     <h3>Total Complaints</h3>
                     <div class="stat-number"><?php echo $stats['total_complaints']; ?></div>

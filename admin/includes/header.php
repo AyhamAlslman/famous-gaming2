@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?>FAMOUS GAMING - Admin Panel</title>
-    <link rel="stylesheet" href="css/admin.css?v=2.0">
+    <link rel="stylesheet" href="css/admin.css?v=2.1">
 
     <link rel="icon" type="image/x-icon" href="../images/favicon.png">
 </head>
@@ -17,6 +17,7 @@
             <ul class="nav-menu">
                 <li><a href="dashboard.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'dashboard.php') ? 'class="active"' : ''; ?>>Dashboard</a></li>
                 <li><a href="bookings_full_crud.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'bookings_full_crud.php' || basename($_SERVER['PHP_SELF']) == 'booking_details.php') ? 'class="active"' : ''; ?>>Bookings</a></li>
+                <li><a href="customer_tickets.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'customer_tickets.php') ? 'class="active"' : ''; ?>>Customer Tickets</a></li>
                 <li><a href="rooms_full_crud.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'rooms_full_crud.php') ? 'class="active"' : ''; ?>>Rooms</a></li>
                 <li><a href="menu_items.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'menu_items.php') ? 'class="active"' : ''; ?>>Menu Items</a></li>
                 <li><a href="store_products.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'store_products.php') ? 'class="active"' : ''; ?>>Store Products</a></li>
