@@ -164,7 +164,7 @@ include 'includes/header.php';
 
                 <div class="form-group">
                     <label>Total Price (JOD)</label>
-                    <input type="number" step="0.01" name="total_price" required>
+                    <input type="number" step="0.50" name="total_price" required>
                 </div>
 
                 <div class="form-group">
@@ -228,7 +228,7 @@ include 'includes/header.php';
 
                 <div class="form-group">
                     <label>Total Price (JOD)</label>
-                    <input type="number" step="0.01" name="total_price" id="edit_total_price" required>
+                    <input type="number" step="0.50" name="total_price" id="edit_total_price" required>
                 </div>
 
                 <div class="form-group">

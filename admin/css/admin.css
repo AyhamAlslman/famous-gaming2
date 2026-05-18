@@ -619,6 +619,26 @@ table tr:hover {
     transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.admin-form-group select,
+.form-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 3rem;
+    cursor: pointer;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.025)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M3 5L7 9L11 5' stroke='%237AE6FF' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 1rem center / 14px 14px,
+        rgba(255, 255, 255, 0.03);
+    border-color: rgba(137, 175, 255, 0.18);
+}
+
+.admin-form-group select:hover,
+.form-group select:hover {
+    border-color: rgba(39, 211, 255, 0.24);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
 .admin-form-group input:focus,
 .admin-form-group select:focus,
 .admin-form-group textarea:focus,
@@ -638,6 +658,27 @@ table tr:hover {
 .form-group small {
     display: block;
     margin-top: 0.45rem;
+    color: var(--admin-text-muted);
+}
+
+.admin-form-group select option,
+.form-group select option {
+    background-color: #0f1828;
+    color: var(--admin-text);
+}
+
+.admin-form-group select option:hover,
+.admin-form-group select option:focus,
+.admin-form-group select option:checked,
+.form-group select option:hover,
+.form-group select option:focus,
+.form-group select option:checked {
+    background-color: #16304e;
+    color: #ffffff;
+}
+
+.admin-form-group select option:disabled,
+.form-group select option:disabled {
     color: var(--admin-text-muted);
 }
 
@@ -844,8 +885,9 @@ input[type="checkbox"] {
 
 optgroup {
     background-color: #13223f;
-    color: var(--admin-text);
+    color: var(--admin-accent-soft);
     font-weight: 700;
+    font-style: normal;
 }
 
 input[type="file"] {
