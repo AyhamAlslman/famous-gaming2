@@ -75,4 +75,97 @@ document.addEventListener('DOMContentLoaded', function() {
         roomSelect.addEventListener('change', calculateTotal);
         hoursSelect.addEventListener('change', calculateTotal);
     }
+
+    function drawBarcode(ctx, code, x, y, width, height) {
+        let seed = 0;
+        for (let i = 0; i < code.length; i++) {
+            seed = (seed * 31 + code.charCodeAt(i)) >>> 0;
+        }
+
+        ctx.fillStyle = '#f8fbff';
+        ctx.fillRect(x, y, width, height);
+        ctx.fillStyle = '#071120';
+
+        let currentX = x + 22;
+        const maxX = x + width - 22;
+
+        while (currentX < maxX) {
+            seed = (seed * 1664525 + 1013904223) >>> 0;
+            const barWidth = 2 + (seed % 5);
+            const barHeight = height - 24 - (seed % 18);
+            ctx.fillRect(currentX, y + height - 12 - barHeight, barWidth, barHeight);
+            currentX += barWidth + 3 + (seed % 3);
+        }
+    }
+
+    function downloadTicket(ticket) {
+        const data = ticket.dataset;
+        const canvas = document.createElement('canvas');
+        canvas.width = 1200;
+        canvas.height = 760;
+        const ctx = canvas.getContext('2d');
+
+        const gradient = ctx.createLinearGradient(0, 0, 1200, 760);
+        gradient.addColorStop(0, '#121b2e');
+        gradient.addColorStop(1, '#071120');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1200, 760);
+
+        ctx.strokeStyle = '#89afff';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(44, 44, 1112, 672);
+
+        ctx.fillStyle = '#34e2a0';
+        ctx.font = '700 28px Arial';
+        ctx.fillText((data.ticketStatus || 'Confirmed').toUpperCase(), 900, 118);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 48px Arial';
+        ctx.fillText('FAMOUS GAMING', 82, 120);
+        ctx.font = '700 34px Arial';
+        ctx.fillText('Booking Ticket', 82, 180);
+
+        ctx.fillStyle = '#9fb0ca';
+        ctx.font = '24px Arial';
+        ctx.fillText('Show this barcode at the shop for your reservation.', 82, 222);
+
+        drawBarcode(ctx, data.ticketCode || 'FAMOUS-GAMING', 82, 270, 1036, 170);
+
+        const items = [
+            ['Customer', data.ticketCustomer || 'Customer'],
+            ['Device / Session', data.ticketDevice || 'Gaming Session'],
+            ['Date', data.ticketDate || 'Booking Date'],
+            ['Time', data.ticketTime || 'Booking Time']
+        ];
+
+        items.forEach(function(item, index) {
+            const col = index % 2;
+            const row = Math.floor(index / 2);
+            const boxX = 82 + col * 524;
+            const boxY = 490 + row * 96;
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+            ctx.fillRect(boxX, boxY, 486, 72);
+            ctx.fillStyle = '#9fb0ca';
+            ctx.font = '700 18px Arial';
+            ctx.fillText(item[0].toUpperCase(), boxX + 22, boxY + 27);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '700 24px Arial';
+            ctx.fillText(item[1], boxX + 22, boxY + 56);
+        });
+
+        const link = document.createElement('a');
+        link.download = 'famous-gaming-booking-ticket.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+
+    document.querySelectorAll('.download-ticket-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const ticket = button.closest('.booking-ticket');
+            if (ticket) {
+                downloadTicket(ticket);
+            }
+        });
+    });
 });

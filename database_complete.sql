@@ -56,8 +56,10 @@ CREATE TABLE rooms (
 -- Bookings Table
 CREATE TABLE bookings (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    booking_code VARCHAR(40) NULL UNIQUE,
     customer_name VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL,
+    customer_session_token VARCHAR(64) NULL,
     room_id INT NOT NULL,
     booking_date DATE NOT NULL,
     start_time TIME NOT NULL,
@@ -74,6 +76,7 @@ CREATE TABLE bookings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+    INDEX idx_customer_session_token (customer_session_token),
     INDEX idx_booking_datetime (room_id, booking_date, start_time, end_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

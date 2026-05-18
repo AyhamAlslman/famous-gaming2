@@ -12,7 +12,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="css/bootstrap.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css?v=3.5">
+    <link rel="stylesheet" href="css/style.css?v=4.2">
 
     <link rel="icon" type="image/svg+xml" href="images/logo-mark.svg">
     <link rel="icon" type="image/png" href="images/favicon.png">
@@ -61,6 +61,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <li class="nav-item"><a class="nav-link <?php echo $current_page === 'services.php' ? 'active' : ''; ?>" href="services.php">Services</a></li>
                     <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' ? 'active' : ''; ?>" href="store.php">Store</a></li>
                     <li class="nav-item"><a class="nav-link <?php echo $current_page === 'booking.php' ? 'active' : ''; ?>" href="booking.php">Book Now</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'my_bookings.php' ? 'active' : ''; ?>" href="my_bookings.php">My Bookings</a></li>
                     <li class="nav-item"><a class="nav-link <?php echo $current_page === 'complaints.php' ? 'active' : ''; ?>" href="complaints.php">Feedback</a></li>
                     <li class="nav-item"><a class="nav-link <?php echo $current_page === 'contact.php' ? 'active' : ''; ?>" href="contact.php">Contact</a></li>
                 </ul>

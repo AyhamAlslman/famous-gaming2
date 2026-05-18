@@ -362,6 +362,82 @@ function get_available_time_slots($conn, $room_id, $booking_date) {
     return $available_slots;
 }
 
+/**
+ * Ensure customer booking confirmation columns exist.
+ */
+function ensure_booking_confirmation_schema($conn) {
+    $columns = [];
+    $result = mysqli_query($conn, "SHOW COLUMNS FROM bookings");
+
+    if ($result) {
+        while ($column = mysqli_fetch_assoc($result)) {
+            $columns[$column['Field']] = true;
+        }
+    }
+
+    if (!isset($columns['booking_code'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN booking_code VARCHAR(40) NULL UNIQUE AFTER id");
+    }
+
+    if (!isset($columns['customer_session_token'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN customer_session_token VARCHAR(64) NULL AFTER phone");
+        mysqli_query($conn, "ALTER TABLE bookings ADD INDEX idx_customer_session_token (customer_session_token)");
+    }
+}
+
+/**
+ * Keep a stable customer token in the PHP session for My Bookings.
+ */
+function get_customer_session_token() {
+    if (empty($_SESSION['customer_booking_token'])) {
+        $_SESSION['customer_booking_token'] = bin2hex(random_bytes(32));
+    }
+
+    return $_SESSION['customer_booking_token'];
+}
+
+/**
+ * Generate a short, shop-friendly booking code.
+ */
+function generate_booking_code() {
+    return 'FG-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+}
+
+/**
+ * Render a simple visual barcode from the stored booking code.
+ */
+function render_booking_barcode($value) {
+    $hash = hash('sha256', (string)$value);
+    $bars = '';
+
+    for ($i = 0; $i < 48; $i++) {
+        $hex = hexdec($hash[$i % strlen($hash)]);
+        $width = 2 + ($hex % 4);
+        $height = 42 + (($hex * 3) % 24);
+        $bars .= '<span style="--bar-width:' . $width . 'px; --bar-height:' . $height . 'px;"></span>';
+    }
+
+    return $bars;
+}
+
+/**
+ * Fetch a booking with room details for customer tickets.
+ */
+function get_customer_booking_by_id($conn, $booking_id) {
+    $query = "SELECT b.*, r.room_name, r.room_type
+              FROM bookings b
+              LEFT JOIN rooms r ON b.room_id = r.id
+              WHERE b.id = ?";
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "i", $booking_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $booking = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+
+    return $booking;
+}
+
 // =====================================================
 // 4. UTILITY FUNCTIONS
 // =====================================================
