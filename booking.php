@@ -307,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <li>We will contact you within 30 minutes to confirm your booking</li>
                 <li>Please arrive 10 minutes before your scheduled time</li>
                 <li>Cancellations should be made at least 2 hours in advance</li>
-                <li>Payment can be made at the venue (cash or card accepted)</li>
+                <li>You can complete a payment simulation online or pay at the venue</li>
             </ul>
         </div>
     </div>

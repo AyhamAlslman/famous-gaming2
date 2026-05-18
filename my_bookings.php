@@ -142,10 +142,21 @@ include 'includes/header.php';
                                 <span>Time</span>
                                 <strong><?php echo format_time($booking['start_time']); ?> for <?php echo (int)$booking['hours']; ?> hour<?php echo (int)$booking['hours'] === 1 ? '' : 's'; ?></strong>
                             </div>
+                            <div>
+                                <span>Payment</span>
+                                <strong><?php echo htmlspecialchars($booking['payment_status'] ?? 'Unpaid'); ?></strong>
+                            </div>
+                            <div>
+                                <span>Total</span>
+                                <strong><?php echo number_format((float)($booking['final_total'] ?? $booking['total_price']), 2); ?> JOD</strong>
+                            </div>
                         </div>
 
                         <div class="booking-ticket-actions">
                             <button type="button" class="btn download-ticket-btn">Save Ticket Image</button>
+                            <?php if ($booking['status'] !== 'Cancelled' && ($booking['payment_status'] ?? 'Unpaid') !== 'Paid'): ?>
+                                <a href="payment.php?booking_id=<?php echo (int)$booking['id']; ?>" class="btn payment-checkout-btn">Simulate Payment</a>
+                            <?php endif; ?>
                             <?php if ($booking['status'] === 'Confirmed'): ?>
                                 <form method="POST" action="my_bookings.php" class="ticket-action-form">
                                     <input type="hidden" name="booking_id" value="<?php echo (int)$booking['id']; ?>">

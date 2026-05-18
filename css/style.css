@@ -2032,6 +2032,14 @@ body.booking-ticket-modal-open {
     background: linear-gradient(90deg, var(--success), var(--cyan));
 }
 
+.payment-checkout-btn {
+    background: linear-gradient(90deg, rgba(137, 175, 255, 0.92), rgba(39, 211, 255, 0.92));
+}
+
+.payment-secondary-btn {
+    background: linear-gradient(90deg, rgba(95, 111, 136, 0.92), rgba(137, 175, 255, 0.86));
+}
+
 .ticket-action-form {
     margin: 0;
 }
@@ -2057,6 +2065,279 @@ body.booking-ticket-modal-open {
 @media (max-width: 768px) {
     .booking-ticket-grid,
     .booking-lookup-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   CHECKOUT PAGE - PAYMENT SIMULATION
+   ======================================== */
+
+.checkout-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.checkout-panel {
+    background: linear-gradient(180deg, rgba(18, 27, 46, 0.98), rgba(11, 17, 32, 0.98));
+    border: 1px solid rgba(137, 175, 255, 0.24);
+    border-radius: 16px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+    padding: 2rem;
+}
+
+.checkout-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.checkout-panel-header h2,
+.payment-success-panel h3 {
+    color: var(--white);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.25rem;
+    margin: 0.35rem 0 0;
+}
+
+.checkout-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08rem;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.checkout-status-pill.status-paid {
+    color: var(--success);
+    background: rgba(52, 226, 160, 0.12);
+    border-color: rgba(52, 226, 160, 0.28);
+}
+
+.checkout-status-pill.status-unpaid,
+.checkout-status-pill.status-partial {
+    color: var(--warning);
+    background: rgba(255, 209, 92, 0.12);
+    border-color: rgba(255, 209, 92, 0.24);
+}
+
+.checkout-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.checkout-summary-grid div,
+.checkout-total-card,
+.payment-success-panel,
+.simulation-note {
+    border-radius: 12px;
+}
+
+.checkout-summary-grid div {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1rem 1.1rem;
+}
+
+.checkout-summary-grid span,
+.checkout-total-row span,
+.checkout-item-row span {
+    display: block;
+    color: #a9b8d4;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08rem;
+    text-transform: uppercase;
+}
+
+.checkout-summary-grid strong,
+.checkout-total-row strong,
+.checkout-item-row strong {
+    display: block;
+    color: var(--white);
+    font-size: 1.02rem;
+    margin-top: 0.32rem;
+}
+
+.checkout-total-card {
+    margin-top: 1.5rem;
+    padding: 1.4rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(8, 14, 26, 0.7));
+    border: 1px solid rgba(143, 238, 255, 0.16);
+}
+
+.checkout-total-row,
+.checkout-item-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+}
+
+.checkout-total-row + .checkout-total-row,
+.checkout-item-row + .checkout-item-row {
+    margin-top: 1rem;
+}
+
+.checkout-items-list {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.checkout-item-row strong,
+.checkout-total-row strong {
+    margin-top: 0;
+    text-align: right;
+}
+
+.checkout-total-row-final {
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.checkout-total-row-final span,
+.checkout-total-row-final strong {
+    color: var(--white);
+    font-size: 1.1rem;
+}
+
+.simulation-note,
+.payment-success-panel {
+    padding: 1.15rem 1.2rem;
+}
+
+.simulation-note {
+    background: rgba(137, 175, 255, 0.09);
+    border: 1px solid rgba(137, 175, 255, 0.16);
+    color: #d6e1f2;
+    margin-bottom: 1.4rem;
+}
+
+.payment-success-panel {
+    background: linear-gradient(180deg, rgba(52, 226, 160, 0.12), rgba(13, 21, 35, 0.85));
+    border: 1px solid rgba(52, 226, 160, 0.22);
+}
+
+.payment-blocked-panel {
+    background: linear-gradient(180deg, rgba(255, 209, 92, 0.12), rgba(13, 21, 35, 0.85));
+    border-color: rgba(255, 209, 92, 0.24);
+}
+
+.payment-success-panel p {
+    color: var(--gray-text);
+    margin: 0.8rem 0 0;
+}
+
+.checkout-form {
+    display: grid;
+    gap: 1.4rem;
+}
+
+.payment-method-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.payment-method-option {
+    display: block;
+    cursor: pointer;
+}
+
+.payment-method-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.payment-method-card {
+    display: block;
+    min-height: 100%;
+    padding: 1rem 1rem 1.05rem;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.payment-method-card strong {
+    display: block;
+    color: var(--white);
+    font-size: 1rem;
+}
+
+.payment-method-card small {
+    display: block;
+    color: var(--gray-text);
+    margin-top: 0.45rem;
+    line-height: 1.5;
+}
+
+.payment-method-option:hover .payment-method-card {
+    transform: translateY(-2px);
+    border-color: rgba(137, 175, 255, 0.26);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+}
+
+.payment-method-input:checked + .payment-method-card {
+    background: linear-gradient(180deg, rgba(137, 175, 255, 0.14), rgba(39, 211, 255, 0.08));
+    border-color: rgba(39, 211, 255, 0.34);
+    box-shadow: 0 16px 32px rgba(12, 19, 34, 0.3);
+}
+
+.visa-fields {
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+}
+
+.checkout-submit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.checkout-amount-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.8rem 1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--white);
+    font-weight: 700;
+    letter-spacing: 0.04rem;
+}
+
+.payment-submit-btn {
+    min-width: 240px;
+}
+
+@media (max-width: 991.98px) {
+    .checkout-shell {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .checkout-summary-grid,
+    .payment-method-grid {
         grid-template-columns: 1fr;
     }
 }
