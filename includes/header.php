@@ -12,7 +12,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="css/bootstrap.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css?v=4.3">
+    <link rel="stylesheet" href="css/style.css?v=4.9">
 
     <link rel="icon" type="image/svg+xml" href="images/logo-mark.svg">
     <link rel="icon" type="image/png" href="images/favicon.png">

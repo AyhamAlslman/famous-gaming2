@@ -129,59 +129,66 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <section class="content">
     <div class="container">
-        <?php if ($success_msg): ?>
+        <?php if ($confirmed_booking): ?>
+            <div class="booking-ticket-modal" role="dialog" aria-modal="true" aria-labelledby="booking-ticket-title">
+                <div class="booking-ticket-modal-backdrop" data-close-ticket-modal></div>
+                <div class="booking-ticket-modal-panel">
+                    <button type="button" class="booking-ticket-close" data-close-ticket-modal aria-label="Close booking ticket">X</button>
+                    <div class="message success booking-ticket-modal-message">
+                        <?php echo $success_msg; ?>
+                    </div>
+                    <div class="booking-ticket"
+                         data-ticket-code="<?php echo htmlspecialchars($confirmed_booking['booking_code'] ?: ('FG-' . str_pad($confirmed_booking['id'], 6, '0', STR_PAD_LEFT))); ?>"
+                         data-ticket-customer="<?php echo htmlspecialchars($confirmed_booking['customer_name']); ?>"
+                         data-ticket-device="<?php echo htmlspecialchars($confirmed_booking['room_name'] . ' - ' . $confirmed_booking['room_type']); ?>"
+                         data-ticket-date="<?php echo htmlspecialchars(format_date($confirmed_booking['booking_date'])); ?>"
+                         data-ticket-time="<?php echo htmlspecialchars(format_time($confirmed_booking['start_time']) . ' for ' . (int)$confirmed_booking['hours'] . ' hour' . ((int)$confirmed_booking['hours'] === 1 ? '' : 's')); ?>"
+                         data-ticket-status="<?php echo htmlspecialchars($confirmed_booking['status']); ?>">
+                        <div class="booking-ticket-header">
+                            <div>
+                                <span class="ticket-label">Booking Ticket</span>
+                                <h2 id="booking-ticket-title">Your reservation is ready</h2>
+                                <p>Please show this booking ID when you arrive.</p>
+                            </div>
+                            <span class="ticket-status"><?php echo htmlspecialchars($confirmed_booking['status']); ?></span>
+                        </div>
+
+                        <div class="booking-ticket-code">
+                            <span>Reservation Barcode</span>
+                            <div class="ticket-barcode" aria-label="Reservation barcode">
+                                <?php echo render_booking_barcode($confirmed_booking['booking_code'] ?: $confirmed_booking['id']); ?>
+                            </div>
+                        </div>
+
+                        <div class="booking-ticket-grid">
+                            <div>
+                                <span>Customer</span>
+                                <strong><?php echo htmlspecialchars($confirmed_booking['customer_name']); ?></strong>
+                            </div>
+                            <div>
+                                <span>Device / Session</span>
+                                <strong><?php echo htmlspecialchars($confirmed_booking['room_name']); ?> - <?php echo htmlspecialchars($confirmed_booking['room_type']); ?></strong>
+                            </div>
+                            <div>
+                                <span>Date</span>
+                                <strong><?php echo format_date($confirmed_booking['booking_date']); ?></strong>
+                            </div>
+                            <div>
+                                <span>Time</span>
+                                <strong><?php echo format_time($confirmed_booking['start_time']); ?> for <?php echo (int)$confirmed_booking['hours']; ?> hour<?php echo (int)$confirmed_booking['hours'] === 1 ? '' : 's'; ?></strong>
+                            </div>
+                        </div>
+
+                        <div class="booking-ticket-actions">
+                            <button type="button" class="btn download-ticket-btn">Save Ticket Image</button>
+                            <a href="my_bookings.php" class="btn">View My Bookings</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php elseif ($success_msg): ?>
             <div class="message success">
                 <?php echo $success_msg; ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($confirmed_booking): ?>
-            <div class="booking-ticket"
-                 data-ticket-code="<?php echo htmlspecialchars($confirmed_booking['booking_code'] ?: ('FG-' . str_pad($confirmed_booking['id'], 6, '0', STR_PAD_LEFT))); ?>"
-                 data-ticket-customer="<?php echo htmlspecialchars($confirmed_booking['customer_name']); ?>"
-                 data-ticket-device="<?php echo htmlspecialchars($confirmed_booking['room_name'] . ' - ' . $confirmed_booking['room_type']); ?>"
-                 data-ticket-date="<?php echo htmlspecialchars(format_date($confirmed_booking['booking_date'])); ?>"
-                 data-ticket-time="<?php echo htmlspecialchars(format_time($confirmed_booking['start_time']) . ' for ' . (int)$confirmed_booking['hours'] . ' hour' . ((int)$confirmed_booking['hours'] === 1 ? '' : 's')); ?>"
-                 data-ticket-status="<?php echo htmlspecialchars($confirmed_booking['status']); ?>">
-                <div class="booking-ticket-header">
-                    <div>
-                        <span class="ticket-label">Booking Ticket</span>
-                        <h2>Your reservation is ready</h2>
-                        <p>Please show this booking ID when you arrive.</p>
-                    </div>
-                    <span class="ticket-status"><?php echo htmlspecialchars($confirmed_booking['status']); ?></span>
-                </div>
-
-                <div class="booking-ticket-code">
-                    <span>Reservation Barcode</span>
-                    <div class="ticket-barcode" aria-label="Reservation barcode">
-                        <?php echo render_booking_barcode($confirmed_booking['booking_code'] ?: $confirmed_booking['id']); ?>
-                    </div>
-                </div>
-
-                <div class="booking-ticket-grid">
-                    <div>
-                        <span>Customer</span>
-                        <strong><?php echo htmlspecialchars($confirmed_booking['customer_name']); ?></strong>
-                    </div>
-                    <div>
-                        <span>Device / Session</span>
-                        <strong><?php echo htmlspecialchars($confirmed_booking['room_name']); ?> - <?php echo htmlspecialchars($confirmed_booking['room_type']); ?></strong>
-                    </div>
-                    <div>
-                        <span>Date</span>
-                        <strong><?php echo format_date($confirmed_booking['booking_date']); ?></strong>
-                    </div>
-                    <div>
-                        <span>Time</span>
-                        <strong><?php echo format_time($confirmed_booking['start_time']); ?> for <?php echo (int)$confirmed_booking['hours']; ?> hour<?php echo (int)$confirmed_booking['hours'] === 1 ? '' : 's'; ?></strong>
-                    </div>
-                </div>
-
-                <div class="booking-ticket-actions">
-                    <button type="button" class="btn download-ticket-btn">Save Ticket Image</button>
-                    <a href="my_bookings.php" class="btn">View My Bookings</a>
-                </div>
             </div>
         <?php endif; ?>
 

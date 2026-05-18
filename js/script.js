@@ -147,6 +147,35 @@ document.addEventListener('DOMContentLoaded', function() {
         hoursSelect.addEventListener('change', calculateTotal);
     }
 
+    document.querySelectorAll('input[type="number"].form-control').forEach(function(input) {
+        if (input.closest('.number-input-wrap')) {
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'number-input-wrap';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        const controls = document.createElement('div');
+        controls.className = 'number-input-controls';
+        controls.innerHTML = '<button type="button" class="number-stepper" aria-label="Increase value">▲</button><button type="button" class="number-stepper" aria-label="Decrease value">▼</button>';
+        wrapper.appendChild(controls);
+
+        const buttons = controls.querySelectorAll('button');
+        buttons[0].addEventListener('click', function() {
+            input.stepUp();
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        buttons[1].addEventListener('click', function() {
+            input.stepDown();
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+
     function drawBarcode(ctx, code, x, y, width, height) {
         let seed = 0;
         for (let i = 0; i < code.length; i++) {
@@ -239,4 +268,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    const bookingTicketModal = document.querySelector('.booking-ticket-modal');
+    if (bookingTicketModal) {
+        document.body.classList.add('booking-ticket-modal-open');
+
+        function closeBookingTicketModal() {
+            bookingTicketModal.classList.add('is-hidden');
+            document.body.classList.remove('booking-ticket-modal-open');
+        }
+
+        bookingTicketModal.querySelectorAll('[data-close-ticket-modal]').forEach(function(button) {
+            button.addEventListener('click', closeBookingTicketModal);
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !bookingTicketModal.classList.contains('is-hidden')) {
+                closeBookingTicketModal();
+            }
+        });
+    }
 });

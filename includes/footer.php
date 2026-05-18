@@ -9,6 +9,6 @@
     <script src="js/bootstrap.min.js"></script>
 
     <!-- Custom JS -->
-    <script src="js/script.js?v=2.0"></script>
+    <script src="js/script.js?v=2.3"></script>
 </body>
 </html>
