@@ -93,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $total_price = $room['price_per_hour'] * $hours;
                     $booking_code = generate_booking_code();
                     $customer_session_token = get_customer_session_token();
+                    $_SESSION['customer_booking_token'] = $customer_session_token;
                     $_SESSION['customer_name'] = $customer_name;
                     $_SESSION['customer_phone'] = $phone;
 
