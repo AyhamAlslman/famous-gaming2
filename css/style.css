@@ -874,9 +874,10 @@ body {
 .form-control:focus,
 .form-select:focus {
     outline: none;
-    border-color: var(--cyan);
-    background-color: rgba(4, 8, 18, 0.98);
-    box-shadow: 0 0 0 4px rgba(39, 211, 255, 0.12);
+    border-color: var(--brand-sapphire);
+    background-color: rgba(7, 12, 26, 0.98);
+    color: var(--white-text);
+    box-shadow: 0 0 0 4px rgba(137, 175, 255, 0.18);
 }
 
 /* Bootstrap form text helpers */
