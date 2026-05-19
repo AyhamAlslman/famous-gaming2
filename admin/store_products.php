@@ -21,6 +21,8 @@ $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
+    admin_require_csrf();
+
     $action = $_POST['action'];
 
     if ($action === 'add' || $action === 'edit') {
@@ -319,6 +321,7 @@ include 'includes/header.php';
         <h2>Add Store Product</h2>
         <form method="POST" action="" enctype="multipart/form-data">
             <input type="hidden" name="action" value="add">
+            <?php echo admin_csrf_input(); ?>
 
             <div class="form-group">
                 <label>Product Name</label>
@@ -378,6 +381,7 @@ include 'includes/header.php';
         <form method="POST" action="" enctype="multipart/form-data">
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="id" id="edit_id">
+            <?php echo admin_csrf_input(); ?>
 
             <div class="form-group">
                 <label>Product Name</label>
@@ -446,6 +450,7 @@ include 'includes/header.php';
 <form id="deleteForm" method="POST" action="" style="display: none;">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="id" id="delete_id">
+    <?php echo admin_csrf_input(); ?>
 </form>
 
 <script>

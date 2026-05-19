@@ -6,15 +6,20 @@ $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    admin_require_csrf();
+
     if (isset($_POST['action']) && $_POST['action'] == 'delete') {
         $id = intval($_POST['id']);
 
-        $query = "DELETE FROM complaints WHERE id = $id";
-        if (mysqli_query($conn, $query)) {
+        $stmt = mysqli_prepare($conn, "DELETE FROM complaints WHERE id = ?");
+        mysqli_stmt_bind_param($stmt, "i", $id);
+
+        if (mysqli_stmt_execute($stmt)) {
             $success_message = 'Complaint deleted successfully';
         } else {
             $error_message = 'Error deleting complaint';
         }
+        mysqli_stmt_close($stmt);
     }
 }
 
@@ -97,6 +102,7 @@ include 'includes/header.php';
     <form id="deleteForm" method="POST" action="" style="display: none;">
         <input type="hidden" name="action" value="delete">
         <input type="hidden" name="id" id="delete_id">
+        <?php echo admin_csrf_input(); ?>
     </form>
 
     <script>

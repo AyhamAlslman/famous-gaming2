@@ -6,6 +6,8 @@ $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    admin_require_csrf();
+
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
             $room_id = intval($_POST['room_id']);
@@ -17,12 +19,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $total_price = floatval($_POST['total_price']);
             $status = $_POST['status'];
 
-            $query = "INSERT INTO bookings (room_id, customer_name, phone, booking_date, start_time, hours, total_price, status) VALUES ($room_id, '$customer_name', '$phone', '$booking_date', '$start_time', $hours, $total_price, '$status')";
-            if (mysqli_query($conn, $query)) {
+            $stmt = mysqli_prepare(
+                $conn,
+                "INSERT INTO bookings (room_id, customer_name, phone, booking_date, start_time, hours, total_price, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+            mysqli_stmt_bind_param($stmt, "issssids", $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $total_price, $status);
+
+            if (mysqli_stmt_execute($stmt)) {
+                $booking_id = mysqli_insert_id($conn);
+                create_admin_notification(
+                    $conn,
+                    'booking_created',
+                    'New booking created',
+                    $customer_name . ' was added to bookings for ' . $booking_date . ' at ' . $start_time . '.',
+                    'bookings',
+                    $booking_id,
+                    'booking_details.php?id=' . $booking_id
+                );
+                if ($status !== 'Cancelled') {
+                    create_admin_notification(
+                        $conn,
+                        'payment_pending',
+                        'Payment still pending',
+                        'Booking #' . $booking_id . ' is waiting for payment.',
+                        'bookings',
+                        $booking_id,
+                        'booking_details.php?id=' . $booking_id
+                    );
+                }
                 $success_message = 'Booking added successfully';
             } else {
                 $error_message = 'Error adding booking';
             }
+            mysqli_stmt_close($stmt);
         } elseif ($_POST['action'] == 'edit') {
             $id = intval($_POST['id']);
             $room_id = intval($_POST['room_id']);
@@ -34,21 +64,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $total_price = floatval($_POST['total_price']);
             $status = $_POST['status'];
 
-            $query = "UPDATE bookings SET room_id = $room_id, customer_name = '$customer_name', phone = '$phone', booking_date = '$booking_date', start_time = '$start_time', hours = $hours, total_price = $total_price, status = '$status' WHERE id = $id";
-            if (mysqli_query($conn, $query)) {
+            $stmt = mysqli_prepare(
+                $conn,
+                "UPDATE bookings
+                 SET room_id = ?, customer_name = ?, phone = ?, booking_date = ?, start_time = ?, hours = ?, total_price = ?, status = ?
+                 WHERE id = ?"
+            );
+            mysqli_stmt_bind_param($stmt, "issssidsi", $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $total_price, $status, $id);
+
+            if (mysqli_stmt_execute($stmt)) {
                 $success_message = 'Booking updated successfully';
             } else {
                 $error_message = 'Error updating booking';
             }
+            mysqli_stmt_close($stmt);
         } elseif ($_POST['action'] == 'delete') {
             $id = intval($_POST['id']);
 
-            $query = "DELETE FROM bookings WHERE id = $id";
-            if (mysqli_query($conn, $query)) {
+            $stmt = mysqli_prepare($conn, "DELETE FROM bookings WHERE id = ?");
+            mysqli_stmt_bind_param($stmt, "i", $id);
+
+            if (mysqli_stmt_execute($stmt)) {
                 $success_message = 'Booking deleted successfully';
             } else {
                 $error_message = 'Error deleting booking';
             }
+            mysqli_stmt_close($stmt);
         }
     }
 }
@@ -126,6 +167,7 @@ include 'includes/header.php';
             <h2 style="margin-bottom: 1.5rem; color: #fff;">Add Booking</h2>
             <form method="POST" action="">
                 <input type="hidden" name="action" value="add">
+                <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
                     <label>Room</label>
@@ -190,6 +232,7 @@ include 'includes/header.php';
             <form method="POST" action="">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_id">
+                <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
                     <label>Room</label>
@@ -250,6 +293,7 @@ include 'includes/header.php';
     <form id="deleteForm" method="POST" action="" style="display: none;">
         <input type="hidden" name="action" value="delete">
         <input type="hidden" name="id" id="delete_id">
+        <?php echo admin_csrf_input(); ?>
     </form>
 
     <script>

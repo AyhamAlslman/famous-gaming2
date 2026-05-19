@@ -1,5 +1,6 @@
 <?php
-include 'includes/config.php';
+require_once 'includes/config.php';
+require_once 'includes/functions.php';
 $page_title = 'Feedback - FAMOUS GAMING';
 include 'includes/header.php';
 
@@ -16,6 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         VALUES ('$customer_name', '$phone', '$message')";
 
         if (mysqli_query($conn, $insert_query)) {
+            $complaint_id = mysqli_insert_id($conn);
+            create_admin_notification(
+                $conn,
+                'feedback_created',
+                'New feedback submitted',
+                $customer_name . ' submitted new feedback for review.',
+                'complaints',
+                $complaint_id,
+                'complaints_full_crud.php'
+            );
             $success_msg = 'Thank you for your feedback! We appreciate your input and will review it carefully.';
         } else {
             $error_msg = 'Error submitting feedback. Please try again.';

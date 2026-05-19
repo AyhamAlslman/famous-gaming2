@@ -94,6 +94,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (mysqli_stmt_execute($stmt)) {
                 mysqli_stmt_close($stmt);
+                create_admin_notification(
+                    $conn,
+                    'payment_updated',
+                    'Payment updated',
+                    'Booking #' . $booking_id . ' was marked paid via ' . $selected_method . '.',
+                    'bookings',
+                    $booking_id,
+                    'booking_details.php?id=' . $booking_id
+                );
                 header('Location: payment.php?booking_id=' . $booking_id . '&payment=success');
                 exit;
             }

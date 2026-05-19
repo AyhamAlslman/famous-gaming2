@@ -160,6 +160,180 @@ code {
     border-color: var(--admin-border-strong);
 }
 
+.admin-notification-nav {
+    position: relative;
+    list-style: none;
+}
+
+.admin-notification-dropdown {
+    position: relative;
+}
+
+.admin-notification-dropdown summary {
+    list-style: none;
+}
+
+.admin-notification-dropdown summary::-webkit-details-marker {
+    display: none;
+}
+
+.admin-notification-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 40px;
+    padding: 0.55rem 0.95rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--admin-text-soft);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.admin-notification-trigger:hover,
+.admin-notification-dropdown[open] .admin-notification-trigger {
+    color: var(--admin-text);
+    background: rgba(39, 211, 255, 0.08);
+    border-color: var(--admin-border-strong);
+}
+
+.admin-notification-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.admin-notification-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    margin-left: 0.45rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(255, 93, 114, 0.98), rgba(185, 31, 45, 0.94));
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.admin-notification-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: min(360px, 92vw);
+    padding: 0.9rem;
+    border-radius: var(--admin-radius);
+    border: 1px solid var(--admin-border);
+    background: linear-gradient(180deg, rgba(12, 19, 34, 0.98), rgba(9, 14, 28, 0.98));
+    box-shadow: var(--admin-shadow);
+    z-index: 200;
+}
+
+.admin-notification-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(137, 175, 255, 0.1);
+}
+
+.admin-notification-menu-header strong {
+    display: block;
+    color: var(--admin-text);
+}
+
+.admin-notification-menu-header span,
+.admin-notification-time,
+.admin-notification-empty {
+    color: var(--admin-text-muted);
+    font-size: 0.9rem;
+}
+
+.admin-notification-list {
+    display: grid;
+    gap: 0.8rem;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.admin-notification-card {
+    padding: 0.85rem 0.95rem;
+    border-radius: var(--admin-radius-sm);
+    border: 1px solid rgba(137, 175, 255, 0.08);
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.admin-notification-card.is-unread {
+    border-color: rgba(39, 211, 255, 0.18);
+    background: rgba(39, 211, 255, 0.05);
+}
+
+.admin-notification-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.admin-notification-card-head strong {
+    color: var(--admin-text);
+    font-size: 1rem;
+}
+
+.admin-notification-card p {
+    color: var(--admin-text-soft);
+    margin: 0 0 0.6rem;
+    line-height: 1.45;
+}
+
+.admin-notification-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--admin-accent);
+    box-shadow: 0 0 0 4px rgba(39, 211, 255, 0.14);
+    flex-shrink: 0;
+}
+
+.admin-notification-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    margin-top: 0.7rem;
+}
+
+.admin-notification-inline-form {
+    display: inline-flex;
+}
+
+.admin-notification-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--admin-accent-soft);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.admin-notification-link-btn:hover {
+    color: var(--admin-text);
+}
+
+.admin-notification-empty {
+    padding: 0.6rem 0.2rem 0.2rem;
+}
+
 /* ============================================
    PAGE HEADER
    ============================================ */
@@ -1192,5 +1366,12 @@ select:-webkit-autofill:focus {
         max-width: 46px !important;
         min-height: 46px;
         max-height: 46px !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .admin-notification-menu {
+        right: auto;
+        left: 0;
     }
 }

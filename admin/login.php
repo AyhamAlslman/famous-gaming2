@@ -12,6 +12,9 @@ require_once '../includes/functions.php';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid request token. Please try again.';
+    } else {
     $username = sanitize_input($_POST['username']);
     $password = $_POST['password']; // Don't sanitize password before verification
 
@@ -73,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         mysqli_stmt_close($stmt);
     }
+    }
 }
 
 mysqli_close($conn);
@@ -99,6 +103,7 @@ mysqli_close($conn);
                 <h3 style="text-align: center; margin-bottom: 1.5rem;">Login</h3>
 
                 <form method="POST" action="">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="form-group">
                         <label>Username</label>
                         <input type="text" name="username" required autofocus>

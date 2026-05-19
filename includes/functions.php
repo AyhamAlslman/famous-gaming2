@@ -438,6 +438,111 @@ function get_customer_booking_by_id($conn, $booking_id) {
     return $booking;
 }
 
+/**
+ * Ensure admin notifications table exists.
+ */
+function ensure_admin_notifications_table($conn) {
+    $query = "CREATE TABLE IF NOT EXISTS admin_notifications (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        notification_type VARCHAR(50) NOT NULL,
+        title VARCHAR(150) NOT NULL,
+        message TEXT NOT NULL,
+        related_table VARCHAR(50) DEFAULT NULL,
+        related_id INT DEFAULT NULL,
+        action_url VARCHAR(255) DEFAULT NULL,
+        is_read TINYINT(1) NOT NULL DEFAULT 0,
+        read_at TIMESTAMP NULL DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_notification_read_created (is_read, created_at),
+        INDEX idx_notification_related (related_table, related_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+    mysqli_query($conn, $query);
+}
+
+/**
+ * Create a new internal admin notification.
+ */
+function create_admin_notification($conn, $type, $title, $message, $related_table = null, $related_id = null, $action_url = null) {
+    ensure_admin_notifications_table($conn);
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "INSERT INTO admin_notifications (notification_type, title, message, related_table, related_id, action_url)
+         VALUES (?, ?, ?, ?, ?, ?)"
+    );
+
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "ssssis", $type, $title, $message, $related_table, $related_id, $action_url);
+    $success = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    return $success;
+}
+
+/**
+ * Count unread internal admin notifications.
+ */
+function count_unread_admin_notifications($conn) {
+    ensure_admin_notifications_table($conn);
+
+    $result = mysqli_query($conn, "SELECT COUNT(*) AS unread_count FROM admin_notifications WHERE is_read = 0");
+    if ($result && ($row = mysqli_fetch_assoc($result))) {
+        return (int)$row['unread_count'];
+    }
+
+    return 0;
+}
+
+/**
+ * Fetch recent internal admin notifications.
+ */
+function get_recent_admin_notifications($conn, $limit = 6) {
+    ensure_admin_notifications_table($conn);
+    $limit = max(1, min(20, (int)$limit));
+    $notifications = [];
+
+    $result = mysqli_query(
+        $conn,
+        "SELECT * FROM admin_notifications ORDER BY created_at DESC, id DESC LIMIT " . $limit
+    );
+
+    if ($result) {
+        $notifications = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    }
+
+    return $notifications;
+}
+
+/**
+ * Mark one notification as read.
+ */
+function mark_admin_notification_read($conn, $notification_id) {
+    ensure_admin_notifications_table($conn);
+    $notification_id = (int)$notification_id;
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE admin_notifications SET is_read = 1, read_at = NOW() WHERE id = ? AND is_read = 0"
+    );
+    mysqli_stmt_bind_param($stmt, "i", $notification_id);
+    $success = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    return $success;
+}
+
+/**
+ * Mark all notifications as read.
+ */
+function mark_all_admin_notifications_read($conn) {
+    ensure_admin_notifications_table($conn);
+    return mysqli_query($conn, "UPDATE admin_notifications SET is_read = 1, read_at = NOW() WHERE is_read = 0");
+}
+
 // =====================================================
 // 4. UTILITY FUNCTIONS
 // =====================================================

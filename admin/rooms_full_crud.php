@@ -7,6 +7,8 @@ $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    admin_require_csrf();
+
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
             $room_name = sanitize_input($_POST['room_name']);
@@ -213,6 +215,7 @@ include 'includes/header.php';
             <h2 style="margin-bottom: 1.5rem; color: #fff;">Add Room</h2>
             <form method="POST" action="" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="add">
+                <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
                     <label>Room Name</label>
@@ -262,6 +265,7 @@ include 'includes/header.php';
             <form method="POST" action="" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_id">
+                <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
                     <label>Room Name</label>
@@ -312,6 +316,7 @@ include 'includes/header.php';
     <form id="deleteForm" method="POST" action="" style="display: none;">
         <input type="hidden" name="action" value="delete">
         <input type="hidden" name="id" id="delete_id">
+        <?php echo admin_csrf_input(); ?>
     </form>
 
     <script>

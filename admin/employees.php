@@ -12,6 +12,8 @@ $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    admin_require_csrf();
+
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
             $username = trim($_POST['username']);
@@ -20,57 +22,80 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $role = $_POST['role'];
             $status = $_POST['status'];
 
-            $check_query = "SELECT id FROM admins WHERE username = '$username'";
-            $check_result = mysqli_query($conn, $check_query);
+            $check_stmt = mysqli_prepare($conn, "SELECT id FROM admins WHERE username = ?");
+            mysqli_stmt_bind_param($check_stmt, "s", $username);
+            mysqli_stmt_execute($check_stmt);
+            $check_result = mysqli_stmt_get_result($check_stmt);
 
             if (mysqli_num_rows($check_result) > 0) {
                 $error_message = 'Username already exists';
             } else {
-                $query = "INSERT INTO admins (username, password, full_name, role, status) VALUES ('$username', '$password', '$full_name', '$role', '$status')";
-                if (mysqli_query($conn, $query)) {
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = mysqli_prepare($conn, "INSERT INTO admins (username, password, full_name, role, status) VALUES (?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt, "sssss", $username, $hashed_password, $full_name, $role, $status);
+
+                if (mysqli_stmt_execute($stmt)) {
                     $success_message = 'Employee added successfully';
                 } else {
                     $error_message = 'Error adding employee';
                 }
+                mysqli_stmt_close($stmt);
             }
+            mysqli_stmt_close($check_stmt);
         } elseif ($_POST['action'] == 'edit') {
-            $id = $_POST['id'];
+            $id = intval($_POST['id']);
             $username = trim($_POST['username']);
             $password = trim($_POST['password']);
             $full_name = trim($_POST['full_name']);
             $role = $_POST['role'];
             $status = $_POST['status'];
 
-            $check_query = "SELECT id FROM admins WHERE username = '$username' AND id != $id";
-            $check_result = mysqli_query($conn, $check_query);
+            $check_stmt = mysqli_prepare($conn, "SELECT id FROM admins WHERE username = ? AND id != ?");
+            mysqli_stmt_bind_param($check_stmt, "si", $username, $id);
+            mysqli_stmt_execute($check_stmt);
+            $check_result = mysqli_stmt_get_result($check_stmt);
 
             if (mysqli_num_rows($check_result) > 0) {
                 $error_message = 'Username already exists';
             } else {
                 if (!empty($password)) {
-                    $query = "UPDATE admins SET username = '$username', password = '$password', full_name = '$full_name', role = '$role', status = '$status' WHERE id = $id";
+                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = mysqli_prepare(
+                        $conn,
+                        "UPDATE admins SET username = ?, password = ?, full_name = ?, role = ?, status = ? WHERE id = ?"
+                    );
+                    mysqli_stmt_bind_param($stmt, "sssssi", $username, $hashed_password, $full_name, $role, $status, $id);
                 } else {
-                    $query = "UPDATE admins SET username = '$username', full_name = '$full_name', role = '$role', status = '$status' WHERE id = $id";
+                    $stmt = mysqli_prepare(
+                        $conn,
+                        "UPDATE admins SET username = ?, full_name = ?, role = ?, status = ? WHERE id = ?"
+                    );
+                    mysqli_stmt_bind_param($stmt, "ssssi", $username, $full_name, $role, $status, $id);
                 }
 
-                if (mysqli_query($conn, $query)) {
+                if (mysqli_stmt_execute($stmt)) {
                     $success_message = 'Employee updated successfully';
                 } else {
                     $error_message = 'Error updating employee';
                 }
+                mysqli_stmt_close($stmt);
             }
+            mysqli_stmt_close($check_stmt);
         } elseif ($_POST['action'] == 'delete') {
-            $id = $_POST['id'];
+            $id = intval($_POST['id']);
 
             if ($id == $_SESSION['admin_id']) {
                 $error_message = 'You cannot delete your own account';
             } else {
-                $query = "DELETE FROM admins WHERE id = $id";
-                if (mysqli_query($conn, $query)) {
+                $stmt = mysqli_prepare($conn, "DELETE FROM admins WHERE id = ?");
+                mysqli_stmt_bind_param($stmt, "i", $id);
+
+                if (mysqli_stmt_execute($stmt)) {
                     $success_message = 'Employee deleted successfully';
                 } else {
                     $error_message = 'Error deleting employee';
                 }
+                mysqli_stmt_close($stmt);
             }
         }
     }
@@ -142,6 +167,7 @@ include 'includes/header.php';
             <h2 style="margin-bottom: 1.5rem; color: #fff;">Add Employee</h2>
             <form method="POST" action="">
                 <input type="hidden" name="action" value="add">
+                <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
                     <label>Username</label>
@@ -188,6 +214,7 @@ include 'includes/header.php';
             <form method="POST" action="">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_id">
+                <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
                     <label>Username</label>
@@ -230,6 +257,7 @@ include 'includes/header.php';
     <form id="deleteForm" method="POST" action="" style="display: none;">
         <input type="hidden" name="action" value="delete">
         <input type="hidden" name="id" id="delete_id">
+        <?php echo admin_csrf_input(); ?>
     </form>
 
     <script>

@@ -104,6 +104,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     if (mysqli_stmt_execute($stmt)) {
                         $booking_id = mysqli_insert_id($conn);
+                        create_admin_notification(
+                            $conn,
+                            'booking_created',
+                            'New booking created',
+                            $customer_name . ' booked ' . $room['room_name'] . ' on ' . $booking_date . ' at ' . $start_time . '.',
+                            'bookings',
+                            $booking_id,
+                            'booking_details.php?id=' . $booking_id
+                        );
+                        create_admin_notification(
+                            $conn,
+                            'payment_pending',
+                            'Payment still pending',
+                            'Booking #' . $booking_id . ' is confirmed and waiting for payment.',
+                            'bookings',
+                            $booking_id,
+                            'booking_details.php?id=' . $booking_id
+                        );
                         $success_msg = 'Your booking has been confirmed. Please show this booking ID at the shop.';
                         $confirmed_booking = get_customer_booking_by_id($conn, $booking_id);
 

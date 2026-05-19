@@ -14,6 +14,8 @@ if ($booking_id === 0) {
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    admin_require_csrf();
+
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add_item') {
             $menu_item_id = intval($_POST['menu_item_id']);
@@ -104,6 +106,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_stmt_bind_param($stmt, "ssdi", $payment_status, $payment_method, $paid_amount, $booking_id);
 
             if (mysqli_stmt_execute($stmt)) {
+                $notification_title = $payment_status === 'Paid' ? 'Payment updated' : 'Payment still pending';
+                $notification_message = $payment_status === 'Paid'
+                    ? 'Booking #' . $booking_id . ' was marked paid via ' . $payment_method . '.'
+                    : 'Booking #' . $booking_id . ' payment status is ' . $payment_status . '.';
+                create_admin_notification(
+                    $conn,
+                    'payment_updated',
+                    $notification_title,
+                    $notification_message,
+                    'bookings',
+                    $booking_id,
+                    'booking_details.php?id=' . $booking_id
+                );
                 $success_message = 'Payment updated successfully';
                 log_admin_action($conn, $_SESSION['admin_id'], 'UPDATE_PAYMENT', 'bookings', $booking_id);
             } else {
@@ -221,6 +236,7 @@ include 'includes/header.php';
                     <!-- Extend Hours Form -->
                     <form method="POST" style="margin-top: 1.5rem;">
                         <input type="hidden" name="action" value="extend_hours">
+                        <?php echo admin_csrf_input(); ?>
                         <h3>Extend Booking</h3>
                         <div class="form-inline">
                             <div class="form-group">
@@ -276,6 +292,7 @@ include 'includes/header.php';
                     <!-- Update Payment Form -->
                     <form method="POST" style="margin-top: 1.5rem;">
                         <input type="hidden" name="action" value="update_payment">
+                        <?php echo admin_csrf_input(); ?>
                         <h3>Update Payment</h3>
                         <div class="form-group">
                             <label>Payment Status</label>
@@ -310,6 +327,7 @@ include 'includes/header.php';
                 <!-- Add Item Form -->
                 <form method="POST">
                     <input type="hidden" name="action" value="add_item">
+                    <?php echo admin_csrf_input(); ?>
                     <div class="form-inline">
                         <div class="form-group" style="flex: 2;">
                             <label>Select Item/Service</label>
@@ -371,6 +389,7 @@ include 'includes/header.php';
                                 <form method="POST" style="display: inline;">
                                     <input type="hidden" name="action" value="remove_item">
                                     <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
+                                    <?php echo admin_csrf_input(); ?>
                                     <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Remove this item?')">Remove</button>
                                 </form>
                             </td>
