@@ -3,7 +3,7 @@
  * Brand-connected admin theme with calmer styling
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap');
 
 :root {
     --admin-bg: #07101d;
@@ -132,8 +132,17 @@ code {
 .nav-menu {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.55rem;
     list-style: none;
+}
+
+.admin-navbar-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-inline-start: auto;
+    flex-shrink: 0;
 }
 
 .admin-nav-menu a,
@@ -160,9 +169,58 @@ code {
     border-color: var(--admin-border-strong);
 }
 
+.admin-language-switcher,
+.nav-menu .admin-language-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.admin-language-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    min-width: 50px;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--admin-text-soft);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.admin-language-link:hover,
+.admin-language-link.active {
+    color: var(--admin-text);
+    background: rgba(39, 211, 255, 0.08);
+    border-color: var(--admin-border-strong);
+}
+
+.admin-language-divider {
+    color: var(--admin-text-muted);
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
 .admin-notification-nav {
     position: relative;
-    list-style: none;
+    flex-shrink: 0;
+}
+
+.admin-body.admin-rtl .admin-navbar-tools {
+    margin-inline-start: 0;
+    margin-inline-end: auto;
+}
+
+.admin-body.admin-rtl .admin-language-switcher,
+.admin-body.admin-rtl .nav-menu .admin-language-switcher {
+    margin-inline-end: 0;
 }
 
 .admin-notification-dropdown {
@@ -1013,6 +1071,25 @@ table tr:hover {
     text-align: center;
 }
 
+.admin-login-language-switcher {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+    color: var(--admin-text-muted);
+}
+
+.admin-login-language-switcher a {
+    color: var(--admin-text-muted);
+    text-decoration: none;
+}
+
+.admin-login-language-switcher a.active,
+.admin-login-language-switcher a:hover {
+    color: var(--admin-accent-soft);
+}
+
 .admin-login-card h3 {
     font-family: 'Orbitron', sans-serif;
     color: var(--admin-text);
@@ -1026,6 +1103,32 @@ table tr:hover {
 
 .admin-login-link:hover {
     color: var(--admin-text);
+}
+
+.admin-body.admin-rtl {
+    direction: rtl;
+    font-family: 'Tajawal', 'Rajdhani', sans-serif;
+}
+
+.admin-body.admin-rtl .logo h2,
+.admin-body.admin-rtl .admin-login-card h3 {
+    letter-spacing: 0;
+}
+
+.admin-body.admin-rtl .page-header,
+.admin-body.admin-rtl .table-container,
+.admin-body.admin-rtl .form-container,
+.admin-body.admin-rtl .modal-content,
+.admin-body.admin-rtl .message,
+.admin-body.admin-rtl .no-data,
+.admin-body.admin-rtl .admin-page-subtitle {
+    text-align: right;
+}
+
+.admin-body.admin-rtl input,
+.admin-body.admin-rtl select,
+.admin-body.admin-rtl textarea {
+    text-align: right;
 }
 
 /* ============================================

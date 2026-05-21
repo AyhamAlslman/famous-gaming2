@@ -73,14 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $items = mysqli_query($conn, "SELECT * FROM menu_items ORDER BY item_category, item_name ASC");
 
-$page_title = 'Menu Items Management';
+$page_title = t('admin_menu_items_management');
 $active_page = 'menu_items';
 include 'includes/header.php';
 ?>
 
     <div class="container" style="margin-top: 2rem;">
         <div class="page-header">
-            <h2>Menu Items Management</h2>
+            <h2><?php echo t('admin_menu_items_management'); ?></h2>
             <button onclick="openAddModal()" class="btn">Add New Item</button>
         </div>
 

@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $complaints = mysqli_query($conn, "SELECT * FROM complaints ORDER BY id DESC");
 
-$page_title = 'Complaints Management';
+$page_title = t('admin_complaints_management');
 $active_page = 'complaints';
 include 'includes/header.php';
 ?>
@@ -33,7 +33,7 @@ include 'includes/header.php';
     <div class="content">
         <div class="container">
             <div class="page-header">
-                <h1>Complaints Management</h1>
+                <h1><?php echo t('admin_complaints_management'); ?></h1>
             </div>
 
             <?php if (!empty($success_message)): ?>

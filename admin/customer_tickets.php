@@ -5,7 +5,7 @@ require_once '../includes/functions.php';
 
 ensure_booking_confirmation_schema($conn);
 
-$page_title = 'Customer Tickets';
+$page_title = t('admin_customer_tickets');
 $active_page = 'customer_tickets';
 
 $tickets_query = "SELECT b.*, r.room_name, r.room_type
@@ -22,10 +22,10 @@ include 'includes/header.php';
         <div class="container">
             <div class="page-header">
                 <div>
-                    <h1>Customer Tickets</h1>
-                    <p class="admin-page-subtitle">Customer-facing booking confirmations and barcode proof.</p>
+                    <h1><?php echo t('admin_customer_tickets'); ?></h1>
+                    <p class="admin-page-subtitle"><?php echo t('admin_customer_tickets_subtitle'); ?></p>
                 </div>
-                <a href="bookings_full_crud.php" class="btn btn-secondary">Manage Bookings</a>
+                <a href="bookings_full_crud.php" class="btn btn-secondary"><?php echo t('admin_manage_bookings'); ?></a>
             </div>
 
             <div class="table-container">
@@ -70,7 +70,7 @@ include 'includes/header.php';
                         </tbody>
                     </table>
                 <?php else: ?>
-                    <div class="no-data">No customer tickets yet</div>
+                    <div class="no-data"><?php echo t('admin_no_customer_tickets'); ?></div>
                 <?php endif; ?>
             </div>
         </div>

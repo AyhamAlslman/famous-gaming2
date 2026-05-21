@@ -98,7 +98,7 @@ $bookings = mysqli_query($conn, "SELECT b.*, r.room_name FROM bookings b LEFT JO
 $rooms = mysqli_query($conn, "SELECT id, room_name FROM rooms ORDER BY room_name");
 $rooms_for_edit = mysqli_query($conn, "SELECT id, room_name FROM rooms ORDER BY room_name");
 
-$page_title = 'Bookings Management';
+$page_title = t('admin_bookings_management');
 $active_page = 'bookings';
 include 'includes/header.php';
 ?>
@@ -106,8 +106,8 @@ include 'includes/header.php';
     <div class="content">
         <div class="container">
             <div class="page-header">
-                <h1>Bookings Management</h1>
-                <button class="btn" onclick="openAddModal()">Add Booking</button>
+                <h1><?php echo t('admin_bookings_management'); ?></h1>
+                <button class="btn" onclick="openAddModal()"><?php echo t('admin_add_booking'); ?></button>
             </div>
 
             <?php if (!empty($success_message)): ?>

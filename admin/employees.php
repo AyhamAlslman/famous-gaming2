@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $employees = mysqli_query($conn, "SELECT * FROM admins ORDER BY id DESC");
 
-$page_title = 'Employees Management';
+$page_title = t('admin_employees_management');
 $active_page = 'employees';
 include 'includes/header.php';
 ?>
@@ -111,7 +111,7 @@ include 'includes/header.php';
     <div class="content">
         <div class="container">
             <div class="page-header">
-                <h1>Employees Management</h1>
+                <h1><?php echo t('admin_employees_management'); ?></h1>
                 <button class="btn" onclick="openAddModal()">Add Employee</button>
             </div>
 

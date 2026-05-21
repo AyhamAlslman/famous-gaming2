@@ -162,7 +162,7 @@ mysqli_stmt_close($stmt);
 $menu_query = "SELECT * FROM menu_items WHERE is_available = 1 ORDER BY item_category, item_name";
 $menu_items = mysqli_query($conn, $menu_query);
 
-$page_title = 'Booking Details #' . $booking['id'];
+$page_title = t('admin_booking_details', ['id' => $booking['id']]);
 $active_page = 'bookings';
 include 'includes/header.php';
 ?>
@@ -170,7 +170,7 @@ include 'includes/header.php';
     <div class="content">
         <div class="container">
             <div class="page-header">
-                <h1>Booking Details #<?php echo $booking['id']; ?></h1>
+                <h1><?php echo t('admin_booking_details', ['id' => $booking['id']]); ?></h1>
                 <a href="bookings_full_crud.php" class="btn btn-secondary">Back to Bookings</a>
             </div>
 

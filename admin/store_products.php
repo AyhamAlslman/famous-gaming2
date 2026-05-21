@@ -205,7 +205,7 @@ if ($store_ready) {
     }
 }
 
-$page_title = 'Store Products Management';
+$page_title = t('admin_store_products_management');
 $active_page = 'store_products';
 include 'includes/header.php';
 ?>
@@ -213,7 +213,7 @@ include 'includes/header.php';
 <div class="content">
     <div class="container">
         <div class="page-header">
-            <h1>Store Products Management</h1>
+            <h1><?php echo t('admin_store_products_management'); ?></h1>
             <?php if ($store_ready): ?>
                 <button class="btn" onclick="openAddModal()">Add Product</button>
             <?php endif; ?>

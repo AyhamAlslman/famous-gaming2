@@ -19,7 +19,7 @@ $today_bookings = mysqli_query($conn, "SELECT b.*, r.room_name FROM bookings b L
 
 $success_message = isset($_GET['success']) ? $_GET['success'] : '';
 
-$page_title = 'Dashboard';
+$page_title = t('admin_dashboard_page_title');
 $active_page = 'dashboard';
 include 'includes/header.php';
 ?>
@@ -27,9 +27,12 @@ include 'includes/header.php';
     <div class="content">
         <div class="container">
             <div class="page-header">
-                <h1>Dashboard</h1>
+                <h1><?php echo t('admin_dashboard_heading'); ?></h1>
                 <div class="user-info">
-                    Welcome, <?php echo $_SESSION['admin_full_name']; ?> (<?php echo ucfirst($_SESSION['admin_role']); ?>)
+                    <?php echo t('admin_dashboard_welcome', [
+                        'name' => $_SESSION['admin_full_name'],
+                        'role' => t('admin_role_' . strtolower($_SESSION['admin_role']), [], ucfirst($_SESSION['admin_role']))
+                    ]); ?>
                 </div>
             </div>
 
@@ -39,38 +42,38 @@ include 'includes/header.php';
 
             <div class="dashboard-stats">
                 <div class="stat-card">
-                    <h3>Total Rooms</h3>
+                    <h3><?php echo t('admin_dashboard_total_rooms'); ?></h3>
                     <div class="stat-number"><?php echo $stats['total_rooms']; ?></div>
                 </div>
                 <div class="stat-card">
-                    <h3>Available Rooms</h3>
+                    <h3><?php echo t('admin_dashboard_available_rooms'); ?></h3>
                     <div class="stat-number"><?php echo $stats['available_rooms']; ?></div>
                 </div>
                 <div class="stat-card">
-                    <h3>Total Bookings</h3>
+                    <h3><?php echo t('admin_dashboard_total_bookings'); ?></h3>
                     <div class="stat-number"><?php echo $stats['total_bookings']; ?></div>
                 </div>
                 <div class="stat-card">
-                    <h3>Pending Bookings</h3>
+                    <h3><?php echo t('admin_dashboard_pending_bookings'); ?></h3>
                     <div class="stat-number"><?php echo $stats['pending_bookings']; ?></div>
                 </div>
                 <a href="customer_tickets.php" class="stat-card admin-stat-link">
-                    <h3>Customer Tickets</h3>
+                    <h3><?php echo t('admin_dashboard_customer_tickets'); ?></h3>
                     <div class="stat-number"><?php echo $stats['customer_tickets']; ?></div>
                 </a>
                 <div class="stat-card">
-                    <h3>Total Complaints</h3>
+                    <h3><?php echo t('admin_dashboard_total_complaints'); ?></h3>
                     <div class="stat-number"><?php echo $stats['total_complaints']; ?></div>
                 </div>
                 <?php if (isAdmin()): ?>
                 <div class="stat-card">
-                    <h3>Total Admins</h3>
+                    <h3><?php echo t('admin_dashboard_total_admins'); ?></h3>
                     <div class="stat-number"><?php echo $stats['total_admins']; ?></div>
                 </div>
                 <?php endif; ?>
             </div>
 
-            <h2 class="section-title">Today's Bookings (<?php echo date('Y-m-d'); ?>)</h2>
+            <h2 class="section-title"><?php echo t('admin_dashboard_todays_bookings'); ?> (<?php echo date('Y-m-d'); ?>)</h2>
 
             <div class="table-container">
                 <?php if (mysqli_num_rows($today_bookings) > 0): ?>
@@ -105,7 +108,7 @@ include 'includes/header.php';
                     </tbody>
                 </table>
                 <?php else: ?>
-                <div class="no-data">No bookings for today</div>
+                <div class="no-data"><?php echo t('admin_dashboard_no_bookings_today'); ?></div>
                 <?php endif; ?>
             </div>
         </div>

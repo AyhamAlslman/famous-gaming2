@@ -1,6 +1,6 @@
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 FAMOUS GAMING - Admin Panel</p>
+            <p><?php echo t('admin_footer'); ?></p>
         </div>
     </footer>
 </body>

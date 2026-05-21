@@ -12,30 +12,30 @@
 }
 
 :root {
-    --black: #05070d;
-    --black-lighter: #0b1020;
-    --black-card: #111827;
+    --black: #0a101a;
+    --black-lighter: #121a2b;
+    --black-card: #182234;
     --cyan: #27d3ff;
     --cyan-light: #7ae6ff;
     --cyan-dark: #1386c7;
     --white: #ffffff;
-    --white-text: #f4f7fb;
-    --gray-text: #93a4bd;
-    --gray-dark: #5f6f88;
+    --white-text: #f7fbff;
+    --gray-text: #a8b7cf;
+    --gray-dark: #73829a;
     --success: #34e2a0;
     --danger: #ff4d5a;
     --warning: #ffd15c;
     --arena-red: #ff3b30;
     --arena-red-dark: #b91f2d;
-    --panel-border: rgba(39, 211, 255, 0.22);
-    --panel-highlight: rgba(255, 59, 48, 0.16);
-    --glass: rgba(10, 15, 30, 0.78);
-    --shadow-arena: 0 18px 60px rgba(0, 0, 0, 0.42);
+    --panel-border: rgba(39, 211, 255, 0.26);
+    --panel-highlight: rgba(255, 59, 48, 0.18);
+    --glass: rgba(18, 27, 46, 0.8);
+    --shadow-arena: 0 18px 56px rgba(0, 0, 0, 0.32);
     --brand-sapphire: #89afff;
     --brand-violet: #a49cff;
     --brand-mint: #8ccfc2;
-    --brand-text-soft: #d8e2f2;
-    --brand-panel: rgba(9, 14, 28, 0.9);
+    --brand-text-soft: #e2ebf8;
+    --brand-panel: rgba(16, 24, 40, 0.9);
 }
 
 body {
@@ -45,9 +45,9 @@ body {
     line-height: 1.6;
     overflow-x: hidden;
     background-image:
-        radial-gradient(circle at top left, rgba(255, 59, 48, 0.14), transparent 28%),
-        radial-gradient(circle at top right, rgba(39, 211, 255, 0.16), transparent 32%),
-        linear-gradient(180deg, #03050a 0%, #08101f 45%, #04070d 100%);
+        radial-gradient(circle at top left, rgba(255, 59, 48, 0.16), transparent 30%),
+        radial-gradient(circle at top right, rgba(39, 211, 255, 0.18), transparent 34%),
+        linear-gradient(180deg, #09111b 0%, #121c30 45%, #0b1220 100%);
 }
 
 body::before {
@@ -100,8 +100,8 @@ body::before {
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
     padding: 0.95rem 0;
-    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.34);
-    border-bottom: 1px solid rgba(137, 175, 255, 0.16);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.26);
+    border-bottom: 1px solid rgba(137, 175, 255, 0.2);
 }
 
 .navbar-brand.logo {
@@ -297,22 +297,25 @@ body::before {
 .nav-language-switcher {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    margin-left: 0.35rem;
-    padding: 0.2rem 0.35rem;
-    border: 1px solid rgba(137, 175, 255, 0.16);
-    background: rgba(255, 255, 255, 0.03);
+    gap: 0.15rem;
+    margin-left: 0.2rem;
+    padding: 0;
 }
 
 .nav-language-switcher .nav-language-link {
-    padding: 0.35rem 0.55rem;
-    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.7rem 0.8rem;
+    font-size: 0.84rem;
     letter-spacing: 0.12rem;
+    min-width: 48px;
+    justify-content: center;
 }
 
 .nav-language-divider {
-    color: rgba(209, 220, 240, 0.55);
+    color: rgba(209, 220, 240, 0.46);
     font-weight: 700;
+    line-height: 1;
 }
 
 .nav-menu .nav-link {

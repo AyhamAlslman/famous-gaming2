@@ -13,13 +13,13 @@ $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        $error_message = 'Invalid request token. Please try again.';
+        $error_message = t('admin_login_invalid_token');
     } else {
     $username = sanitize_input($_POST['username']);
     $password = $_POST['password']; // Don't sanitize password before verification
 
     if (empty($username) || empty($password)) {
-        $error_message = 'Username and password are required';
+        $error_message = t('admin_login_required');
     } else {
         // Use prepared statement to prevent SQL injection
         $stmt = mysqli_prepare($conn, "SELECT id, username, password, full_name, role, status FROM admins WHERE username = ?");
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Check if account is inactive
             if ($admin['status'] == 'Inactive') {
-                $error_message = 'This account is inactive. Please contact administrator';
+                $error_message = t('admin_login_inactive');
             } else {
                 // Verify password using password_verify for hashed passwords
                 // Also support plain text for backward compatibility during migration
@@ -67,11 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     header('Location: dashboard.php');
                     exit;
                 } else {
-                    $error_message = 'Invalid username or password';
+                    $error_message = t('admin_login_invalid');
                 }
             }
         } else {
-            $error_message = 'Invalid username or password';
+            $error_message = t('admin_login_invalid');
         }
 
         mysqli_stmt_close($stmt);
@@ -83,44 +83,49 @@ mysqli_close($conn);
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo htmlspecialchars(site_language(), ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars(site_direction(), ENT_QUOTES, 'UTF-8'); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - FAMOUS GAMING Admin</title>
+    <title><?php echo t('admin_login_page_title'); ?></title>
     <link rel="stylesheet" href="css/admin.css?v=2.0">
 </head>
-<body class="admin-body admin-login-page">
+<body class="admin-body admin-login-page <?php echo site_is_rtl() ? 'admin-rtl' : ''; ?>">
     <section class="content admin-login-content">
         <div class="container admin-login-container">
-            <h2 class="section-title">Admin Panel</h2>
+            <div class="admin-login-language-switcher">
+                <a href="<?php echo htmlspecialchars(site_switch_language_url('en'), ENT_QUOTES, 'UTF-8'); ?>" class="<?php echo site_language() === 'en' ? 'active' : ''; ?>"><?php echo t('lang_en'); ?></a>
+                <span>/</span>
+                <a href="<?php echo htmlspecialchars(site_switch_language_url('ar'), ENT_QUOTES, 'UTF-8'); ?>" class="<?php echo site_language() === 'ar' ? 'active' : ''; ?>"><?php echo t('lang_ar'); ?></a>
+            </div>
+            <h2 class="section-title"><?php echo t('admin_login_heading'); ?></h2>
 
             <?php if (!empty($error_message)): ?>
                 <div class="message error"><?php echo $error_message; ?></div>
             <?php endif; ?>
 
             <div class="form-container admin-login-card">
-                <h3 style="text-align: center; margin-bottom: 1.5rem;">Login</h3>
+                <h3 style="text-align: center; margin-bottom: 1.5rem;"><?php echo t('admin_login_title'); ?></h3>
 
                 <form method="POST" action="">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                     <div class="form-group">
-                        <label>Username</label>
+                        <label><?php echo t('admin_login_username'); ?></label>
                         <input type="text" name="username" required autofocus>
                     </div>
 
                     <div class="form-group">
-                        <label>Password</label>
+                        <label><?php echo t('admin_login_password'); ?></label>
                         <input type="password" name="password" required>
                     </div>
 
                     <div class="form-group">
-                        <button type="submit" class="btn" style="width: 100%;">Login</button>
+                        <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_login_submit'); ?></button>
                     </div>
                 </form>
 
                 <div style="text-align: center; margin-top: 1.5rem;">
-                    <a href="../index.php" class="admin-login-link">Back to Main Site</a>
+                    <a href="../index.php" class="admin-login-link"><?php echo t('admin_login_back'); ?></a>
                 </div>
             </div>
         </div>
@@ -128,7 +133,7 @@ mysqli_close($conn);
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 FAMOUS GAMING - Admin Panel</p>
+            <p><?php echo t('admin_footer'); ?></p>
         </div>
     </footer>
 </body>

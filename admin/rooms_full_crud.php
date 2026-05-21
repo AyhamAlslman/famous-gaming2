@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $rooms = mysqli_query($conn, "SELECT * FROM rooms ORDER BY id DESC");
 
-$page_title = 'Rooms Management';
+$page_title = t('admin_rooms_management');
 $active_page = 'rooms';
 include 'includes/header.php';
 ?>
@@ -161,7 +161,7 @@ include 'includes/header.php';
     <div class="content">
         <div class="container">
             <div class="page-header">
-                <h1>Rooms Management</h1>
+                <h1><?php echo t('admin_rooms_management'); ?></h1>
                 <button class="btn" onclick="openAddModal()">Add Room</button>
             </div>
 
