@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/config.php';
 $current_page = basename($_SERVER['PHP_SELF']);
 $switch_to_en = site_switch_language_url('en');
 $switch_to_ar = site_switch_language_url('ar');

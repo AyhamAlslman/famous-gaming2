@@ -1,4 +1,3 @@
-<?php require_once __DIR__ . '/config.php'; ?>
     <footer class="footer">
         <div class="container">
             <p><?php echo t('footer_rights'); ?></p>
