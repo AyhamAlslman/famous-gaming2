@@ -3,7 +3,7 @@ include 'includes/config.php';
 $page_title = t('home_page_title');
 include 'includes/header.php';
 ?>
-
+   Alooooooooooooooooooooooooooo 
 <section class="hero" style="background-image: linear-gradient(120deg, rgba(3, 8, 18, 0.94) 0%, rgba(3, 8, 18, 0.72) 45%, rgba(4, 8, 18, 0.94) 100%), url('images/home-hero-background.png');">
     <div class="container">
         <h1><?php echo t('home_hero_title'); ?></h1>
