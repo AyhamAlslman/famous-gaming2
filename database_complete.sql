@@ -11,6 +11,8 @@ USE playroom_db;
 -- DROP EXISTING TABLES (if any)
 -- =====================================================
 DROP TABLE IF EXISTS audit_log;
+DROP TABLE IF EXISTS admin_notifications;
+DROP TABLE IF EXISTS site_notifications;
 DROP TABLE IF EXISTS system_settings;
 DROP TABLE IF EXISTS time_slots;
 DROP TABLE IF EXISTS business_hours;
@@ -68,6 +70,22 @@ CREATE TABLE site_users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_site_users_role_status (role, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Customer Notifications Table
+CREATE TABLE site_notifications (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    notification_type VARCHAR(50) NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    message TEXT NOT NULL,
+    action_url VARCHAR(255) DEFAULT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    read_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES site_users(id) ON DELETE CASCADE,
+    INDEX idx_site_notifications_user_read (user_id, is_read, created_at),
+    INDEX idx_site_notifications_user_created (user_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Bookings Table
@@ -146,6 +164,22 @@ CREATE TABLE complaints (
     phone VARCHAR(20) DEFAULT NULL,
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Admin Notifications Table
+CREATE TABLE admin_notifications (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    notification_type VARCHAR(50) NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    message TEXT NOT NULL,
+    related_table VARCHAR(50) DEFAULT NULL,
+    related_id INT DEFAULT NULL,
+    action_url VARCHAR(255) DEFAULT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    read_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_notification_read_created (is_read, created_at),
+    INDEX idx_notification_related (related_table, related_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================

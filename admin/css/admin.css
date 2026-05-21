@@ -1654,3 +1654,203 @@ body.admin-confirm-open {
         margin-inline-start: 0;
     }
 }
+
+/* Final admin polish */
+:root {
+    --admin-bg: #162235;
+    --admin-bg-alt: #1d2a3d;
+    --admin-surface: #24344b;
+    --admin-surface-soft: #2b3d57;
+    --admin-text: #f8fbff;
+    --admin-text-soft: #dce8f5;
+    --admin-text-muted: #b5c4d6;
+    --admin-border: rgba(151, 196, 232, 0.26);
+    --admin-border-strong: rgba(77, 215, 255, 0.38);
+    --admin-accent: #38bdf8;
+    --admin-accent-soft: #a8f0ff;
+    --admin-success: #4ade80;
+    --admin-danger: #ff6677;
+    --admin-warning: #ffd166;
+    --admin-radius: 8px;
+    --admin-radius-sm: 8px;
+}
+
+body,
+.admin-body {
+    background:
+        linear-gradient(180deg, rgba(22, 34, 53, 0.96), rgba(16, 26, 42, 0.98)),
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 30%);
+    color: var(--admin-text);
+}
+
+.navbar {
+    background:
+        linear-gradient(90deg, rgba(25, 40, 63, 0.98), rgba(28, 58, 86, 0.92));
+    border-bottom-color: var(--admin-border);
+}
+
+.nav-menu a,
+.admin-language-link,
+.admin-notification-trigger {
+    border-radius: var(--admin-radius);
+}
+
+.admin-language-switcher .admin-language-link {
+    min-width: 52px;
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-notification-menu-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.admin-notification-link-btn {
+    min-height: 30px;
+}
+
+.btn,
+.admin-btn {
+    border-radius: var(--admin-radius);
+    background: linear-gradient(135deg, #38bdf8, #4ade80);
+    color: #06131d;
+}
+
+.btn:hover,
+.admin-btn:hover {
+    color: #06131d;
+}
+
+.btn-danger,
+.admin-btn-danger {
+    background: linear-gradient(135deg, #ff6677, #ff9f7c);
+    color: #ffffff;
+}
+
+.btn-info,
+.admin-btn-info {
+    background: linear-gradient(135deg, #4c88ff, #38bdf8);
+    color: #ffffff;
+}
+
+.btn-success,
+.admin-btn-success {
+    background: linear-gradient(135deg, #28c98d, #4ade80);
+    color: #06131d;
+}
+
+.btn-secondary,
+.admin-btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--admin-text);
+}
+
+.admin-page-header,
+.page-header,
+.admin-card,
+.card,
+.form-container,
+.table-container,
+.modal-content,
+.admin-modal-content,
+.admin-stat-card,
+.stat-card,
+.admin-notification-page-card {
+    border-radius: var(--admin-radius);
+    border-color: var(--admin-border);
+    background:
+        linear-gradient(145deg, rgba(36, 52, 75, 0.96), rgba(24, 37, 58, 0.98)),
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent 34%);
+}
+
+table {
+    background: #203049;
+}
+
+table th {
+    background: #2a4161;
+    color: #ffffff;
+}
+
+table td {
+    color: var(--admin-text-soft);
+}
+
+.admin-form-group input,
+.admin-form-group select,
+.admin-form-group textarea,
+.form-group input,
+.form-group select,
+.form-group textarea {
+    border-radius: var(--admin-radius);
+    background-color: rgba(255, 255, 255, 0.075);
+    color: var(--admin-text);
+}
+
+.admin-notifications-page-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.admin-notification-page-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--admin-border);
+}
+
+.admin-notification-page-card.is-unread {
+    border-color: rgba(77, 215, 255, 0.52);
+    background:
+        linear-gradient(145deg, rgba(36, 65, 94, 0.96), rgba(24, 37, 58, 0.98)),
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 34%);
+}
+
+.admin-notification-page-head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.admin-notification-page-head h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.08rem;
+}
+
+.admin-notification-page-body p {
+    margin: 0.35rem 0 0.45rem;
+    color: var(--admin-text-soft);
+}
+
+.admin-notification-page-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.admin-login-language-switcher a {
+    min-width: 54px;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 760px) {
+    .admin-notification-page-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-notification-page-actions,
+    .admin-notification-page-actions .btn,
+    .admin-notification-page-actions form {
+        width: 100%;
+    }
+}

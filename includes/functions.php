@@ -413,6 +413,7 @@ function ensure_user_auth_schema($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     ensure_booking_confirmation_schema($conn);
+    ensure_site_notifications_table($conn);
 }
 
 /**
@@ -707,6 +708,175 @@ function mark_admin_notification_read($conn, $notification_id) {
 function mark_all_admin_notifications_read($conn) {
     ensure_admin_notifications_table($conn);
     return mysqli_query($conn, "UPDATE admin_notifications SET is_read = 1, read_at = NOW() WHERE is_read = 0");
+}
+
+/**
+ * Fetch all internal admin notifications for the full notifications page.
+ */
+function get_all_admin_notifications($conn, $limit = 120) {
+    ensure_admin_notifications_table($conn);
+    $limit = max(20, min(250, (int)$limit));
+    $notifications = [];
+
+    $result = mysqli_query(
+        $conn,
+        "SELECT * FROM admin_notifications ORDER BY created_at DESC, id DESC LIMIT " . $limit
+    );
+
+    if ($result) {
+        $notifications = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    }
+
+    return $notifications;
+}
+
+/**
+ * Ensure customer-facing notifications table exists.
+ */
+function ensure_site_notifications_table($conn) {
+    $query = "CREATE TABLE IF NOT EXISTS site_notifications (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NOT NULL,
+        notification_type VARCHAR(50) NOT NULL,
+        title VARCHAR(150) NOT NULL,
+        message TEXT NOT NULL,
+        action_url VARCHAR(255) DEFAULT NULL,
+        is_read TINYINT(1) NOT NULL DEFAULT 0,
+        read_at TIMESTAMP NULL DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_site_notifications_user_read (user_id, is_read, created_at),
+        INDEX idx_site_notifications_user_created (user_id, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+    mysqli_query($conn, $query);
+}
+
+/**
+ * Create a new customer-facing notification.
+ */
+function create_site_notification($conn, $user_id, $type, $title, $message, $action_url = null) {
+    ensure_site_notifications_table($conn);
+    $user_id = (int)$user_id;
+
+    if ($user_id <= 0) {
+        return false;
+    }
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "INSERT INTO site_notifications (user_id, notification_type, title, message, action_url)
+         VALUES (?, ?, ?, ?, ?)"
+    );
+
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "issss", $user_id, $type, $title, $message, $action_url);
+    $success = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    return $success;
+}
+
+/**
+ * Count unread customer notifications.
+ */
+function count_unread_site_notifications($conn, $user_id) {
+    ensure_site_notifications_table($conn);
+    $user_id = (int)$user_id;
+
+    if ($user_id <= 0) {
+        return 0;
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT COUNT(*) AS unread_count FROM site_notifications WHERE user_id = ? AND is_read = 0");
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+
+    return $row ? (int)$row['unread_count'] : 0;
+}
+
+/**
+ * Fetch customer notifications.
+ */
+function get_site_notifications($conn, $user_id, $limit = 80) {
+    ensure_site_notifications_table($conn);
+    $user_id = (int)$user_id;
+    $limit = max(6, min(160, (int)$limit));
+    $notifications = [];
+
+    if ($user_id <= 0) {
+        return $notifications;
+    }
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT * FROM site_notifications WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT " . $limit
+    );
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+
+    if ($result) {
+        $notifications = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    }
+
+    mysqli_stmt_close($stmt);
+
+    return $notifications;
+}
+
+function get_recent_site_notifications($conn, $user_id, $limit = 5) {
+    return get_site_notifications($conn, $user_id, $limit);
+}
+
+/**
+ * Mark one customer notification as read.
+ */
+function mark_site_notification_read($conn, $user_id, $notification_id) {
+    ensure_site_notifications_table($conn);
+    $user_id = (int)$user_id;
+    $notification_id = (int)$notification_id;
+
+    if ($user_id <= 0 || $notification_id <= 0) {
+        return false;
+    }
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE site_notifications SET is_read = 1, read_at = NOW() WHERE id = ? AND user_id = ? AND is_read = 0"
+    );
+    mysqli_stmt_bind_param($stmt, "ii", $notification_id, $user_id);
+    $success = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    return $success;
+}
+
+/**
+ * Mark all customer notifications as read.
+ */
+function mark_all_site_notifications_read($conn, $user_id) {
+    ensure_site_notifications_table($conn);
+    $user_id = (int)$user_id;
+
+    if ($user_id <= 0) {
+        return false;
+    }
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "UPDATE site_notifications SET is_read = 1, read_at = NOW() WHERE user_id = ? AND is_read = 0"
+    );
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    $success = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    return $success;
 }
 
 // =====================================================

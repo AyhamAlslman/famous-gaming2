@@ -3,7 +3,7 @@ require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
 ensure_user_auth_schema($conn);
-$auth_redirect = safe_local_redirect($_GET['redirect'] ?? $_POST['redirect'] ?? ($_SESSION['post_login_redirect'] ?? 'index.php'));
+$auth_redirect = safe_local_redirect($_GET['redirect'] ?? $_POST['redirect'] ?? ($_SESSION['post_login_redirect'] ?? 'user_dashboard.php'));
 
 if (!empty($_SESSION['site_user_id'])) {
     header('Location: ' . $auth_redirect);
@@ -57,6 +57,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['site_user_loyalty_points'] = 0;
                 $_SESSION['customer_name'] = $full_name;
                 $_SESSION['customer_phone'] = $phone;
+                create_site_notification(
+                    $conn,
+                    (int)$user_id,
+                    'account_created',
+                    t('auth_register_success'),
+                    t('user_notification_welcome'),
+                    'user_dashboard.php'
+                );
 
                 unset($_SESSION['post_login_redirect']);
                 header('Location: ' . $auth_redirect);

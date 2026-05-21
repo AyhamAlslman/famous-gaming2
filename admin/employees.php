@@ -112,7 +112,7 @@ include 'includes/header.php';
         <div class="container">
             <div class="page-header">
                 <h1><?php echo t('admin_employees_management'); ?></h1>
-                <button class="btn" onclick="openAddModal()">Add Employee</button>
+                <button class="btn" onclick="openAddModal()"><?php echo t('admin_action_add'); ?> <?php echo t('admin_role_employee'); ?></button>
             </div>
 
             <?php if (!empty($success_message)): ?>
@@ -127,12 +127,12 @@ include 'includes/header.php';
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Username</th>
-                            <th>Full Name</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th><?php echo t('admin_field_id'); ?></th>
+                            <th><?php echo t('admin_field_username'); ?></th>
+                            <th><?php echo t('auth_full_name'); ?></th>
+                            <th><?php echo t('admin_field_role'); ?></th>
+                            <th><?php echo t('admin_field_status'); ?></th>
+                            <th><?php echo t('admin_field_actions'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -141,16 +141,16 @@ include 'includes/header.php';
                             <td><?php echo $employee['id']; ?></td>
                             <td><?php echo htmlspecialchars($employee['username']); ?></td>
                             <td><?php echo htmlspecialchars($employee['full_name']); ?></td>
-                            <td><span class="role-badge"><?php echo ucfirst($employee['role']); ?></span></td>
+                            <td><span class="role-badge"><?php echo t('admin_role_' . strtolower($employee['role']), [], ucfirst($employee['role'])); ?></span></td>
                             <td>
                                 <span class="status-badge status-<?php echo strtolower($employee['status']); ?>">
-                                    <?php echo $employee['status']; ?>
+                                    <?php echo htmlspecialchars(t('admin_status_' . strtolower($employee['status']), [], $employee['status'])); ?>
                                 </span>
                             </td>
                             <td>
-                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($employee); ?>)'>Edit</button>
+                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($employee); ?>)'><?php echo t('admin_action_edit'); ?></button>
                                 <?php if ($employee['id'] != $_SESSION['admin_id']): ?>
-                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $employee['id']; ?>)">Delete</button>
+                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $employee['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -164,44 +164,44 @@ include 'includes/header.php';
     <div id="addModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAddModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;">Add Employee</h2>
+            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_action_add'); ?> <?php echo t('admin_role_employee'); ?></h2>
             <form method="POST" action="">
                 <input type="hidden" name="action" value="add">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
-                    <label>Username</label>
+                    <label><?php echo t('admin_field_username'); ?></label>
                     <input type="text" name="username" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Password</label>
+                    <label><?php echo t('auth_password'); ?></label>
                     <input type="password" name="password" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Full Name</label>
+                    <label><?php echo t('auth_full_name'); ?></label>
                     <input type="text" name="full_name" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Role</label>
+                    <label><?php echo t('admin_field_role'); ?></label>
                     <select name="role" required>
-                        <option value="admin">Admin</option>
-                        <option value="employee">Employee</option>
+                        <option value="admin"><?php echo t('admin_role_admin'); ?></option>
+                        <option value="employee"><?php echo t('admin_role_employee'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Status</label>
+                    <label><?php echo t('admin_field_status'); ?></label>
                     <select name="status" required>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                        <option value="Active"><?php echo t('admin_status_active'); ?></option>
+                        <option value="Inactive"><?php echo t('admin_status_inactive'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;">Add Employee</button>
+                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_add'); ?></button>
                 </div>
             </form>
         </div>
@@ -210,45 +210,45 @@ include 'includes/header.php';
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;">Edit Employee</h2>
+            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_action_edit'); ?> <?php echo t('admin_role_employee'); ?></h2>
             <form method="POST" action="">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_id">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
-                    <label>Username</label>
+                    <label><?php echo t('admin_field_username'); ?></label>
                     <input type="text" name="username" id="edit_username" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Password (leave empty to keep current)</label>
+                    <label><?php echo t('admin_password_optional'); ?></label>
                     <input type="password" name="password" id="edit_password">
                 </div>
 
                 <div class="form-group">
-                    <label>Full Name</label>
+                    <label><?php echo t('auth_full_name'); ?></label>
                     <input type="text" name="full_name" id="edit_full_name" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Role</label>
+                    <label><?php echo t('admin_field_role'); ?></label>
                     <select name="role" id="edit_role" required>
-                        <option value="admin">Admin</option>
-                        <option value="employee">Employee</option>
+                        <option value="admin"><?php echo t('admin_role_admin'); ?></option>
+                        <option value="employee"><?php echo t('admin_role_employee'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Status</label>
+                    <label><?php echo t('admin_field_status'); ?></label>
                     <select name="status" id="edit_status" required>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                        <option value="Active"><?php echo t('admin_status_active'); ?></option>
+                        <option value="Inactive"><?php echo t('admin_status_inactive'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;">Update Employee</button>
+                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_update'); ?></button>
                 </div>
             </form>
         </div>

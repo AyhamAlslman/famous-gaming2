@@ -122,15 +122,15 @@ include 'includes/header.php';
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Customer Name</th>
-                            <th>Phone</th>
-                            <th>Room</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Duration (hours)</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th><?php echo t('admin_field_id'); ?></th>
+                            <th><?php echo t('admin_field_customer_name'); ?></th>
+                            <th><?php echo t('admin_field_phone'); ?></th>
+                            <th><?php echo t('admin_field_room'); ?></th>
+                            <th><?php echo t('admin_field_date'); ?></th>
+                            <th><?php echo t('admin_field_time'); ?></th>
+                            <th><?php echo t('admin_field_duration'); ?></th>
+                            <th><?php echo t('admin_field_status'); ?></th>
+                            <th><?php echo t('admin_field_actions'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -145,13 +145,13 @@ include 'includes/header.php';
                             <td><?php echo $booking['hours']; ?></td>
                             <td>
                                 <span class="status-badge status-<?php echo strtolower($booking['status']); ?>">
-                                    <?php echo $booking['status']; ?>
+                                    <?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?>
                                 </span>
                             </td>
                             <td>
-                                <a href="booking_details.php?id=<?php echo $booking['id']; ?>" class="btn btn-small btn-info">View Details</a>
-                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($booking); ?>)'>Edit</button>
-                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $booking['id']; ?>)">Delete</button>
+                                <a href="booking_details.php?id=<?php echo $booking['id']; ?>" class="btn btn-small btn-info"><?php echo t('admin_action_view_details'); ?></a>
+                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($booking); ?>)'><?php echo t('admin_action_edit'); ?></button>
+                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $booking['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
                             </td>
                         </tr>
                         <?php endwhile; ?>
@@ -164,15 +164,15 @@ include 'includes/header.php';
     <div id="addModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAddModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;">Add Booking</h2>
+            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_add_booking'); ?></h2>
             <form method="POST" action="">
                 <input type="hidden" name="action" value="add">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
-                    <label>Room</label>
+                    <label><?php echo t('admin_field_room'); ?></label>
                     <select name="room_id" required>
-                        <option value="">Select Room</option>
+                        <option value=""><?php echo t('booking_form_choose_room'); ?></option>
                         <?php while ($room = mysqli_fetch_assoc($rooms)): ?>
                         <option value="<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['room_name']); ?></option>
                         <?php endwhile; ?>
@@ -180,46 +180,46 @@ include 'includes/header.php';
                 </div>
 
                 <div class="form-group">
-                    <label>Customer Name</label>
+                    <label><?php echo t('admin_field_customer_name'); ?></label>
                     <input type="text" name="customer_name" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Phone</label>
+                    <label><?php echo t('admin_field_phone'); ?></label>
                     <input type="text" name="phone" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Booking Date</label>
+                    <label><?php echo t('admin_field_date'); ?></label>
                     <input type="date" name="booking_date" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Start Time</label>
+                    <label><?php echo t('admin_field_time'); ?></label>
                     <input type="time" name="start_time" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Duration (hours)</label>
+                    <label><?php echo t('admin_field_duration'); ?></label>
                     <input type="number" name="hours" min="1" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Total Price (JOD)</label>
+                    <label><?php echo t('admin_field_price'); ?> (JOD)</label>
                     <input type="number" step="0.50" name="total_price" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Status</label>
+                    <label><?php echo t('admin_field_status'); ?></label>
                     <select name="status" required>
-                        <option value="Pending">Pending</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Cancelled">Cancelled</option>
+                        <option value="Pending"><?php echo t('status_pending'); ?></option>
+                        <option value="Confirmed"><?php echo t('status_confirmed'); ?></option>
+                        <option value="Cancelled"><?php echo t('status_cancelled'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;">Add Booking</button>
+                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_add_booking'); ?></button>
                 </div>
             </form>
         </div>
@@ -228,16 +228,16 @@ include 'includes/header.php';
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;">Edit Booking</h2>
+            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_action_edit'); ?> <?php echo t('admin_add_booking'); ?></h2>
             <form method="POST" action="">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_id">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
-                    <label>Room</label>
+                    <label><?php echo t('admin_field_room'); ?></label>
                     <select name="room_id" id="edit_room_id" required>
-                        <option value="">Select Room</option>
+                        <option value=""><?php echo t('booking_form_choose_room'); ?></option>
                         <?php while ($room = mysqli_fetch_assoc($rooms_for_edit)): ?>
                         <option value="<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['room_name']); ?></option>
                         <?php endwhile; ?>
@@ -245,46 +245,46 @@ include 'includes/header.php';
                 </div>
 
                 <div class="form-group">
-                    <label>Customer Name</label>
+                    <label><?php echo t('admin_field_customer_name'); ?></label>
                     <input type="text" name="customer_name" id="edit_customer_name" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Phone</label>
+                    <label><?php echo t('admin_field_phone'); ?></label>
                     <input type="text" name="phone" id="edit_phone" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Booking Date</label>
+                    <label><?php echo t('admin_field_date'); ?></label>
                     <input type="date" name="booking_date" id="edit_booking_date" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Start Time</label>
+                    <label><?php echo t('admin_field_time'); ?></label>
                     <input type="time" name="start_time" id="edit_start_time" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Duration (hours)</label>
+                    <label><?php echo t('admin_field_duration'); ?></label>
                     <input type="number" name="hours" id="edit_hours" min="1" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Total Price (JOD)</label>
+                    <label><?php echo t('admin_field_price'); ?> (JOD)</label>
                     <input type="number" step="0.50" name="total_price" id="edit_total_price" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Status</label>
+                    <label><?php echo t('admin_field_status'); ?></label>
                     <select name="status" id="edit_status" required>
-                        <option value="Pending">Pending</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Cancelled">Cancelled</option>
+                        <option value="Pending"><?php echo t('status_pending'); ?></option>
+                        <option value="Confirmed"><?php echo t('status_confirmed'); ?></option>
+                        <option value="Cancelled"><?php echo t('status_cancelled'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;">Update Booking</button>
+                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_update'); ?></button>
                 </div>
             </form>
         </div>

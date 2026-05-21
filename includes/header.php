@@ -3,10 +3,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $switch_to_en = site_switch_language_url('en');
 $switch_to_ar = site_switch_language_url('ar');
 $site_user_name = $_SESSION['site_user_name'] ?? '';
+$site_user_id = isset($_SESSION['site_user_id']) ? (int)$_SESSION['site_user_id'] : 0;
 $site_user_points = isset($_SESSION['site_user_loyalty_points']) ? (int)$_SESSION['site_user_loyalty_points'] : 0;
-$site_user_logged_in = $site_user_name !== '';
+$site_user_logged_in = $site_user_id > 0 && $site_user_name !== '';
+$site_user_notification_count = $site_user_logged_in ? count_unread_site_notifications($conn, $site_user_id) : 0;
 $language_target_url = site_language() === 'ar' ? $switch_to_en : $switch_to_ar;
 $language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
+$is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_password.php'], true);
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars(site_language(), ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars(site_direction(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -66,6 +69,7 @@ $language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
                     <li class="nav-item"><a class="nav-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>" href="index.php"><?php echo t('nav_home'); ?></a></li>
                     <li class="nav-item"><a class="nav-link <?php echo $current_page === 'about.php' ? 'active' : ''; ?>" href="about.php"><?php echo t('nav_about'); ?></a></li>
                     <?php if ($site_user_logged_in): ?>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'user_dashboard.php' ? 'active' : ''; ?>" href="user_dashboard.php"><?php echo t('nav_account'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'services.php' ? 'active' : ''; ?>" href="services.php"><?php echo t('nav_services'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' ? 'active' : ''; ?>" href="store.php"><?php echo t('nav_store'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'booking.php' ? 'active' : ''; ?>" href="booking.php"><?php echo t('nav_book_now'); ?></a></li>
@@ -75,14 +79,22 @@ $language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
                     <li class="nav-item"><a class="nav-link <?php echo $current_page === 'contact.php' ? 'active' : ''; ?>" href="contact.php"><?php echo t('nav_contact'); ?></a></li>
                 </ul>
                 <div class="nav-actions">
-                    <div class="nav-language-switcher" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>">
-                        <a class="nav-language-link nav-language-toggle" href="<?php echo htmlspecialchars($language_target_url, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($language_target_label, ENT_QUOTES, 'UTF-8'); ?></a>
-                    </div>
+                    <?php if (!$is_auth_page): ?>
+                        <div class="nav-language-switcher" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>">
+                            <a class="nav-language-link nav-language-toggle" href="<?php echo htmlspecialchars($language_target_url, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($language_target_label, ENT_QUOTES, 'UTF-8'); ?></a>
+                        </div>
+                    <?php endif; ?>
                     <?php if ($site_user_logged_in): ?>
-                        <div class="nav-user-pill">
+                        <a class="nav-notification-link <?php echo $current_page === 'notifications.php' ? 'active' : ''; ?>" href="notifications.php" aria-label="<?php echo htmlspecialchars(t('nav_notifications'), ENT_QUOTES, 'UTF-8'); ?>">
+                            <span class="nav-notification-icon" aria-hidden="true">!</span>
+                            <?php if ($site_user_notification_count > 0): ?>
+                                <span class="nav-notification-count"><?php echo $site_user_notification_count > 99 ? '99+' : $site_user_notification_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                        <a class="nav-user-pill" href="user_dashboard.php">
                             <span class="nav-user-name"><?php echo htmlspecialchars($site_user_name); ?></span>
                             <span class="nav-user-points"><?php echo t('loyalty_points'); ?>: <?php echo $site_user_points; ?></span>
-                        </div>
+                        </a>
                         <a class="nav-auth-link nav-auth-secondary" href="logout.php" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                     <?php else: ?>
                         <a class="nav-auth-link nav-auth-secondary <?php echo $current_page === 'login.php' ? 'active' : ''; ?>" href="login.php"><?php echo t('nav_login'); ?></a>

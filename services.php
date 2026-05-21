@@ -1,6 +1,6 @@
 <?php
 include 'includes/config.php';
-include 'includes/functions.php';
+require_once 'includes/functions.php';
 
 $menu_items = [];
 $menu_result = mysqli_query($conn, "SELECT item_name, item_category, item_price, item_description FROM menu_items WHERE is_available = 1 AND item_category IN ('Drinks', 'Snacks') ORDER BY item_category, item_name");
@@ -120,7 +120,7 @@ include 'includes/header.php';
                 <div class="service-menu-grid">
                     <?php foreach ($menu_items as $item): ?>
                         <div class="service-menu-item">
-                            <span><?php echo htmlspecialchars($item['item_category']); ?></span>
+                            <span><?php echo htmlspecialchars(translated_menu_category_label($item['item_category'])); ?></span>
                             <h3><?php echo htmlspecialchars($item['item_name']); ?></h3>
                             <p><?php echo htmlspecialchars($item['item_description']); ?></p>
                             <strong><?php echo number_format((float)$item['item_price'], 2); ?> JOD</strong>

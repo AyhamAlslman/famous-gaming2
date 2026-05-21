@@ -7,6 +7,8 @@ $current_admin_query = $_SERVER['QUERY_STRING'] ?? '';
 $admin_notification_redirect = $current_admin_path . ($current_admin_query !== '' ? '?' . $current_admin_query : '');
 $switch_to_en = site_switch_language_url('en');
 $switch_to_ar = site_switch_language_url('ar');
+$admin_language_target_url = site_language() === 'ar' ? $switch_to_en : $switch_to_ar;
+$admin_language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars(site_language(), ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars(site_direction(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -52,6 +54,7 @@ $switch_to_ar = site_switch_language_url('ar');
                                     <strong><?php echo t('admin_notifications'); ?></strong>
                                     <span><?php echo t('admin_unread', ['count' => $admin_notification_unread_count]); ?></span>
                                 </div>
+                                <a href="notifications.php" class="admin-notification-link-btn"><?php echo t('admin_view_all_notifications'); ?></a>
                                 <?php if ($admin_notification_unread_count > 0): ?>
                                     <form method="POST" action="notifications.php" class="admin-notification-inline-form">
                                         <input type="hidden" name="action" value="mark_all_read">
@@ -100,9 +103,7 @@ $switch_to_ar = site_switch_language_url('ar');
                     </details>
                 </div>
                 <div class="admin-language-switcher">
-                    <a class="admin-language-link <?php echo site_language() === 'en' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($switch_to_en, ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('lang_en'); ?></a>
-                    <span class="admin-language-divider">/</span>
-                    <a class="admin-language-link <?php echo site_language() === 'ar' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($switch_to_ar, ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('lang_ar'); ?></a>
+                    <a class="admin-language-link active" href="<?php echo htmlspecialchars($admin_language_target_url, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($admin_language_target_label, ENT_QUOTES, 'UTF-8'); ?></a>
                 </div>
             </div>
         </div>

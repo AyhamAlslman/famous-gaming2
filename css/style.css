@@ -5944,3 +5944,480 @@ body {
         padding-top: 7rem;
     }
 }
+
+/* Final cohesive customer experience polish */
+:root {
+    --fg-bg: #142033;
+    --fg-bg-deep: #0f1a2a;
+    --fg-panel: rgba(29, 44, 66, 0.94);
+    --fg-panel-soft: rgba(39, 58, 84, 0.84);
+    --fg-border: rgba(143, 202, 236, 0.28);
+    --fg-text: #f7fbff;
+    --fg-muted: #c7d5e6;
+    --fg-blue: #38bdf8;
+    --fg-green: #4ade80;
+    --fg-pink: #ff6aa7;
+    --fg-gold: #ffd166;
+    --fg-danger: #ff6677;
+    --fg-radius: 8px;
+}
+
+body {
+    background:
+        linear-gradient(180deg, rgba(20, 32, 51, 0.92), rgba(15, 26, 42, 0.96)),
+        url('../images/home-hero-background.png') center top / cover fixed;
+    color: var(--fg-text);
+}
+
+body,
+.nav-menu .nav-link,
+.btn,
+.form-control,
+.form-select {
+    letter-spacing: 0;
+}
+
+.navbar {
+    border-radius: var(--fg-radius);
+    border-color: rgba(132, 204, 255, 0.34);
+    background:
+        linear-gradient(90deg, rgba(18, 32, 53, 0.94), rgba(18, 47, 74, 0.86)),
+        url('../images/home-neon-sign.jpg') center / cover !important;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.nav-user-pill,
+.nav-notification-link,
+.nav-auth-link,
+.nav-language-link.nav-language-toggle {
+    min-height: 44px;
+    border-radius: var(--fg-radius);
+    text-decoration: none;
+}
+
+.nav-user-pill {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.48rem 0.8rem;
+    border: 1px solid rgba(143, 202, 236, 0.28);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--fg-text);
+}
+
+.nav-user-pill:hover {
+    color: #ffffff;
+    border-color: rgba(79, 223, 255, 0.56);
+}
+
+.nav-user-name,
+.nav-user-points {
+    line-height: 1.15;
+}
+
+.nav-user-points {
+    color: #bff2dc;
+    font-size: 0.82rem;
+}
+
+.nav-notification-link {
+    position: relative;
+    width: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(143, 202, 236, 0.28);
+    background: rgba(255, 255, 255, 0.08);
+    color: #eaf8ff;
+    font-weight: 900;
+}
+
+.nav-notification-link:hover,
+.nav-notification-link.active {
+    color: #06131d;
+    background: #ffffff;
+}
+
+.nav-notification-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-grid;
+    place-items: center;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+.nav-notification-count {
+    position: absolute;
+    top: -7px;
+    inset-inline-end: -7px;
+    min-width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.35rem;
+    border: 2px solid #122035;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--fg-pink), var(--fg-danger));
+    color: #fff;
+    font-size: 0.72rem;
+}
+
+.arena-home-frame {
+    background: rgba(14, 25, 42, 0.78);
+    border-radius: 16px;
+    border-color: rgba(143, 202, 236, 0.32);
+}
+
+.arena-home-frame .home-hero-clean.home-hero-user-image {
+    min-height: min(74vh, 720px);
+    background-position: center;
+}
+
+.arena-home-frame .home-hero-copy {
+    max-width: min(100%, 780px);
+    padding: clamp(1.3rem, 3vw, 2.4rem);
+    border-radius: 12px;
+    border: 1px solid rgba(199, 231, 255, 0.22);
+    background: linear-gradient(135deg, rgba(13, 27, 47, 0.78), rgba(17, 43, 68, 0.5));
+    box-shadow: 0 26px 68px rgba(3, 10, 24, 0.36);
+}
+
+.arena-home-frame .home-hero-copy h1 {
+    max-width: 14ch;
+    font-size: clamp(2.7rem, 5.6vw, 5.7rem);
+    line-height: 0.98;
+}
+
+.arena-home-frame .home-hero-copy p {
+    max-width: 62ch;
+    font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+    color: #f2fbff;
+}
+
+.home-status-pill,
+.ticket-label,
+.store-eyebrow {
+    letter-spacing: 0;
+}
+
+.home-intro-panel,
+.home-menu-preview,
+.booking-room-showcase,
+.auth-card,
+.booking-addons-panel,
+.my-bookings-heading,
+.notifications-shell,
+.user-dashboard-section,
+.user-dashboard-stat,
+.user-action-card,
+.notification-card,
+.form-container,
+.checkout-panel,
+.feedback-category-card,
+.store-product-card {
+    border-radius: var(--fg-radius);
+    border-color: var(--fg-border);
+    background:
+        linear-gradient(145deg, var(--fg-panel), rgba(19, 32, 51, 0.96)),
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 32%);
+    color: var(--fg-text);
+}
+
+.home-service-card-large {
+    min-height: 330px;
+    border-radius: var(--fg-radius);
+}
+
+.home-service-card-large h3,
+.home-menu-item h3,
+.booking-room-detail-body h3,
+.user-action-card h2,
+.notifications-toolbar h2,
+.notification-card h3,
+.user-booking-mini-card h3 {
+    color: #ffffff;
+}
+
+.home-service-card-large p,
+.home-menu-item p,
+.booking-room-detail-body p,
+.user-action-card p,
+.notifications-toolbar p,
+.notification-card p,
+.user-booking-mini-card p,
+.auth-links a,
+.form-text {
+    color: var(--fg-muted);
+}
+
+.btn {
+    border-radius: var(--fg-radius);
+    clip-path: none;
+    background: linear-gradient(135deg, #3bc7ff, #4ade80);
+    color: #06131d;
+    border-color: rgba(255, 255, 255, 0.12);
+    text-shadow: none;
+}
+
+.btn:hover {
+    color: #06131d;
+    transform: translateY(-2px);
+}
+
+.btn-danger,
+.ticket-cancel-btn {
+    background: linear-gradient(135deg, #ff6677, #ff9f7c);
+    color: #fff;
+}
+
+.home-secondary-btn,
+.payment-secondary-btn,
+.store-basket-clear-btn {
+    background: rgba(255, 255, 255, 0.09);
+    color: #f5fbff;
+    border-color: rgba(143, 202, 236, 0.24);
+}
+
+.home-secondary-btn:hover,
+.payment-secondary-btn:hover,
+.store-basket-clear-btn:hover {
+    color: #ffffff;
+}
+
+.form-control,
+.form-select,
+.form-group input,
+.form-group select,
+.form-group textarea {
+    border-radius: var(--fg-radius);
+    border-color: rgba(171, 210, 238, 0.28);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--fg-text);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: rgba(79, 223, 255, 0.58);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+}
+
+.auth-page-content {
+    min-height: calc(100vh - 280px);
+    display: flex;
+    align-items: center;
+}
+
+.auth-card {
+    width: min(100%, 560px);
+    padding: clamp(1.3rem, 3vw, 2rem);
+    box-shadow: 0 24px 64px rgba(4, 11, 24, 0.34);
+}
+
+.user-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-dashboard-stat {
+    display: grid;
+    gap: 0.45rem;
+    padding: 1.2rem;
+    text-decoration: none;
+}
+
+.user-dashboard-stat span,
+.user-action-card span,
+.notification-time,
+.user-booking-mini-card span {
+    color: #9fefff;
+    font-weight: 800;
+}
+
+.user-dashboard-stat strong {
+    color: #ffffff;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    line-height: 1;
+}
+
+.loyalty-stat strong {
+    color: #bff2dc;
+}
+
+.user-dashboard-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-action-card {
+    min-height: 190px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    padding: 1.1rem;
+    text-decoration: none;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.user-action-card:hover,
+.user-dashboard-stat:hover,
+.notification-card:hover,
+.user-booking-mini-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(79, 223, 255, 0.58);
+    box-shadow: 0 22px 52px rgba(4, 11, 24, 0.3);
+}
+
+.user-dashboard-section {
+    padding: 1.1rem;
+    margin-top: 1rem;
+}
+
+.user-room-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.user-room-status {
+    position: absolute;
+    top: 0.8rem;
+    inset-inline-start: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(5, 13, 24, 0.78);
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.user-bookings-mini-list,
+.notifications-list {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.user-booking-mini-card,
+.notification-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--fg-border);
+    border-radius: var(--fg-radius);
+    background: rgba(255, 255, 255, 0.055);
+    text-decoration: none;
+    color: var(--fg-text);
+}
+
+.notifications-shell {
+    width: min(100%, 980px);
+    margin-inline: auto;
+    padding: 1rem;
+}
+
+.notifications-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.notification-card.is-unread {
+    border-color: rgba(79, 223, 255, 0.54);
+    background: rgba(56, 189, 248, 0.09);
+}
+
+.notification-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.notification-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--fg-pink);
+    box-shadow: 0 0 0 5px rgba(255, 106, 167, 0.14);
+}
+
+.notification-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.notifications-empty,
+.user-dashboard-empty {
+    text-align: center;
+    padding: 2rem;
+}
+
+.site-footer {
+    border-top-color: rgba(56, 189, 248, 0.58);
+    background:
+        linear-gradient(90deg, rgba(18, 32, 53, 0.96), rgba(19, 52, 79, 0.9)),
+        url('../images/home-neon-sign.jpg') center / cover;
+}
+
+@media (max-width: 1100px) {
+    .user-dashboard-grid,
+    .user-dashboard-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .nav-actions {
+        align-items: stretch;
+    }
+
+    .nav-user-pill {
+        width: 100%;
+    }
+
+    .arena-home-frame .home-hero-copy h1 {
+        max-width: 100%;
+    }
+
+    .home-service-card-large {
+        min-height: 270px;
+    }
+
+    .user-dashboard-grid,
+    .user-dashboard-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .notifications-toolbar,
+    .notification-card,
+    .user-booking-mini-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .notification-card-actions,
+    .notification-card-actions .btn,
+    .notification-card-actions form {
+        width: 100%;
+    }
+}

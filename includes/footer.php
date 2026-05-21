@@ -12,6 +12,7 @@
                 <a href="index.php"><?php echo t('nav_home'); ?></a>
                 <a href="about.php"><?php echo t('nav_about'); ?></a>
                 <?php if ($footer_user_logged_in): ?>
+                    <a href="user_dashboard.php"><?php echo t('nav_account'); ?></a>
                     <a href="services.php"><?php echo t('nav_services'); ?></a>
                     <a href="store.php"><?php echo t('nav_store'); ?></a>
                     <a href="booking.php"><?php echo t('nav_book_now'); ?></a>
@@ -25,6 +26,7 @@
                 <h3><?php echo t('footer_support'); ?></h3>
                 <a href="contact.php"><?php echo t('nav_contact'); ?></a>
                 <?php if ($footer_user_logged_in): ?>
+                    <a href="notifications.php"><?php echo t('nav_notifications'); ?></a>
                     <a href="my_bookings.php"><?php echo t('nav_my_bookings'); ?></a>
                     <a href="logout.php" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                 <?php else: ?>

@@ -3,7 +3,7 @@ require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
 ensure_user_auth_schema($conn);
-$auth_redirect = safe_local_redirect($_GET['redirect'] ?? $_POST['redirect'] ?? ($_SESSION['post_login_redirect'] ?? 'index.php'));
+$auth_redirect = safe_local_redirect($_GET['redirect'] ?? $_POST['redirect'] ?? ($_SESSION['post_login_redirect'] ?? 'user_dashboard.php'));
 
 if (!empty($_SESSION['admin_logged_in'])) {
     header('Location: admin/dashboard.php');

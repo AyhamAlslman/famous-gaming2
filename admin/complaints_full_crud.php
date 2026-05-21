@@ -49,12 +49,12 @@ include 'includes/header.php';
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Customer Name</th>
-                            <th>Phone</th>
-                            <th>Message</th>
-                            <th>Submitted</th>
-                            <th>Actions</th>
+                            <th><?php echo t('admin_field_id'); ?></th>
+                            <th><?php echo t('admin_field_customer_name'); ?></th>
+                            <th><?php echo t('admin_field_phone'); ?></th>
+                            <th><?php echo t('admin_field_message'); ?></th>
+                            <th><?php echo t('admin_field_submitted'); ?></th>
+                            <th><?php echo t('admin_field_actions'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -70,15 +70,15 @@ include 'includes/header.php';
                             </td>
                             <td><?php echo date('Y-m-d h:i A', strtotime($complaint['created_at'])); ?></td>
                             <td>
-                                <button class="btn btn-small btn-info" onclick='viewComplaint(<?php echo json_encode($complaint); ?>)'>View</button>
-                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $complaint['id']; ?>)">Delete</button>
+                                <button class="btn btn-small btn-info" onclick='viewComplaint(<?php echo json_encode($complaint); ?>)'><?php echo t('common_view'); ?></button>
+                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $complaint['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
                             </td>
                         </tr>
                         <?php endwhile; ?>
                     </tbody>
                 </table>
                 <?php else: ?>
-                <div class="no-data">No complaints found</div>
+                <div class="no-data"><?php echo t('admin_no_complaints'); ?></div>
                 <?php endif; ?>
             </div>
         </div>
@@ -87,13 +87,13 @@ include 'includes/header.php';
     <div id="viewModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeViewModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;">Complaint Details</h2>
+            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_complaint_details'); ?></h2>
             <div class="complaint-details">
                 <p><strong>ID:</strong> <span id="view_id"></span></p>
-                <p><strong>Customer Name:</strong> <span id="view_customer_name"></span></p>
-                <p><strong>Phone:</strong> <span id="view_phone"></span></p>
-                <p><strong>Submitted:</strong> <span id="view_date"></span></p>
-                <h3>Message:</h3>
+                <p><strong><?php echo t('admin_field_customer_name'); ?>:</strong> <span id="view_customer_name"></span></p>
+                <p><strong><?php echo t('admin_field_phone'); ?>:</strong> <span id="view_phone"></span></p>
+                <p><strong><?php echo t('admin_field_submitted'); ?>:</strong> <span id="view_date"></span></p>
+                <h3><?php echo t('admin_field_message'); ?>:</h3>
                 <p id="view_message" style="line-height: 1.8; white-space: pre-wrap;"></p>
             </div>
         </div>

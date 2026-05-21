@@ -2,16 +2,17 @@
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
-ensure_booking_confirmation_schema($conn);
+ensure_user_auth_schema($conn);
+$current_site_user = get_current_site_user($conn);
 
-function get_checkout_booking($conn, $booking_id, $customer_session_token) {
+function get_checkout_booking($conn, $booking_id, $customer_session_token, $site_user_id = 0) {
     $query = "SELECT b.*, r.room_name, r.room_type
               FROM bookings b
               LEFT JOIN rooms r ON b.room_id = r.id
-              WHERE b.id = ? AND b.customer_session_token = ?
+              WHERE b.id = ? AND (b.customer_session_token = ? OR b.user_id = ?)
               LIMIT 1";
     $stmt = mysqli_prepare($conn, $query);
-    mysqli_stmt_bind_param($stmt, "is", $booking_id, $customer_session_token);
+    mysqli_stmt_bind_param($stmt, "isi", $booking_id, $customer_session_token, $site_user_id);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     $booking = mysqli_fetch_assoc($result);
@@ -41,19 +42,22 @@ $success_msg = isset($_GET['payment']) && $_GET['payment'] === 'success' ? t('pa
 $error_msg = '';
 $customer_session_token = $_SESSION['customer_booking_token'] ?? '';
 $booking_id = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : (isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0);
-$selected_method = sanitize_input($_POST['payment_method'] ?? 'Cash');
+$selected_method = sanitize_input($_POST['payment_method'] ?? ($_GET['method'] ?? 'Cash'));
 $card_number = sanitize_input($_POST['card_number'] ?? '');
 $expiry_date = sanitize_input($_POST['expiry_date'] ?? '');
 $cvv = sanitize_input($_POST['cvv'] ?? '');
 $otp_code = sanitize_input($_POST['otp_code'] ?? '');
 $otp_confirmed = sanitize_input($_POST['otp_confirmed'] ?? '0');
+if (!in_array($selected_method, ['Cash', 'Visa', 'CliQ'], true)) {
+    $selected_method = 'Cash';
+}
 
 $booking = null;
 $booking_items = [];
 $payable_total = 0.0;
 
-if ($booking_id > 0 && !empty($customer_session_token)) {
-    $booking = get_checkout_booking($conn, $booking_id, $customer_session_token);
+if ($booking_id > 0 && (!empty($customer_session_token) || $current_site_user)) {
+    $booking = get_checkout_booking($conn, $booking_id, $customer_session_token, $current_site_user ? (int)$current_site_user['id'] : 0);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -92,9 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $conn,
                 "UPDATE bookings
                  SET payment_status = 'Paid', payment_method = ?, paid_amount = ?
-                 WHERE id = ? AND customer_session_token = ?"
+                 WHERE id = ? AND (customer_session_token = ? OR user_id = ?)"
             );
-            mysqli_stmt_bind_param($stmt, "sdis", $selected_method, $payable_total, $booking_id, $customer_session_token);
+            $payment_site_user_id = $current_site_user ? (int)$current_site_user['id'] : 0;
+            mysqli_stmt_bind_param($stmt, "sdisi", $selected_method, $payable_total, $booking_id, $customer_session_token, $payment_site_user_id);
 
             if (mysqli_stmt_execute($stmt)) {
                 mysqli_stmt_close($stmt);
@@ -106,6 +111,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'bookings',
                     $booking_id,
                     'booking_details.php?id=' . $booking_id
+                );
+                create_site_notification(
+                    $conn,
+                    (int)($booking['user_id'] ?? 0),
+                    'payment_updated',
+                    t('payment_success'),
+                    t('payment_already_paid_text', ['method' => t('payment_' . strtolower($selected_method), [], $selected_method)]),
+                    'my_bookings.php'
                 );
                 header('Location: payment.php?booking_id=' . $booking_id . '&payment=success');
                 exit;

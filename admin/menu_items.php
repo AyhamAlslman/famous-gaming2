@@ -81,7 +81,7 @@ include 'includes/header.php';
     <div class="container" style="margin-top: 2rem;">
         <div class="page-header">
             <h2><?php echo t('admin_menu_items_management'); ?></h2>
-            <button onclick="openAddModal()" class="btn">Add New Item</button>
+            <button onclick="openAddModal()" class="btn"><?php echo t('admin_action_add'); ?> <?php echo t('admin_nav_menu_items'); ?></button>
         </div>
 
         <?php if ($success_message): ?>
@@ -96,13 +96,13 @@ include 'includes/header.php';
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Item Name</th>
-                        <th>Category</th>
-                        <th>Price (JOD)</th>
-                        <th>Description</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th><?php echo t('admin_field_id'); ?></th>
+                        <th><?php echo t('admin_field_item_name'); ?></th>
+                        <th><?php echo t('admin_field_category'); ?></th>
+                        <th><?php echo t('admin_field_price'); ?> (JOD)</th>
+                        <th><?php echo t('admin_field_description'); ?></th>
+                        <th><?php echo t('admin_field_status'); ?></th>
+                        <th><?php echo t('admin_field_actions'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -112,21 +112,21 @@ include 'includes/header.php';
                             <td><?php echo htmlspecialchars($item['item_name']); ?></td>
                             <td>
                                 <span class="category-badge category-<?php echo strtolower($item['item_category']); ?>">
-                                    <?php echo htmlspecialchars($item['item_category']); ?>
+                                    <?php echo htmlspecialchars(translated_menu_category_label($item['item_category'])); ?>
                                 </span>
                             </td>
                             <td><?php echo number_format($item['item_price'], 2); ?> JOD</td>
                             <td><?php echo htmlspecialchars($item['item_description']); ?></td>
                             <td>
                                 <?php if ($item['is_available']): ?>
-                                    <span style="color: #4CAF50;">✓ Available</span>
+                                    <span class="status-badge status-available"><?php echo t('status_available'); ?></span>
                                 <?php else: ?>
-                                    <span style="color: #f44336;">✗ Unavailable</span>
+                                    <span class="status-badge status-busy"><?php echo t('store_unavailable'); ?></span>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($item); ?>)'>Edit</button>
-                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $item['id']; ?>)">Delete</button>
+                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($item); ?>)'><?php echo t('admin_action_edit'); ?></button>
+                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $item['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -139,44 +139,44 @@ include 'includes/header.php';
     <div id="addModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAddModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem;">Add Menu Item</h2>
+            <h2 style="margin-bottom: 1.5rem;"><?php echo t('admin_action_add'); ?> <?php echo t('admin_nav_menu_items'); ?></h2>
             <form method="POST" action="">
                 <input type="hidden" name="action" value="add">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
-                    <label>Item Name</label>
+                    <label><?php echo t('admin_field_item_name'); ?></label>
                     <input type="text" name="item_name" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Category</label>
+                    <label><?php echo t('admin_field_category'); ?></label>
                     <select name="item_category" required>
-                        <option value="Drinks">Drinks</option>
-                        <option value="Snacks">Snacks</option>
-                        <option value="Services">Services</option>
+                        <option value="Drinks"><?php echo t('admin_category_drinks'); ?></option>
+                        <option value="Snacks"><?php echo t('admin_category_snacks'); ?></option>
+                        <option value="Services"><?php echo t('nav_services'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Price (JOD)</label>
+                    <label><?php echo t('admin_field_price'); ?> (JOD)</label>
                     <input type="number" step="0.01" name="item_price" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Description</label>
+                    <label><?php echo t('admin_field_description'); ?></label>
                     <textarea name="item_description" rows="3"></textarea>
                 </div>
 
                 <div class="form-group">
                     <label>
                         <input type="checkbox" name="is_available" checked>
-                        Available
+                        <?php echo t('status_available'); ?>
                     </label>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;">Add Item</button>
+                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_add'); ?></button>
                 </div>
             </form>
         </div>
@@ -186,45 +186,45 @@ include 'includes/header.php';
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem;">Edit Menu Item</h2>
+            <h2 style="margin-bottom: 1.5rem;"><?php echo t('admin_action_edit'); ?> <?php echo t('admin_nav_menu_items'); ?></h2>
             <form method="POST" action="">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_id">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
-                    <label>Item Name</label>
+                    <label><?php echo t('admin_field_item_name'); ?></label>
                     <input type="text" name="item_name" id="edit_item_name" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Category</label>
+                    <label><?php echo t('admin_field_category'); ?></label>
                     <select name="item_category" id="edit_item_category" required>
-                        <option value="Drinks">Drinks</option>
-                        <option value="Snacks">Snacks</option>
-                        <option value="Services">Services</option>
+                        <option value="Drinks"><?php echo t('admin_category_drinks'); ?></option>
+                        <option value="Snacks"><?php echo t('admin_category_snacks'); ?></option>
+                        <option value="Services"><?php echo t('nav_services'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Price (JOD)</label>
+                    <label><?php echo t('admin_field_price'); ?> (JOD)</label>
                     <input type="number" step="0.01" name="item_price" id="edit_item_price" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Description</label>
+                    <label><?php echo t('admin_field_description'); ?></label>
                     <textarea name="item_description" id="edit_item_description" rows="3"></textarea>
                 </div>
 
                 <div class="form-group">
                     <label>
                         <input type="checkbox" name="is_available" id="edit_is_available">
-                        Available
+                        <?php echo t('status_available'); ?>
                     </label>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;">Update Item</button>
+                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_update'); ?></button>
                 </div>
             </form>
         </div>

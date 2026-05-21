@@ -33,13 +33,13 @@ include 'includes/header.php';
                     <table>
                         <thead>
                             <tr>
-                                <th>Ticket</th>
-                                <th>Customer</th>
-                                <th>Device / Session</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th><?php echo t('booking_ticket_label'); ?></th>
+                                <th><?php echo t('common_customer'); ?></th>
+                                <th><?php echo t('booking_device_session'); ?></th>
+                                <th><?php echo t('common_date'); ?></th>
+                                <th><?php echo t('common_time'); ?></th>
+                                <th><?php echo t('admin_field_status'); ?></th>
+                                <th><?php echo t('admin_field_actions'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -56,14 +56,14 @@ include 'includes/header.php';
                                     </td>
                                     <td><?php echo htmlspecialchars($ticket['room_name']); ?> - <?php echo htmlspecialchars($ticket['room_type']); ?></td>
                                     <td><?php echo date('M d, Y', strtotime($ticket['booking_date'])); ?></td>
-                                    <td><?php echo date('h:i A', strtotime($ticket['start_time'])); ?> for <?php echo (int)$ticket['hours']; ?> hour<?php echo (int)$ticket['hours'] === 1 ? '' : 's'; ?></td>
+                                    <td><?php echo date('h:i A', strtotime($ticket['start_time'])); ?> - <?php echo translated_hours_label($ticket['hours']); ?></td>
                                     <td>
                                         <span class="status-badge status-<?php echo strtolower(htmlspecialchars($ticket['status'])); ?>">
-                                            <?php echo htmlspecialchars($ticket['status']); ?>
+                                            <?php echo htmlspecialchars(t('status_' . strtolower($ticket['status']), [], $ticket['status'])); ?>
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="booking_details.php?id=<?php echo (int)$ticket['id']; ?>" class="btn btn-small">View Details</a>
+                                        <a href="booking_details.php?id=<?php echo (int)$ticket['id']; ?>" class="btn btn-small"><?php echo t('admin_action_view_details'); ?></a>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>

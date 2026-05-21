@@ -3,7 +3,7 @@ require_once 'auth_check.php';
 include '../includes/config.php';
 require_once '../includes/functions.php';
 
-ensure_booking_confirmation_schema($conn);
+ensure_user_auth_schema($conn);
 
 $stats = [];
 $stats['total_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms"))['count'];
@@ -13,6 +13,11 @@ $stats['pending_bookings'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUN
 $stats['customer_tickets'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM bookings WHERE booking_code IS NOT NULL OR customer_session_token IS NOT NULL"))['count'];
 $stats['total_complaints'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM complaints"))['count'];
 $stats['total_admins'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM admins"))['count'];
+$stats['total_users'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM site_users"))['count'] ?? 0;
+$stats['menu_items'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM menu_items"))['count'] ?? 0;
+$stats['store_products'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM store_products"))['count'] ?? 0;
+$stats['paid_revenue'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) as total FROM bookings WHERE payment_status = 'Paid'"))['total'] ?? 0;
+$stats['unread_notifications'] = count_unread_admin_notifications($conn);
 
 $today = date('Y-m-d');
 $today_bookings = mysqli_query($conn, "SELECT b.*, r.room_name FROM bookings b LEFT JOIN rooms r ON b.room_id = r.id WHERE DATE(b.booking_date) = '$today' ORDER BY b.start_time DESC");
@@ -65,6 +70,28 @@ include 'includes/header.php';
                     <h3><?php echo t('admin_dashboard_total_complaints'); ?></h3>
                     <div class="stat-number"><?php echo $stats['total_complaints']; ?></div>
                 </div>
+                <div class="stat-card">
+                    <h3><?php echo t('admin_dashboard_total_users'); ?></h3>
+                    <div class="stat-number"><?php echo $stats['total_users']; ?></div>
+                </div>
+                <?php if (isAdmin()): ?>
+                    <a href="menu_items.php" class="stat-card admin-stat-link">
+                        <h3><?php echo t('admin_dashboard_menu_items'); ?></h3>
+                        <div class="stat-number"><?php echo $stats['menu_items']; ?></div>
+                    </a>
+                    <a href="store_products.php" class="stat-card admin-stat-link">
+                        <h3><?php echo t('admin_dashboard_store_products'); ?></h3>
+                        <div class="stat-number"><?php echo $stats['store_products']; ?></div>
+                    </a>
+                <?php endif; ?>
+                <a href="notifications.php" class="stat-card admin-stat-link">
+                    <h3><?php echo t('admin_notifications'); ?></h3>
+                    <div class="stat-number"><?php echo $stats['unread_notifications']; ?></div>
+                </a>
+                <div class="stat-card">
+                    <h3><?php echo t('admin_dashboard_paid_revenue'); ?></h3>
+                    <div class="stat-number"><?php echo number_format((float)$stats['paid_revenue'], 2); ?></div>
+                </div>
                 <?php if (isAdmin()): ?>
                 <div class="stat-card">
                     <h3><?php echo t('admin_dashboard_total_admins'); ?></h3>
@@ -80,13 +107,13 @@ include 'includes/header.php';
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Customer Name</th>
-                            <th>Phone</th>
-                            <th>Room</th>
-                            <th>Time</th>
-                            <th>Duration (hours)</th>
-                            <th>Status</th>
+                            <th><?php echo t('admin_field_id'); ?></th>
+                            <th><?php echo t('admin_field_customer_name'); ?></th>
+                            <th><?php echo t('admin_field_phone'); ?></th>
+                            <th><?php echo t('admin_field_room'); ?></th>
+                            <th><?php echo t('admin_field_time'); ?></th>
+                            <th><?php echo t('admin_field_duration'); ?></th>
+                            <th><?php echo t('admin_field_status'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -100,7 +127,7 @@ include 'includes/header.php';
                             <td><?php echo $booking['hours']; ?></td>
                             <td>
                                 <span class="status-badge status-<?php echo strtolower($booking['status']); ?>">
-                                    <?php echo $booking['status']; ?>
+                                    <?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?>
                                 </span>
                             </td>
                         </tr>

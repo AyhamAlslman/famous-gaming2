@@ -215,7 +215,7 @@ include 'includes/header.php';
         <div class="page-header">
             <h1><?php echo t('admin_store_products_management'); ?></h1>
             <?php if ($store_ready): ?>
-                <button class="btn" onclick="openAddModal()">Add Product</button>
+                <button class="btn" onclick="openAddModal()"><?php echo t('admin_action_add'); ?> <?php echo t('admin_product'); ?></button>
             <?php endif; ?>
         </div>
 
@@ -235,19 +235,19 @@ include 'includes/header.php';
         <?php else: ?>
             <div class="dashboard-stats admin-store-stats">
                 <div class="stat-card">
-                    <h3>Total Products</h3>
+                    <h3><?php echo t('admin_total_products'); ?></h3>
                     <div class="stat-number"><?php echo $stats['total_products']; ?></div>
                 </div>
                 <div class="stat-card">
-                    <h3>Active Products</h3>
+                    <h3><?php echo t('admin_active_products'); ?></h3>
                     <div class="stat-number"><?php echo $stats['active_products']; ?></div>
                 </div>
                 <div class="stat-card">
-                    <h3>Low Stock</h3>
+                    <h3><?php echo t('admin_low_stock'); ?></h3>
                     <div class="stat-number"><?php echo $stats['low_stock']; ?></div>
                 </div>
                 <div class="stat-card">
-                    <h3>Out of Stock</h3>
+                    <h3><?php echo t('admin_out_of_stock'); ?></h3>
                     <div class="stat-number"><?php echo $stats['out_of_stock']; ?></div>
                 </div>
             </div>
@@ -256,20 +256,20 @@ include 'includes/header.php';
                 <table class="admin-store-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Image</th>
-                            <th>Product Name</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th><?php echo t('admin_field_id'); ?></th>
+                            <th><?php echo t('admin_field_image'); ?></th>
+                            <th><?php echo t('admin_product_name'); ?></th>
+                            <th><?php echo t('admin_field_category'); ?></th>
+                            <th><?php echo t('admin_field_price'); ?></th>
+                            <th><?php echo t('admin_field_stock'); ?></th>
+                            <th><?php echo t('admin_field_status'); ?></th>
+                            <th><?php echo t('admin_field_actions'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($products)): ?>
                             <tr>
-                                <td colspan="8" class="no-data">No store products found.</td>
+                                <td colspan="8" class="no-data"><?php echo t('store_no_products'); ?></td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($products as $product): ?>
@@ -288,20 +288,20 @@ include 'includes/header.php';
                                     </td>
                                     <td>
                                         <span class="category-badge admin-store-category">
-                                            <?php echo htmlspecialchars($product['category']); ?>
+                                            <?php echo htmlspecialchars(translated_category_label($product['category'])); ?>
                                         </span>
                                     </td>
                                     <td><?php echo number_format($product['price'], 2); ?> JOD</td>
                                     <td><?php echo (int)$product['stock_quantity']; ?></td>
                                     <td>
                                         <span class="admin-store-status <?php echo strtolower($product['status']) === 'active' ? 'admin-store-status-active' : 'admin-store-status-inactive'; ?>">
-                                            <?php echo htmlspecialchars($product['status']); ?>
+                                            <?php echo htmlspecialchars(t('admin_status_' . strtolower($product['status']), [], $product['status'])); ?>
                                         </span>
                                     </td>
                                     <td class="admin-store-actions-cell">
                                         <div class="admin-store-actions">
-                                            <button class="btn btn-small btn-success admin-store-action-btn" onclick='openEditModal(<?php echo json_encode($product, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>)'>Edit</button>
-                                            <button class="btn btn-small btn-danger admin-store-action-btn" onclick="confirmDelete(<?php echo (int)$product['id']; ?>)">Delete</button>
+                                            <button class="btn btn-small btn-success admin-store-action-btn" onclick='openEditModal(<?php echo json_encode($product, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>)'><?php echo t('admin_action_edit'); ?></button>
+                                            <button class="btn btn-small btn-danger admin-store-action-btn" onclick="confirmDelete(<?php echo (int)$product['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -318,57 +318,57 @@ include 'includes/header.php';
 <div id="addModal" class="modal">
     <div class="modal-content admin-store-modal">
         <span class="close" onclick="closeAddModal()">&times;</span>
-        <h2>Add Store Product</h2>
+        <h2><?php echo t('admin_action_add'); ?> <?php echo t('admin_product'); ?></h2>
         <form method="POST" action="" enctype="multipart/form-data">
             <input type="hidden" name="action" value="add">
             <?php echo admin_csrf_input(); ?>
 
             <div class="form-group">
-                <label>Product Name</label>
+                <label><?php echo t('admin_product_name'); ?></label>
                 <input type="text" name="product_name" required>
             </div>
 
             <div class="form-group">
-                <label>Category</label>
+                <label><?php echo t('admin_field_category'); ?></label>
                 <select name="category" required>
                     <?php foreach ($allowed_categories as $category): ?>
-                        <option value="<?php echo htmlspecialchars($category); ?>"><?php echo htmlspecialchars($category); ?></option>
+                        <option value="<?php echo htmlspecialchars($category); ?>"><?php echo htmlspecialchars(translated_category_label($category)); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Price (JOD)</label>
+                <label><?php echo t('admin_field_price'); ?> (JOD)</label>
                 <input type="number" step="0.01" min="0" name="price" required>
             </div>
 
             <div class="form-group">
-                <label>Stock Quantity</label>
+                <label><?php echo t('admin_field_stock'); ?></label>
                 <input type="number" min="0" name="stock_quantity" required>
             </div>
 
             <div class="form-group">
-                <label>Status</label>
+                <label><?php echo t('admin_field_status'); ?></label>
                 <select name="status" required>
                     <?php foreach ($allowed_statuses as $status_option): ?>
-                        <option value="<?php echo htmlspecialchars($status_option); ?>"><?php echo htmlspecialchars($status_option); ?></option>
+                        <option value="<?php echo htmlspecialchars($status_option); ?>"><?php echo htmlspecialchars(t('admin_status_' . strtolower($status_option), [], $status_option)); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Description</label>
-                <textarea name="description" rows="4" placeholder="Add a short premium product description"></textarea>
+                <label><?php echo t('admin_field_description'); ?></label>
+                <textarea name="description" rows="4" placeholder="<?php echo htmlspecialchars(t('admin_product_description_placeholder'), ENT_QUOTES, 'UTF-8'); ?>"></textarea>
             </div>
 
             <div class="form-group">
-                <label>Product Image</label>
+                <label><?php echo t('admin_field_image'); ?></label>
                 <input type="file" name="product_image" accept="image/jpeg,image/png,image/gif">
-                <small>Optional. Max size: 5MB. Formats: JPG, PNG, GIF.</small>
+                <small><?php echo t('admin_upload_hint'); ?></small>
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn" style="width: 100%;">Add Product</button>
+                <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_add'); ?></button>
             </div>
         </form>
     </div>
@@ -377,71 +377,71 @@ include 'includes/header.php';
 <div id="editModal" class="modal">
     <div class="modal-content admin-store-modal">
         <span class="close" onclick="closeEditModal()">&times;</span>
-        <h2>Edit Store Product</h2>
+        <h2><?php echo t('admin_action_edit'); ?> <?php echo t('admin_product'); ?></h2>
         <form method="POST" action="" enctype="multipart/form-data">
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="id" id="edit_id">
             <?php echo admin_csrf_input(); ?>
 
             <div class="form-group">
-                <label>Product Name</label>
+                <label><?php echo t('admin_product_name'); ?></label>
                 <input type="text" name="product_name" id="edit_product_name" required>
             </div>
 
             <div class="form-group">
-                <label>Category</label>
+                <label><?php echo t('admin_field_category'); ?></label>
                 <select name="category" id="edit_category" required>
                     <?php foreach ($allowed_categories as $category): ?>
-                        <option value="<?php echo htmlspecialchars($category); ?>"><?php echo htmlspecialchars($category); ?></option>
+                        <option value="<?php echo htmlspecialchars($category); ?>"><?php echo htmlspecialchars(translated_category_label($category)); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Price (JOD)</label>
+                <label><?php echo t('admin_field_price'); ?> (JOD)</label>
                 <input type="number" step="0.01" min="0" name="price" id="edit_price" required>
             </div>
 
             <div class="form-group">
-                <label>Stock Quantity</label>
+                <label><?php echo t('admin_field_stock'); ?></label>
                 <input type="number" min="0" name="stock_quantity" id="edit_stock_quantity" required>
             </div>
 
             <div class="form-group">
-                <label>Status</label>
+                <label><?php echo t('admin_field_status'); ?></label>
                 <select name="status" id="edit_status" required>
                     <?php foreach ($allowed_statuses as $status_option): ?>
-                        <option value="<?php echo htmlspecialchars($status_option); ?>"><?php echo htmlspecialchars($status_option); ?></option>
+                        <option value="<?php echo htmlspecialchars($status_option); ?>"><?php echo htmlspecialchars(t('admin_status_' . strtolower($status_option), [], $status_option)); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Description</label>
+                <label><?php echo t('admin_field_description'); ?></label>
                 <textarea name="description" id="edit_description" rows="4"></textarea>
             </div>
 
             <div class="form-group">
-                <label>Current Image</label>
+                <label><?php echo t('admin_current_image'); ?></label>
                 <div id="edit_current_image" class="admin-store-current-image"></div>
             </div>
 
             <div class="form-group">
                 <label>
                     <input type="checkbox" name="remove_image" id="edit_remove_image" value="1">
-                    Remove current image
+                    <?php echo t('admin_remove_current_image'); ?>
                 </label>
-                <small>Use this to delete the current image and restore the default placeholder.</small>
+                <small><?php echo t('admin_remove_image_hint'); ?></small>
             </div>
 
             <div class="form-group">
-                <label>Replace Image</label>
+                <label><?php echo t('admin_replace_image'); ?></label>
                 <input type="file" name="product_image" id="edit_product_image" accept="image/jpeg,image/png,image/gif">
-                <small>Upload a new image only if you want to replace the current one.</small>
+                <small><?php echo t('admin_replace_image_hint'); ?></small>
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn" style="width: 100%;">Update Product</button>
+                <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_update'); ?></button>
             </div>
         </form>
     </div>

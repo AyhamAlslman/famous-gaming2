@@ -2,10 +2,11 @@
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
 $page_title = t('complaints_page_title');
-include 'includes/header.php';
 
 $success_msg = '';
 $error_msg = '';
+ensure_user_auth_schema($conn);
+$current_site_user = get_current_site_user($conn);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $customer_name = sanitize_input($_POST['customer_name'] ?? '');
@@ -27,6 +28,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $complaint_id,
                 'complaints_full_crud.php'
             );
+            create_site_notification(
+                $conn,
+                (int)($current_site_user['id'] ?? 0),
+                'support_sent',
+                t('complaints_success'),
+                t('user_notification_support_sent'),
+                'complaints.php'
+            );
             $success_msg = t('complaints_success');
         } else {
             $error_msg = t('complaints_error');
@@ -37,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error_msg = t('complaints_required');
     }
 }
+
+include 'includes/header.php';
 ?>
 
 <section class="hero">
@@ -70,12 +81,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <form method="POST" action="" class="form-container">
                 <div class="form-group">
                     <label class="form-label"><?php echo t('complaints_name'); ?></label>
-                    <input type="text" name="customer_name" class="form-control" required>
+                    <input type="text" name="customer_name" class="form-control" value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ($current_site_user['full_name'] ?? '')); ?>" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label"><?php echo t('complaints_phone'); ?></label>
-                    <input type="tel" name="phone" class="form-control" placeholder="07XXXXXXXX">
+                    <input type="tel" name="phone" class="form-control" value="<?php echo htmlspecialchars($_POST['phone'] ?? ($current_site_user['phone'] ?? '')); ?>" placeholder="07XXXXXXXX">
                     <small class="booking-time-hint form-text"><?php echo t('complaints_phone_hint'); ?></small>
                 </div>
 

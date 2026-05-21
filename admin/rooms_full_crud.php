@@ -162,7 +162,7 @@ include 'includes/header.php';
         <div class="container">
             <div class="page-header">
                 <h1><?php echo t('admin_rooms_management'); ?></h1>
-                <button class="btn" onclick="openAddModal()">Add Room</button>
+                <button class="btn" onclick="openAddModal()"><?php echo t('admin_action_add'); ?> <?php echo t('common_room'); ?></button>
             </div>
 
             <?php if (!empty($success_message)): ?>
@@ -177,12 +177,12 @@ include 'includes/header.php';
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Room Name</th>
-                            <th>Type</th>
-                            <th>Price/Hour</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th><?php echo t('admin_field_id'); ?></th>
+                            <th><?php echo t('admin_field_room'); ?></th>
+                            <th><?php echo t('admin_field_type'); ?></th>
+                            <th><?php echo t('admin_field_price'); ?></th>
+                            <th><?php echo t('admin_field_status'); ?></th>
+                            <th><?php echo t('admin_field_actions'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -191,15 +191,15 @@ include 'includes/header.php';
                             <td><?php echo $room['id']; ?></td>
                             <td><?php echo htmlspecialchars($room['room_name']); ?></td>
                             <td><?php echo htmlspecialchars($room['room_type']); ?></td>
-                            <td>$<?php echo number_format($room['price_per_hour'], 2); ?></td>
+                            <td><?php echo number_format($room['price_per_hour'], 2); ?> JOD</td>
                             <td>
                                 <span class="status-badge status-<?php echo strtolower($room['status']); ?>">
-                                    <?php echo $room['status']; ?>
+                                    <?php echo htmlspecialchars(t('status_' . strtolower($room['status']), [], $room['status'])); ?>
                                 </span>
                             </td>
                             <td>
-                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($room); ?>)'>Edit</button>
-                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $room['id']; ?>)">Delete</button>
+                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($room); ?>)'><?php echo t('admin_action_edit'); ?></button>
+                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $room['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
                             </td>
                         </tr>
                         <?php endwhile; ?>
@@ -212,18 +212,18 @@ include 'includes/header.php';
     <div id="addModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAddModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;">Add Room</h2>
+            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_action_add'); ?> <?php echo t('common_room'); ?></h2>
             <form method="POST" action="" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="add">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
-                    <label>Room Name</label>
+                    <label><?php echo t('admin_field_room'); ?></label>
                     <input type="text" name="room_name" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Room Type</label>
+                    <label><?php echo t('admin_field_type'); ?></label>
                     <select name="room_type" required>
                         <option value="PS5">PS5</option>
                         <option value="PS4">PS4</option>
@@ -233,26 +233,26 @@ include 'includes/header.php';
                 </div>
 
                 <div class="form-group">
-                    <label>Room Image (Optional)</label>
+                    <label><?php echo t('admin_field_image'); ?></label>
                     <input type="file" name="room_image" accept="image/jpeg,image/png,image/gif">
-                    <small style="color: #888; display: block; margin-top: 0.5rem;">Max size: 5MB. Formats: JPG, PNG, GIF</small>
+                    <small style="color: #b5c4d6; display: block; margin-top: 0.5rem;"><?php echo t('admin_upload_hint'); ?></small>
                 </div>
 
                 <div class="form-group">
-                    <label>Price Per Hour</label>
+                    <label><?php echo t('admin_field_price'); ?></label>
                     <input type="number" step="0.01" name="price_per_hour" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Status</label>
+                    <label><?php echo t('admin_field_status'); ?></label>
                     <select name="status" required>
-                        <option value="Available">Available</option>
-                        <option value="Busy">Busy</option>
+                        <option value="Available"><?php echo t('status_available'); ?></option>
+                        <option value="Busy"><?php echo t('status_busy'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;">Add Room</button>
+                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_add'); ?></button>
                 </div>
             </form>
         </div>
@@ -261,19 +261,19 @@ include 'includes/header.php';
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;">Edit Room</h2>
+            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_action_edit'); ?> <?php echo t('common_room'); ?></h2>
             <form method="POST" action="" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="id" id="edit_id">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
-                    <label>Room Name</label>
+                    <label><?php echo t('admin_field_room'); ?></label>
                     <input type="text" name="room_name" id="edit_room_name" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Room Type</label>
+                    <label><?php echo t('admin_field_type'); ?></label>
                     <select name="room_type" id="edit_room_type" required>
                         <option value="PS5">PS5</option>
                         <option value="PS4">PS4</option>
@@ -283,31 +283,31 @@ include 'includes/header.php';
                 </div>
 
                 <div class="form-group">
-                    <label>Room Image (Optional)</label>
+                    <label><?php echo t('admin_field_image'); ?></label>
                     <div id="edit_current_image" style="margin-bottom: 0.5rem;"></div>
                     <label style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
                         <input type="checkbox" name="remove_image" id="edit_remove_image" value="1">
-                        Remove current image
+                        <?php echo t('admin_remove_current_image'); ?>
                     </label>
                     <input type="file" name="room_image" id="edit_room_image" accept="image/jpeg,image/png,image/gif">
-                    <small style="color: #888; display: block; margin-top: 0.5rem;">Upload new image to replace current one. Max size: 5MB</small>
+                    <small style="color: #b5c4d6; display: block; margin-top: 0.5rem;"><?php echo t('admin_replace_image_hint'); ?></small>
                 </div>
 
                 <div class="form-group">
-                    <label>Price Per Hour</label>
+                    <label><?php echo t('admin_field_price'); ?></label>
                     <input type="number" step="0.01" name="price_per_hour" id="edit_price_per_hour" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Status</label>
+                    <label><?php echo t('admin_field_status'); ?></label>
                     <select name="status" id="edit_status" required>
-                        <option value="Available">Available</option>
-                        <option value="Busy">Busy</option>
+                        <option value="Available"><?php echo t('status_available'); ?></option>
+                        <option value="Busy"><?php echo t('status_busy'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;">Update Room</button>
+                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_update'); ?></button>
                 </div>
             </form>
         </div>

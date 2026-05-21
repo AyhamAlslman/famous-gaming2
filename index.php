@@ -17,7 +17,7 @@ include 'includes/header.php';
 ?>
 
 <main class="arena-home-frame">
-<section class="home-hero home-hero-clean home-hero-user-image" style="background-image: linear-gradient(90deg, rgba(5, 12, 28, 0.78) 0%, rgba(8, 19, 42, 0.36) 48%, rgba(5, 12, 28, 0.18) 100%), url('images/background.png');">
+<section class="home-hero home-hero-clean home-hero-user-image" style="background-image: linear-gradient(90deg, rgba(5, 12, 28, 0.72) 0%, rgba(8, 19, 42, 0.32) 48%, rgba(5, 12, 28, 0.18) 100%), url('images/home-hero-2026.jpg');">
     <div class="container home-hero-layout home-hero-layout-clean">
         <div class="home-hero-copy">
             <span class="home-status-pill status-<?php echo htmlspecialchars($business_status['state']); ?>">
@@ -47,7 +47,7 @@ include 'includes/header.php';
 
         <div class="home-service-grid home-service-grid-three">
             <a href="<?php echo $is_logged_in ? 'booking.php' : $booking_login_link; ?>" class="home-service-card home-service-card-large">
-                <img src="images/background.png" alt="<?php echo htmlspecialchars(t('home_book_card_title'), ENT_QUOTES, 'UTF-8'); ?>">
+                <img src="images/home-game-collage.jpg" alt="<?php echo htmlspecialchars(t('home_book_card_title'), ENT_QUOTES, 'UTF-8'); ?>">
                 <div>
                     <span><?php echo t('nav_book_now'); ?></span>
                     <h3><?php echo t('home_book_card_title'); ?></h3>
@@ -85,7 +85,7 @@ include 'includes/header.php';
                 <div class="home-menu-grid">
                     <?php foreach ($menu_items as $item): ?>
                         <div class="home-menu-item">
-                            <span><?php echo htmlspecialchars($item['item_category']); ?></span>
+                            <span><?php echo htmlspecialchars(translated_menu_category_label($item['item_category'])); ?></span>
                             <h3><?php echo htmlspecialchars($item['item_name']); ?></h3>
                             <p><?php echo htmlspecialchars($item['item_description']); ?></p>
                             <strong><?php echo number_format((float)$item['item_price'], 2); ?> JOD</strong>

@@ -186,6 +186,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             $booking_id,
                             'booking_details.php?id=' . $booking_id
                         );
+                        create_site_notification(
+                            $conn,
+                            $site_user_id,
+                            'booking_created',
+                            t('booking_ticket_ready'),
+                            t('booking_success') . ' ' . $room['room_name'] . ' - ' . format_date($booking_date) . ' ' . format_time($start_time),
+                            'my_bookings.php'
+                        );
                         $success_msg = t('booking_success');
                         if ($loyalty_points_earned > 0) {
                             $success_msg .= ' ' . t('loyalty_earned', ['points' => $loyalty_points_earned]);
@@ -438,7 +446,7 @@ include 'includes/header.php';
                                 $posted_quantity = isset($_POST['menu_items'][$item_id]) ? max(0, min(20, (int)$_POST['menu_items'][$item_id])) : 0;
                                 ?>
                                 <label class="booking-addon-card">
-                                    <span class="booking-addon-category"><?php echo htmlspecialchars($menu_item['item_category']); ?></span>
+                                    <span class="booking-addon-category"><?php echo htmlspecialchars(translated_menu_category_label($menu_item['item_category'])); ?></span>
                                     <strong><?php echo htmlspecialchars($menu_item['item_name']); ?></strong>
                                     <?php if (!empty($menu_item['item_description'])): ?>
                                         <small><?php echo htmlspecialchars($menu_item['item_description']); ?></small>

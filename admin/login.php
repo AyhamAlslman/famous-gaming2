@@ -94,9 +94,11 @@ mysqli_close($conn);
     <section class="content admin-login-content">
         <div class="container admin-login-container">
             <div class="admin-login-language-switcher">
-                <a href="<?php echo htmlspecialchars(site_switch_language_url('en'), ENT_QUOTES, 'UTF-8'); ?>" class="<?php echo site_language() === 'en' ? 'active' : ''; ?>"><?php echo t('lang_en'); ?></a>
-                <span>/</span>
-                <a href="<?php echo htmlspecialchars(site_switch_language_url('ar'), ENT_QUOTES, 'UTF-8'); ?>" class="<?php echo site_language() === 'ar' ? 'active' : ''; ?>"><?php echo t('lang_ar'); ?></a>
+                <?php
+                $admin_login_language_url = site_language() === 'ar' ? site_switch_language_url('en') : site_switch_language_url('ar');
+                $admin_login_language_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
+                ?>
+                <a href="<?php echo htmlspecialchars($admin_login_language_url, ENT_QUOTES, 'UTF-8'); ?>" class="active"><?php echo htmlspecialchars($admin_login_language_label, ENT_QUOTES, 'UTF-8'); ?></a>
             </div>
             <h2 class="section-title"><?php echo t('admin_login_heading'); ?></h2>
 
