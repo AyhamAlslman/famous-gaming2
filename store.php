@@ -2,7 +2,7 @@
 include 'includes/config.php';
 require_once 'includes/functions.php';
 
-$page_title = 'Store - FAMOUS GAMING';
+$page_title = t('store_page_title');
 $allowed_categories = [
     'PlayStation Consoles',
     'Controllers',
@@ -45,9 +45,9 @@ include 'includes/header.php';
     <div class="container">
         <div class="store-hero-shell">
             <div class="store-hero-copy store-hero-copy-centered">
-                <span class="store-eyebrow">Gaming Store</span>
-                <h1>Premium PlayStation Gear for Every Setup</h1>
-                <p>Discover consoles, controllers, games, covers, and essential accessories curated for a modern gaming center experience.</p>
+                <span class="store-eyebrow"><?php echo t('store_eyebrow'); ?></span>
+                <h1><?php echo t('store_hero_title'); ?></h1>
+                <p><?php echo t('store_hero_text'); ?></p>
             </div>
         </div>
     </div>
@@ -57,18 +57,18 @@ include 'includes/header.php';
     <div class="container">
         <div class="store-toolbar">
             <div>
-                <h2 class="section-title store-section-title">Explore The Store</h2>
-                <p class="store-toolbar-text">Filter by category and browse the latest products available at FAMOUS GAMING.</p>
+                <h2 class="section-title store-section-title"><?php echo t('store_section_title'); ?></h2>
+                <p class="store-toolbar-text"><?php echo t('store_toolbar_text'); ?></p>
             </div>
             <div class="store-filter-chips" id="storeFilterChips">
-                <a href="store.php" class="store-filter-chip <?php echo $selected_category === '' ? 'active' : ''; ?>" data-store-filter="all">All Products</a>
+                <a href="store.php" class="store-filter-chip <?php echo $selected_category === '' ? 'active' : ''; ?>" data-store-filter="all"><?php echo t('store_all_products'); ?></a>
                 <?php foreach ($allowed_categories as $category): ?>
                     <a
                         href="store.php?category=<?php echo urlencode($category); ?>"
                         class="store-filter-chip <?php echo $selected_category === $category ? 'active' : ''; ?>"
                         data-store-filter="<?php echo htmlspecialchars($category, ENT_QUOTES, 'UTF-8'); ?>"
                     >
-                        <?php echo htmlspecialchars($category); ?>
+                        <?php echo htmlspecialchars(translated_category_label($category)); ?>
                     </a>
                 <?php endforeach; ?>
             </div>
@@ -76,13 +76,13 @@ include 'includes/header.php';
 
         <?php if (!$store_ready): ?>
             <div class="store-empty-state">
-                <h3>Store setup is not ready yet</h3>
-                <p>Run the updated database schema to create the new <code>store_products</code> table and publish products here.</p>
+                <h3><?php echo t('store_setup_missing'); ?></h3>
+                <p><?php echo t('store_setup_missing_text'); ?></p>
             </div>
         <?php elseif (empty($products)): ?>
             <div class="store-empty-state">
-                <h3>No products found</h3>
-                <p>There are no active products in this category right now. Try another filter or add items from the admin panel.</p>
+                <h3><?php echo t('store_no_products'); ?></h3>
+                <p><?php echo t('store_no_products_text'); ?></p>
             </div>
         <?php else: ?>
             <div class="store-layout">
@@ -92,7 +92,7 @@ include 'includes/header.php';
                             <?php
                             $has_image = !empty($product['image_path']) && file_exists(__DIR__ . '/' . $product['image_path']);
                             $is_in_stock = ((int)$product['stock_quantity'] > 0);
-                            $stock_label = !$is_in_stock ? 'Out of Stock' : (((int)$product['stock_quantity'] <= 5) ? 'Limited Stock' : 'In Stock');
+                            $stock_label = !$is_in_stock ? t('store_stock_out') : (((int)$product['stock_quantity'] <= 5) ? t('store_stock_limited') : t('store_stock_in'));
                             $stock_class = !$is_in_stock ? 'store-stock-out' : (((int)$product['stock_quantity'] <= 5) ? 'store-stock-limited' : 'store-stock-in');
                             ?>
                             <div class="col-12 col-md-6 col-xl-4" data-store-card data-store-category="<?php echo htmlspecialchars($product['category'], ENT_QUOTES, 'UTF-8'); ?>">
@@ -104,13 +104,13 @@ include 'includes/header.php';
                                     data-card-modal-trigger
                                     data-product-id="<?php echo (int) $product['id']; ?>"
                                     data-product-name="<?php echo htmlspecialchars($product['product_name'], ENT_QUOTES, 'UTF-8'); ?>"
-                                    data-product-type="<?php echo htmlspecialchars($product['category'], ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-product-type="<?php echo htmlspecialchars(translated_category_label($product['category']), ENT_QUOTES, 'UTF-8'); ?>"
                                     data-product-description="<?php echo htmlspecialchars($product['description'], ENT_QUOTES, 'UTF-8'); ?>"
                                     data-product-price="<?php echo number_format((float) $product['price'], 2, '.', ''); ?>"
                                     data-product-stock="<?php echo (int) $product['stock_quantity']; ?>"
                                     data-product-image="<?php echo $has_image ? htmlspecialchars($product['image_path'], ENT_QUOTES, 'UTF-8') : ''; ?>"
                                     data-card-title="<?php echo htmlspecialchars($product['product_name'], ENT_QUOTES, 'UTF-8'); ?>"
-                                    data-card-type="<?php echo htmlspecialchars($product['category'], ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-card-type="<?php echo htmlspecialchars(translated_category_label($product['category']), ENT_QUOTES, 'UTF-8'); ?>"
                                     data-card-description="<?php echo htmlspecialchars($product['description'], ENT_QUOTES, 'UTF-8'); ?>"
                                 >
                                     <div class="store-product-media" data-card-media>
@@ -121,13 +121,13 @@ include 'includes/header.php';
                                                 <span>FG</span>
                                             </div>
                                         <?php endif; ?>
-                                        <span class="store-category-badge"><?php echo htmlspecialchars($product['category']); ?></span>
+                                        <span class="store-category-badge"><?php echo htmlspecialchars(translated_category_label($product['category'])); ?></span>
                                     </div>
 
                                     <div class="store-product-body">
                                         <div class="store-product-meta">
                                             <span class="store-stock-badge <?php echo $stock_class; ?>" data-card-extra><?php echo $stock_label; ?></span>
-                                            <span class="store-stock-qty" data-card-extra><?php echo (int)$product['stock_quantity']; ?> in stock</span>
+                                            <span class="store-stock-qty" data-card-extra><?php echo t('store_in_stock_suffix', ['count' => (int)$product['stock_quantity']]); ?></span>
                                         </div>
                                         <h3><?php echo htmlspecialchars($product['product_name']); ?></h3>
                                         <p><?php echo htmlspecialchars($product['description']); ?></p>
@@ -139,7 +139,7 @@ include 'includes/header.php';
                                                 data-store-add
                                                 <?php echo !$is_in_stock ? 'disabled' : ''; ?>
                                             >
-                                                <?php echo $is_in_stock ? 'Add to Basket' : 'Unavailable'; ?>
+                                                <?php echo $is_in_stock ? t('store_add_to_basket') : t('store_unavailable'); ?>
                                             </button>
                                         </div>
                                     </div>
@@ -148,8 +148,8 @@ include 'includes/header.php';
                         <?php endforeach; ?>
                     </div>
                     <div class="store-empty-state store-empty-state-filtered" id="storeFilteredEmptyState" hidden>
-                        <h3>No products found</h3>
-                        <p>There are no active products in this category right now. Try another filter to keep browsing.</p>
+                        <h3><?php echo t('store_no_products'); ?></h3>
+                        <p><?php echo t('store_no_filtered_products_text'); ?></p>
                     </div>
                 </div>
 
@@ -157,34 +157,34 @@ include 'includes/header.php';
                     <div class="store-basket-card">
                         <div class="store-basket-header">
                             <div>
-                                <span class="store-basket-eyebrow">Basket</span>
-                                <h3>Your Store Picks</h3>
+                                <span class="store-basket-eyebrow"><?php echo t('store_basket'); ?></span>
+                                <h3><?php echo t('store_basket_title'); ?></h3>
                             </div>
-                            <span class="store-basket-count" id="storeBasketCount">0 items</span>
+                            <span class="store-basket-count" id="storeBasketCount"><?php echo t('store_basket_items', ['count' => 0]); ?></span>
                         </div>
 
                         <div class="store-basket-summary">
                             <div class="store-basket-summary-item">
-                                <span>Items</span>
+                                <span><?php echo t('store_basket_summary_items'); ?></span>
                                 <strong id="storeBasketItemsCount">0</strong>
                             </div>
                             <div class="store-basket-summary-item">
-                                <span>Subtotal</span>
+                                <span><?php echo t('store_basket_summary_subtotal'); ?></span>
                                 <strong id="storeBasketSubtotal">0.00 JOD</strong>
                             </div>
                         </div>
 
                         <div class="store-basket-body" id="storeBasketItems">
                             <div class="store-basket-empty">
-                                <h4>Your basket is empty</h4>
-                                <p>Add products from the cards to start building your gaming setup.</p>
+                                <h4><?php echo t('store_basket_empty_title'); ?></h4>
+                                <p><?php echo t('store_basket_empty_text'); ?></p>
                             </div>
                         </div>
 
                         <div class="store-basket-footer">
-                            <p class="store-basket-note">Your basket stays on this device so you can keep browsing without losing your picks.</p>
+                            <p class="store-basket-note"><?php echo t('store_basket_note'); ?></p>
                             <div class="store-basket-actions">
-                                <button type="button" class="btn store-basket-clear-btn" id="storeBasketClearBtn">Clear Basket</button>
+                                <button type="button" class="btn store-basket-clear-btn" id="storeBasketClearBtn"><?php echo t('store_clear_basket'); ?></button>
                             </div>
                         </div>
                     </div>
@@ -198,7 +198,7 @@ include 'includes/header.php';
 <div class="card-detail-modal" id="cardDetailModal" hidden>
     <div class="card-detail-backdrop" data-card-modal-close></div>
     <div class="card-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="cardDetailModalTitle">
-        <button type="button" class="card-detail-close" aria-label="Close details" data-card-modal-close>&times;</button>
+        <button type="button" class="card-detail-close" aria-label="<?php echo htmlspecialchars(t('store_close_details'), ENT_QUOTES, 'UTF-8'); ?>" data-card-modal-close>&times;</button>
         <div class="card-detail-layout">
             <div class="card-detail-media-shell" id="cardDetailModalMedia"></div>
             <div class="card-detail-copy">
@@ -208,17 +208,30 @@ include 'includes/header.php';
                 <div class="card-detail-meta" id="cardDetailModalMeta"></div>
                 <ul class="card-detail-list" id="cardDetailModalList"></ul>
                 <div class="card-detail-actions">
-                    <button type="button" class="btn store-add-btn card-detail-add-btn" id="cardDetailAddBtn">Add to Basket</button>
+                    <button type="button" class="btn store-add-btn card-detail-add-btn" id="cardDetailAddBtn"><?php echo t('store_add_to_basket'); ?></button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 <div class="store-basket-toast" id="storeBasketToast" hidden>
-    <span id="storeBasketToastText">Added to basket</span>
+    <span id="storeBasketToastText"><?php echo t('store_added_to_basket'); ?></span>
 </div>
 <script>
     (function () {
+        const storeTexts = <?php echo json_encode([
+            'addToBasket' => t('store_add_to_basket'),
+            'unavailable' => t('store_unavailable'),
+            'addedToBasket' => t('store_added_to_basket'),
+            'maxStockReached' => t('store_max_stock_reached'),
+            'basketCleared' => t('store_basket_cleared'),
+            'basketEmptyTitle' => t('store_basket_empty_title'),
+            'basketEmptyText' => t('store_basket_empty_text'),
+            'basketItem' => t('store_basket_item'),
+            'basketItems' => t('store_basket_items'),
+            'removeItem' => t('store_remove_item'),
+            'bookedOut' => t('booking_slot_booked')
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
         const filterContainer = document.getElementById('storeFilterChips');
         const cards = Array.from(document.querySelectorAll('[data-store-card]'));
         const filteredEmptyState = document.getElementById('storeFilteredEmptyState');
@@ -293,6 +306,12 @@ include 'includes/header.php';
             return Number(value).toFixed(2) + ' JOD';
         }
 
+        function replaceText(template, replacements) {
+            return Object.keys(replacements).reduce(function (result, key) {
+                return result.replace(':' + key, replacements[key]);
+            }, template);
+        }
+
         function escapeHtml(value) {
             return String(value).replace(/[&<>"']/g, function (character) {
                 const entities = {
@@ -334,13 +353,13 @@ include 'includes/header.php';
 
             if (!product || product.stock <= 0) {
                 modalAddButton.disabled = true;
-                modalAddButton.textContent = 'Unavailable';
+                modalAddButton.textContent = storeTexts.unavailable;
                 modalAddButton.dataset.productId = '';
                 return;
             }
 
             modalAddButton.disabled = false;
-            modalAddButton.textContent = 'Add to Basket';
+            modalAddButton.textContent = storeTexts.addToBasket;
             modalAddButton.dataset.productId = String(productId);
         }
 
@@ -358,13 +377,15 @@ include 'includes/header.php';
                 return product ? sum + (product.price * item.quantity) : sum;
             }, 0);
 
-            basketCount.textContent = totalItems + (totalItems === 1 ? ' item' : ' items');
+            basketCount.textContent = replaceText(totalItems === 1 ? storeTexts.basketItem : storeTexts.basketItems, {
+                count: String(totalItems)
+            });
             basketItemsCount.textContent = String(totalItems);
             basketSubtotal.textContent = formatCurrency(subtotalValue);
             basketClearBtn.disabled = totalItems === 0;
 
             if (totalItems === 0) {
-                basketItems.innerHTML = '<div class="store-basket-empty"><h4>Your basket is empty</h4><p>Add products from the cards to start building your gaming setup.</p></div>';
+                basketItems.innerHTML = '<div class="store-basket-empty"><h4>' + escapeHtml(storeTexts.basketEmptyTitle) + '</h4><p>' + escapeHtml(storeTexts.basketEmptyText) + '</p></div>';
                 return;
             }
 
@@ -394,7 +415,7 @@ include 'includes/header.php';
                                 '</div>' +
                             '</div>' +
                         '</div>' +
-                        '<button type="button" class="store-basket-remove-btn" data-basket-remove="' + product.id + '" aria-label="Remove ' + escapeHtml(product.name) + '">&times;</button>' +
+                        '<button type="button" class="store-basket-remove-btn" data-basket-remove="' + product.id + '" aria-label="' + escapeHtml(replaceText(storeTexts.removeItem, { name: product.name })) + '">&times;</button>' +
                     '</div>';
             }).join('');
         }
@@ -441,12 +462,12 @@ include 'includes/header.php';
             const nextQuantity = (currentItem ? currentItem.quantity : 0) + 1;
 
             if (nextQuantity > product.stock) {
-                showToast('Maximum stock reached for ' + product.name);
+                showToast(replaceText(storeTexts.maxStockReached, { name: product.name }));
                 return;
             }
 
             changeQuantity(productId, nextQuantity);
-            showToast(product.name + ' added to basket');
+            showToast(product.name + ' - ' + storeTexts.addedToBasket);
         }
 
         function applyFilter(filterValue) {
@@ -614,7 +635,7 @@ include 'includes/header.php';
                 cart = [];
                 saveCart();
                 renderCart();
-                showToast('Basket cleared');
+                showToast(storeTexts.basketCleared);
             });
         }
 

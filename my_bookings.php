@@ -2,7 +2,7 @@
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
-$page_title = 'My Bookings - FAMOUS GAMING';
+$page_title = t('my_bookings_page_title');
 $success_msg = '';
 $error_msg = '';
 
@@ -20,9 +20,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $updated = mysqli_stmt_affected_rows($stmt);
         mysqli_stmt_close($stmt);
 
-        $success_msg = $updated > 0 ? 'Booking cancelled successfully.' : 'This booking could not be cancelled.';
+        $success_msg = $updated > 0 ? t('my_bookings_cancel_success') : t('my_bookings_cancel_error');
     } elseif ($ticket_action === 'cancel') {
-        $error_msg = 'Your booking session was not found. Please make a new booking to see tickets here.';
+        $error_msg = t('my_bookings_session_missing');
     }
 
     $booking_lookup = strtoupper(sanitize_input($_POST['booking_lookup'] ?? ''));
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($ticket_action === 'cancel') {
         // Cancel action already handled above.
     } elseif (empty($booking_lookup) || empty($phone)) {
-        $error_msg = 'Please enter your booking ID and phone number.';
+        $error_msg = t('my_bookings_lookup_required');
     } else {
         $stmt = mysqli_prepare($conn, "SELECT id, customer_name, phone, customer_session_token FROM bookings WHERE (id = ? OR booking_code = ?) AND phone = ? LIMIT 1");
         mysqli_stmt_bind_param($stmt, "iss", $booking_id, $booking_lookup, $phone);
@@ -55,9 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['customer_booking_token'] = $customer_session_token;
             $_SESSION['customer_name'] = $booking['customer_name'];
             $_SESSION['customer_phone'] = $booking['phone'];
-            $success_msg = 'Booking found. You can show the ticket below at the shop.';
+            $success_msg = t('my_bookings_found');
         } else {
-            $error_msg = 'No booking was found for that booking ID and phone number.';
+            $error_msg = t('my_bookings_not_found');
         }
     }
 }
@@ -84,8 +84,8 @@ include 'includes/header.php';
 
 <section class="hero">
     <div class="container">
-        <h1>My Bookings</h1>
-        <p>Show your confirmed booking ticket at the shop</p>
+        <h1><?php echo t('my_bookings_hero_title'); ?></h1>
+        <p><?php echo t('my_bookings_hero_text'); ?></p>
     </div>
 </section>
 
@@ -107,61 +107,61 @@ include 'includes/header.php';
                          data-ticket-customer="<?php echo htmlspecialchars($booking['customer_name']); ?>"
                          data-ticket-device="<?php echo htmlspecialchars($booking['room_name'] . ' - ' . $booking['room_type']); ?>"
                          data-ticket-date="<?php echo htmlspecialchars(format_date($booking['booking_date'])); ?>"
-                         data-ticket-time="<?php echo htmlspecialchars(format_time($booking['start_time']) . ' for ' . (int)$booking['hours'] . ' hour' . ((int)$booking['hours'] === 1 ? '' : 's')); ?>"
-                         data-ticket-status="<?php echo htmlspecialchars($booking['status']); ?>">
+                         data-ticket-time="<?php echo htmlspecialchars(format_time($booking['start_time']) . ' - ' . translated_hours_label($booking['hours'])); ?>"
+                         data-ticket-status="<?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?>">
                         <div class="booking-ticket-header">
                             <div>
-                                <span class="ticket-label">Booking Ticket</span>
-                                <h2>Your reservation is ready</h2>
-                                <p>Please show this booking ID when you arrive.</p>
+                                <span class="ticket-label"><?php echo t('booking_ticket_label'); ?></span>
+                                <h2><?php echo t('booking_ticket_ready'); ?></h2>
+                                <p><?php echo t('booking_ticket_arrival'); ?></p>
                             </div>
-                            <span class="ticket-status status-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>"><?php echo htmlspecialchars($booking['status']); ?></span>
+                            <span class="ticket-status status-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>"><?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?></span>
                         </div>
 
                         <div class="booking-ticket-code">
-                            <span>Reservation Barcode</span>
-                            <div class="ticket-barcode" aria-label="Reservation barcode">
+                            <span><?php echo t('booking_barcode'); ?></span>
+                            <div class="ticket-barcode" aria-label="<?php echo htmlspecialchars(t('booking_barcode'), ENT_QUOTES, 'UTF-8'); ?>">
                                 <?php echo render_booking_barcode($booking['booking_code'] ?: $booking['id']); ?>
                             </div>
                         </div>
 
                         <div class="booking-ticket-grid">
                             <div>
-                                <span>Customer</span>
+                                <span><?php echo t('common_customer'); ?></span>
                                 <strong><?php echo htmlspecialchars($booking['customer_name']); ?></strong>
                             </div>
                             <div>
-                                <span>Device / Session</span>
+                                <span><?php echo t('booking_device_session'); ?></span>
                                 <strong><?php echo htmlspecialchars($booking['room_name']); ?> - <?php echo htmlspecialchars($booking['room_type']); ?></strong>
                             </div>
                             <div>
-                                <span>Date</span>
+                                <span><?php echo t('common_date'); ?></span>
                                 <strong><?php echo format_date($booking['booking_date']); ?></strong>
                             </div>
                             <div>
-                                <span>Time</span>
-                                <strong><?php echo format_time($booking['start_time']); ?> for <?php echo (int)$booking['hours']; ?> hour<?php echo (int)$booking['hours'] === 1 ? '' : 's'; ?></strong>
+                                <span><?php echo t('common_time'); ?></span>
+                                <strong><?php echo format_time($booking['start_time']); ?> - <?php echo translated_hours_label($booking['hours']); ?></strong>
                             </div>
                             <div>
-                                <span>Payment</span>
-                                <strong><?php echo htmlspecialchars($booking['payment_status'] ?? 'Unpaid'); ?></strong>
+                                <span><?php echo t('common_payment'); ?></span>
+                                <strong><?php echo htmlspecialchars(t('status_' . strtolower($booking['payment_status'] ?? 'Unpaid'), [], $booking['payment_status'] ?? 'Unpaid')); ?></strong>
                             </div>
                             <div>
-                                <span>Total</span>
+                                <span><?php echo t('common_total'); ?></span>
                                 <strong><?php echo number_format((float)($booking['final_total'] ?? $booking['total_price']), 2); ?> JOD</strong>
                             </div>
                         </div>
 
                         <div class="booking-ticket-actions">
-                            <button type="button" class="btn download-ticket-btn">Save Ticket Image</button>
+                            <button type="button" class="btn download-ticket-btn"><?php echo t('booking_save_ticket'); ?></button>
                             <?php if ($booking['status'] !== 'Cancelled' && ($booking['payment_status'] ?? 'Unpaid') !== 'Paid'): ?>
-                                <a href="payment.php?booking_id=<?php echo (int)$booking['id']; ?>" class="btn payment-checkout-btn">Simulate Payment</a>
+                                <a href="payment.php?booking_id=<?php echo (int)$booking['id']; ?>" class="btn payment-checkout-btn"><?php echo t('my_bookings_simulate_payment'); ?></a>
                             <?php endif; ?>
                             <?php if ($booking['status'] === 'Confirmed'): ?>
                                 <form method="POST" action="my_bookings.php" class="ticket-action-form">
                                     <input type="hidden" name="booking_id" value="<?php echo (int)$booking['id']; ?>">
                                     <input type="hidden" name="ticket_action" value="cancel">
-                                    <button type="submit" class="btn ticket-cancel-btn" onclick="return confirm('Cancel this booking?');">Cancel Booking</button>
+                                    <button type="submit" class="btn ticket-cancel-btn" onclick="return confirm('<?php echo htmlspecialchars(t('my_bookings_cancel_confirm'), ENT_QUOTES, 'UTF-8'); ?>');"><?php echo t('my_bookings_cancel'); ?></button>
                                 </form>
                             <?php endif; ?>
                         </div>
@@ -170,9 +170,9 @@ include 'includes/header.php';
             </div>
         <?php else: ?>
             <div class="empty-bookings">
-                <h2>No bookings in this session yet</h2>
-                <p>Book a gaming session to see your confirmed ticket here.</p>
-                <a href="booking.php" class="btn">Book Now</a>
+                <h2><?php echo t('my_bookings_empty_title'); ?></h2>
+                <p><?php echo t('my_bookings_empty_text'); ?></p>
+                <a href="booking.php" class="btn"><?php echo t('nav_book_now'); ?></a>
             </div>
         <?php endif; ?>
     </div>

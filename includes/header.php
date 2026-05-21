@@ -1,8 +1,10 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
+$switch_to_en = site_switch_language_url('en');
+$switch_to_ar = site_switch_language_url('ar');
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo htmlspecialchars(site_language(), ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars(site_direction(), ENT_QUOTES, 'UTF-8'); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +19,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link rel="icon" type="image/svg+xml" href="images/logo-mark.svg">
     <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
-<body>
+<body class="<?php echo site_is_rtl() ? 'rtl-layout' : ''; ?>">
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand logo" href="index.php">
@@ -56,14 +58,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto nav-menu">
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>" href="index.php">Home</a></li>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'about.php' ? 'active' : ''; ?>" href="about.php">About</a></li>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'services.php' ? 'active' : ''; ?>" href="services.php">Services</a></li>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' ? 'active' : ''; ?>" href="store.php">Store</a></li>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'booking.php' ? 'active' : ''; ?>" href="booking.php">Book Now</a></li>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'my_bookings.php' ? 'active' : ''; ?>" href="my_bookings.php">My Bookings</a></li>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'complaints.php' ? 'active' : ''; ?>" href="complaints.php">Feedback</a></li>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'contact.php' ? 'active' : ''; ?>" href="contact.php">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>" href="index.php"><?php echo t('nav_home'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'about.php' ? 'active' : ''; ?>" href="about.php"><?php echo t('nav_about'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'services.php' ? 'active' : ''; ?>" href="services.php"><?php echo t('nav_services'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' ? 'active' : ''; ?>" href="store.php"><?php echo t('nav_store'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'booking.php' ? 'active' : ''; ?>" href="booking.php"><?php echo t('nav_book_now'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'my_bookings.php' ? 'active' : ''; ?>" href="my_bookings.php"><?php echo t('nav_my_bookings'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'complaints.php' ? 'active' : ''; ?>" href="complaints.php"><?php echo t('nav_feedback'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'contact.php' ? 'active' : ''; ?>" href="contact.php"><?php echo t('nav_contact'); ?></a></li>
+                    <li class="nav-item nav-language-switcher">
+                        <a class="nav-link nav-language-link <?php echo site_language() === 'en' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($switch_to_en, ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('lang_en'); ?></a>
+                        <span class="nav-language-divider">/</span>
+                        <a class="nav-link nav-language-link <?php echo site_language() === 'ar' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($switch_to_ar, ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('lang_ar'); ?></a>
+                    </li>
                 </ul>
             </div>
         </div>

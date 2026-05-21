@@ -1,19 +1,19 @@
 <?php
 include 'includes/config.php';
-$page_title = 'Home - FAMOUS GAMING';
+$page_title = t('home_page_title');
 include 'includes/header.php';
 ?>
 
 <section class="hero">
     <div class="container">
-        <h1>Welcome to FAMOUS GAMING</h1>
-        <p>Experience Premium Gaming in Luxury</p>
-        <p>State-of-the-Art Consoles - VIP Rooms - Professional Service</p>
+        <h1><?php echo t('home_hero_title'); ?></h1>
+        <p><?php echo t('home_hero_line_1'); ?></p>
+        <p><?php echo t('home_hero_line_2'); ?></p>
     </div>
 </section>
 <section class="content">
     <div class="container">
-        <h2 class="section-title">Our Premium Rooms</h2>
+        <h2 class="section-title"><?php echo t('home_rooms_title'); ?></h2>
 
         <div class="row g-4 rooms-grid">
             <?php
@@ -37,15 +37,15 @@ include 'includes/header.php';
 
                         <h3><?= htmlspecialchars($room['room_name']) ?></h3>
                         <div class="room-type"><?= htmlspecialchars($room['room_type']) ?></div>
-                        <div class="room-price"><?= number_format($room['price_per_hour'], 2) ?> JOD/hr</div>
+                        <div class="room-price"><?= number_format($room['price_per_hour'], 2) ?> <?php echo t('home_room_price_suffix'); ?></div>
                         <div class="room-card-actions">
                             <?php if ($is_available): ?>
                                 <a href="booking.php?room_id=<?= (int)$room['id'] ?>#booking-form" class="btn btn-small room-book-btn">
-                                    Book Now
+                                    <?php echo t('home_book_room'); ?>
                                 </a>
                             <?php else: ?>
                                 <span class="btn btn-small room-book-btn room-book-btn-disabled" aria-disabled="true">
-                                    Booking Unavailable
+                                    <?php echo t('home_booking_unavailable'); ?>
                                 </span> 
                             <?php endif; ?>
                         </div>
@@ -55,7 +55,7 @@ include 'includes/header.php';
         </div>
 
         <div class="index-cta-container">
-            <a href="booking.php" class="btn">Book Your Experience</a>
+            <a href="booking.php" class="btn"><?php echo t('home_cta'); ?></a>
         </div>
     </div>
 </section>

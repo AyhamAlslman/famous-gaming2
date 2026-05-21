@@ -3,7 +3,7 @@
    Broadcast-Inspired Arena Lighting
    ======================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
 * {
     margin: 0;
@@ -292,6 +292,27 @@ body::before {
 
 .nav-menu {
     gap: 0.5rem;
+}
+
+.nav-language-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: 0.35rem;
+    padding: 0.2rem 0.35rem;
+    border: 1px solid rgba(137, 175, 255, 0.16);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.nav-language-switcher .nav-language-link {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.12rem;
+}
+
+.nav-language-divider {
+    color: rgba(209, 220, 240, 0.55);
+    font-weight: 700;
 }
 
 .nav-menu .nav-link {
@@ -1577,6 +1598,65 @@ table tr:last-child td,
     .controller-orb {
         animation: none;
     }
+}
+
+/* ========================================
+   LANGUAGE / RTL SUPPORT
+   ======================================== */
+
+body.rtl-layout {
+    direction: rtl;
+    font-family: 'Tajawal', 'Rajdhani', sans-serif;
+}
+
+.rtl-layout .navbar-brand.logo {
+    direction: ltr;
+}
+
+.rtl-layout .logo-word-gaming,
+.rtl-layout .logo-word-famous,
+.rtl-layout .nav-menu .nav-link,
+.rtl-layout .ticket-label,
+.rtl-layout .booking-ticket-code span,
+.rtl-layout .booking-ticket-grid span,
+.rtl-layout .checkout-summary-grid span,
+.rtl-layout .checkout-total-row span,
+.rtl-layout .checkout-item-row span {
+    letter-spacing: 0;
+}
+
+.rtl-layout .nav-language-switcher {
+    margin-left: 0;
+    margin-right: 0.35rem;
+}
+
+.rtl-layout .booking-ticket-header,
+.rtl-layout .booking-ticket-actions,
+.rtl-layout .checkout-panel-header,
+.rtl-layout .checkout-submit-row,
+.rtl-layout .checkout-total-row,
+.rtl-layout .checkout-item-row,
+.rtl-layout .store-basket-summary-item,
+.rtl-layout .store-basket-item-price-row,
+.rtl-layout .contact-hours-item {
+    direction: rtl;
+}
+
+.rtl-layout .form-control,
+.rtl-layout .form-select,
+.rtl-layout textarea,
+.rtl-layout input {
+    text-align: right;
+}
+
+.rtl-layout .hero,
+.rtl-layout .section-title,
+.rtl-layout .index-cta-container,
+.rtl-layout .about-cta-container,
+.rtl-layout .services-cta-container,
+.rtl-layout .contact-cta-container,
+.rtl-layout .store-hero-copy-centered {
+    text-align: center;
 }
 
 /* ========================================

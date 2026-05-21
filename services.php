@@ -1,20 +1,20 @@
 <?php
 include 'includes/config.php';
-$page_title = 'Services - FAMOUS GAMING';
+$page_title = t('services_page_title');
 include 'includes/header.php';
 ?>
 
 <section class="hero">
     <div class="container">
-        <h1>Premium Services</h1>
-        <p>Luxury Gaming Experience - Professional Hospitality - Exclusive Amenities</p>
+        <h1><?php echo t('services_hero_title'); ?></h1>
+        <p><?php echo t('services_hero_text'); ?></p>
     </div>
 </section>
 
 <section class="content">
     <div class="container">
         <div class="services-amenities-section">
-            <h2 class="section-title">Exclusive Amenities</h2>
+            <h2 class="section-title"><?php echo t('services_section_title'); ?></h2>
 
             <div class="row g-4 services-grid">
                 <div class="col-12 col-md-6 col-lg-4">
@@ -22,23 +22,23 @@ include 'includes/header.php';
                         class="service-card service-detail-card h-100"
                         role="button"
                         tabindex="0"
-                        aria-label="View details for Gaming Excellence"
+                        aria-label="<?php echo htmlspecialchars(t('services_gaming_title'), ENT_QUOTES, 'UTF-8'); ?>"
                         data-card-modal-trigger
-                        data-card-title="Gaming Excellence"
-                        data-card-type="Gaming Experience"
-                        data-card-description="A premium console setup built for competitive sessions, immersive visuals, and a polished in-room PlayStation experience."
+                        data-card-title="<?php echo htmlspecialchars(t('services_gaming_title'), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-card-type="<?php echo htmlspecialchars(t('services_gaming_type'), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-card-description="<?php echo htmlspecialchars(t('services_gaming_desc'), ENT_QUOTES, 'UTF-8'); ?>"
                     >
                         <div class="service-image" data-card-media>
-                            <img src="images/service-gaming.png" alt="Gaming Experience" class="img-fluid">
+                            <img src="images/service-gaming.png" alt="<?php echo htmlspecialchars(t('services_gaming_type'), ENT_QUOTES, 'UTF-8'); ?>" class="img-fluid">
                         </div>
                         <div class="service-card-content">
-                            <h3>Gaming Excellence</h3>
+                            <h3><?php echo t('services_gaming_title'); ?></h3>
                             <ul>
-                                <li data-card-detail-item>Latest PS4 &amp; PS5 Consoles</li>
-                                <li data-card-detail-item>Premium Game Library</li>
-                                <li data-card-detail-item>4K HDR Display Technology</li>
-                                <li data-card-detail-item>Professional Controllers</li>
-                                <li data-card-detail-item>VR Gaming Available</li>
+                                <li data-card-detail-item><?php echo t('services_gaming_item_1'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_gaming_item_2'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_gaming_item_3'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_gaming_item_4'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_gaming_item_5'); ?></li>
                             </ul>
                         </div>
                     </div>
@@ -49,23 +49,23 @@ include 'includes/header.php';
                         class="service-card service-detail-card h-100"
                         role="button"
                         tabindex="0"
-                        aria-label="View details for Premium Hospitality"
+                        aria-label="<?php echo htmlspecialchars(t('services_hospitality_title'), ENT_QUOTES, 'UTF-8'); ?>"
                         data-card-modal-trigger
-                        data-card-title="Premium Hospitality"
-                        data-card-type="Hospitality"
-                        data-card-description="Comfort-driven lounge service designed to keep every gaming session smooth, social, and well supported."
+                        data-card-title="<?php echo htmlspecialchars(t('services_hospitality_title'), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-card-type="<?php echo htmlspecialchars(t('services_hospitality_type'), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-card-description="<?php echo htmlspecialchars(t('services_hospitality_desc'), ENT_QUOTES, 'UTF-8'); ?>"
                     >
                         <div class="service-image" data-card-media>
-                            <img src="images/service-food.png" alt="Hospitality" class="img-fluid">
+                            <img src="images/service-food.png" alt="<?php echo htmlspecialchars(t('services_hospitality_type'), ENT_QUOTES, 'UTF-8'); ?>" class="img-fluid">
                         </div>
                         <div class="service-card-content">
-                            <h3>Premium Hospitality</h3>
+                            <h3><?php echo t('services_hospitality_title'); ?></h3>
                             <ul>
-                                <li data-card-detail-item>Gourmet Beverages</li>
-                                <li data-card-detail-item>Specialty Coffee Selection</li>
-                                <li data-card-detail-item>Premium Snacks</li>
-                                <li data-card-detail-item>Fresh Pizza &amp; Sandwiches</li>
-                                <li data-card-detail-item>In-Room Service</li>
+                                <li data-card-detail-item><?php echo t('services_hospitality_item_1'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_hospitality_item_2'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_hospitality_item_3'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_hospitality_item_4'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_hospitality_item_5'); ?></li>
                             </ul>
                         </div>
                     </div>
@@ -76,23 +76,23 @@ include 'includes/header.php';
                         class="service-card service-detail-card h-100"
                         role="button"
                         tabindex="0"
-                        aria-label="View details for Private Events"
+                        aria-label="<?php echo htmlspecialchars(t('services_events_title'), ENT_QUOTES, 'UTF-8'); ?>"
                         data-card-modal-trigger
-                        data-card-title="Private Events"
-                        data-card-type="Events"
-                        data-card-description="Tailored event experiences for birthdays, tournaments, and group sessions inside a premium gaming atmosphere."
+                        data-card-title="<?php echo htmlspecialchars(t('services_events_title'), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-card-type="<?php echo htmlspecialchars(t('services_events_type'), ENT_QUOTES, 'UTF-8'); ?>"
+                        data-card-description="<?php echo htmlspecialchars(t('services_events_desc'), ENT_QUOTES, 'UTF-8'); ?>"
                     >
                         <div class="service-image" data-card-media>
-                            <img src="images/service-event.png" alt="Events" class="img-fluid">
+                            <img src="images/service-event.png" alt="<?php echo htmlspecialchars(t('services_events_type'), ENT_QUOTES, 'UTF-8'); ?>" class="img-fluid">
                         </div>
                         <div class="service-card-content">
-                            <h3>Private Events</h3>
+                            <h3><?php echo t('services_events_title'); ?></h3>
                             <ul>
-                                <li data-card-detail-item>Luxury Birthday Packages</li>
-                                <li data-card-detail-item>Professional Tournaments</li>
-                                <li data-card-detail-item>Corporate Team Building</li>
-                                <li data-card-detail-item>Bespoke Decorations</li>
-                                <li data-card-detail-item>Exclusive Event Rates</li>
+                                <li data-card-detail-item><?php echo t('services_events_item_1'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_events_item_2'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_events_item_3'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_events_item_4'); ?></li>
+                                <li data-card-detail-item><?php echo t('services_events_item_5'); ?></li>
                             </ul>
                         </div>
                     </div>
@@ -101,41 +101,41 @@ include 'includes/header.php';
         </div>
 
         <div class="why-choose-us-container">
-            <h2 class="section-title why-choose-us-title">Why Choose Us</h2>
+            <h2 class="section-title why-choose-us-title"><?php echo t('services_why_title'); ?></h2>
             <div class="row g-4 why-choose-us-grid">
                 <div class="col-12 col-sm-6 col-lg-3">
                     <div class="why-choose-us-item">
                         <div class="why-choose-us-icon">⚡</div>
-                        <h4 class="why-choose-us-heading">Ultra-Fast Connectivity</h4>
-                        <p class="why-choose-us-description">Zero-latency fiber connection</p>
+                        <h4 class="why-choose-us-heading"><?php echo t('services_why_1_title'); ?></h4>
+                        <p class="why-choose-us-description"><?php echo t('services_why_1_text'); ?></p>
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-3">
                     <div class="why-choose-us-item">
                         <div class="why-choose-us-icon">🎯</div>
-                        <h4 class="why-choose-us-heading">Curated Collection</h4>
-                        <p class="why-choose-us-description">Weekly updated game library</p>
+                        <h4 class="why-choose-us-heading"><?php echo t('services_why_2_title'); ?></h4>
+                        <p class="why-choose-us-description"><?php echo t('services_why_2_text'); ?></p>
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-3">
                     <div class="why-choose-us-item">
                         <div class="why-choose-us-icon">🛋️</div>
-                        <h4 class="why-choose-us-heading">Luxury Environment</h4>
-                        <p class="why-choose-us-description">Designer furniture and acoustics</p>
+                        <h4 class="why-choose-us-heading"><?php echo t('services_why_3_title'); ?></h4>
+                        <p class="why-choose-us-description"><?php echo t('services_why_3_text'); ?></p>
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-lg-3">
                     <div class="why-choose-us-item">
                         <div class="why-choose-us-icon">🏆</div>
-                        <h4 class="why-choose-us-heading">Elite Competitions</h4>
-                        <p class="why-choose-us-description">Professional tournament hosting</p>
+                        <h4 class="why-choose-us-heading"><?php echo t('services_why_4_title'); ?></h4>
+                        <p class="why-choose-us-description"><?php echo t('services_why_4_text'); ?></p>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="services-cta-container">
-            <a href="booking.php" class="btn services-cta-btn">Reserve Your Experience</a>
+            <a href="booking.php" class="btn services-cta-btn"><?php echo t('services_cta'); ?></a>
         </div>
     </div>
 </section>
@@ -143,7 +143,7 @@ include 'includes/header.php';
 <div class="card-detail-modal" id="servicesCardDetailModal" hidden>
     <div class="card-detail-backdrop" data-card-modal-close></div>
     <div class="card-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="servicesCardDetailModalTitle">
-        <button type="button" class="card-detail-close" aria-label="Close details" data-card-modal-close>&times;</button>
+        <button type="button" class="card-detail-close" aria-label="<?php echo htmlspecialchars(t('services_close_details'), ENT_QUOTES, 'UTF-8'); ?>" data-card-modal-close>&times;</button>
         <div class="card-detail-layout">
             <div class="card-detail-media-shell" id="servicesCardDetailModalMedia"></div>
             <div class="card-detail-copy">

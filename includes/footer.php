@@ -1,7 +1,7 @@
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 FAMOUS GAMING - All Rights Reserved</p>
-            <p>The Best Gaming Experience in Town</p>
+            <p><?php echo t('footer_rights'); ?></p>
+            <p><?php echo t('footer_tagline'); ?></p>
         </div>
     </footer>
 

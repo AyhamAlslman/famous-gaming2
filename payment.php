@@ -36,8 +36,8 @@ function get_checkout_booking_items($conn, $booking_id) {
     return $items;
 }
 
-$page_title = 'Checkout Simulation - FAMOUS GAMING';
-$success_msg = isset($_GET['payment']) && $_GET['payment'] === 'success' ? 'Payment simulation successful' : '';
+$page_title = t('payment_page_title');
+$success_msg = isset($_GET['payment']) && $_GET['payment'] === 'success' ? t('payment_success') : '';
 $error_msg = '';
 $customer_session_token = $_SESSION['customer_booking_token'] ?? '';
 $booking_id = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : (isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0);
@@ -56,26 +56,26 @@ if ($booking_id > 0 && !empty($customer_session_token)) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$booking) {
-        $error_msg = 'This booking could not be loaded for checkout. Please open it from My Bookings.';
+        $error_msg = t('payment_booking_missing');
     } elseif (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
-        $error_msg = 'Your session expired. Please refresh the page and try again.';
+        $error_msg = t('payment_session_expired');
     } elseif ($booking['status'] === 'Cancelled') {
-        $error_msg = 'Cancelled bookings cannot be paid.';
+        $error_msg = t('payment_cancelled_error');
     } elseif (($booking['payment_status'] ?? 'Unpaid') === 'Paid') {
-        $success_msg = 'Payment simulation successful';
+        $success_msg = t('payment_success');
     } elseif (!in_array($selected_method, ['Cash', 'Visa', 'CliQ'], true)) {
-        $error_msg = 'Please select a valid payment method.';
+        $error_msg = t('payment_method_invalid');
     } else {
         if ($selected_method === 'Visa') {
             $card_number_digits = preg_replace('/\D+/', '', $card_number);
             $cvv_digits = preg_replace('/\D+/', '', $cvv);
 
             if (strlen($card_number_digits) < 13 || strlen($card_number_digits) > 19) {
-                $error_msg = 'Please enter a valid simulated card number.';
+                $error_msg = t('payment_card_invalid');
             } elseif (!preg_match('/^(0[1-9]|1[0-2])\/[0-9]{2}$/', $expiry_date)) {
-                $error_msg = 'Please enter the expiry date in MM/YY format.';
+                $error_msg = t('payment_expiry_invalid');
             } elseif (strlen($cvv_digits) < 3 || strlen($cvv_digits) > 4) {
-                $error_msg = 'Please enter a valid simulated CVV.';
+                $error_msg = t('payment_cvv_invalid');
             }
         }
 
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $error_msg = 'Payment simulation could not be completed. Please try again.';
+            $error_msg = t('payment_submit_error');
             mysqli_stmt_close($stmt);
         }
     }
@@ -125,8 +125,8 @@ include 'includes/header.php';
 
 <section class="hero">
     <div class="container">
-        <h1>Checkout Simulation</h1>
-        <p>Review your booking and complete a safe demo payment flow</p>
+        <h1><?php echo t('payment_hero_title'); ?></h1>
+        <p><?php echo t('payment_hero_text'); ?></p>
     </div>
 </section>
 
@@ -142,12 +142,12 @@ include 'includes/header.php';
 
         <?php if (!$booking): ?>
             <div class="booking-lookup-panel">
-                <span class="ticket-label">Checkout Access</span>
-                <h2>Booking not available for checkout</h2>
-                <p>Open this page from your booking confirmation or from My Bookings so we can verify your session.</p>
+                <span class="ticket-label"><?php echo t('payment_access'); ?></span>
+                <h2><?php echo t('payment_not_available_title'); ?></h2>
+                <p><?php echo t('payment_not_available_text'); ?></p>
                 <div class="booking-ticket-actions">
-                    <a href="my_bookings.php" class="btn">Go to My Bookings</a>
-                    <a href="booking.php" class="btn payment-secondary-btn">Make a New Booking</a>
+                    <a href="my_bookings.php" class="btn"><?php echo t('payment_go_to_bookings'); ?></a>
+                    <a href="booking.php" class="btn payment-secondary-btn"><?php echo t('payment_new_booking'); ?></a>
                 </div>
             </div>
         <?php else: ?>
@@ -155,48 +155,48 @@ include 'includes/header.php';
                 <div class="checkout-panel checkout-summary-panel">
                     <div class="checkout-panel-header">
                         <div>
-                            <span class="ticket-label">Booking Summary</span>
-                            <h2>Reservation #<?php echo htmlspecialchars($booking['booking_code'] ?: ('FG-' . str_pad($booking['id'], 6, '0', STR_PAD_LEFT))); ?></h2>
+                            <span class="ticket-label"><?php echo t('payment_summary'); ?></span>
+                            <h2><?php echo t('payment_reservation'); ?><?php echo htmlspecialchars($booking['booking_code'] ?: ('FG-' . str_pad($booking['id'], 6, '0', STR_PAD_LEFT))); ?></h2>
                         </div>
                         <span class="checkout-status-pill status-<?php echo strtolower(htmlspecialchars($booking['payment_status'] ?? 'unpaid')); ?>">
-                            <?php echo htmlspecialchars($booking['payment_status'] ?? 'Unpaid'); ?>
+                            <?php echo htmlspecialchars(t('status_' . strtolower($booking['payment_status'] ?? 'Unpaid'), [], $booking['payment_status'] ?? 'Unpaid')); ?>
                         </span>
                     </div>
 
                     <div class="checkout-summary-grid">
                         <div>
-                            <span>Customer</span>
+                            <span><?php echo t('common_customer'); ?></span>
                             <strong><?php echo htmlspecialchars($booking['customer_name']); ?></strong>
                         </div>
                         <div>
-                            <span>Phone</span>
+                            <span><?php echo t('common_phone'); ?></span>
                             <strong><?php echo htmlspecialchars($booking['phone']); ?></strong>
                         </div>
                         <div>
-                            <span>Room</span>
+                            <span><?php echo t('common_room'); ?></span>
                             <strong><?php echo htmlspecialchars($booking['room_name']); ?> - <?php echo htmlspecialchars($booking['room_type']); ?></strong>
                         </div>
                         <div>
-                            <span>Schedule</span>
+                            <span><?php echo t('common_schedule'); ?></span>
                             <strong><?php echo format_date($booking['booking_date']); ?>, <?php echo format_time($booking['start_time']); ?></strong>
                         </div>
                         <div>
-                            <span>Duration</span>
-                            <strong><?php echo (int)$booking['hours']; ?> hour<?php echo (int)$booking['hours'] === 1 ? '' : 's'; ?></strong>
+                            <span><?php echo t('common_duration'); ?></span>
+                            <strong><?php echo translated_hours_label($booking['hours']); ?></strong>
                         </div>
                         <div>
-                            <span>Booking Status</span>
-                            <strong><?php echo htmlspecialchars($booking['status']); ?></strong>
+                            <span><?php echo t('common_booking_status'); ?></span>
+                            <strong><?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?></strong>
                         </div>
                     </div>
 
                     <div class="checkout-total-card">
                         <div class="checkout-total-row">
-                            <span>Room Booking</span>
+                            <span><?php echo t('payment_room_booking'); ?></span>
                             <strong><?php echo number_format((float)$booking['total_price'], 2); ?> JOD</strong>
                         </div>
                         <div class="checkout-total-row">
-                            <span>Additional Items</span>
+                            <span><?php echo t('payment_additional_items'); ?></span>
                             <strong><?php echo number_format((float)$booking['additional_items_total'], 2); ?> JOD</strong>
                         </div>
 
@@ -212,7 +212,7 @@ include 'includes/header.php';
                         <?php endif; ?>
 
                         <div class="checkout-total-row checkout-total-row-final">
-                            <span>Total Due</span>
+                            <span><?php echo t('payment_total_due'); ?></span>
                             <strong><?php echo number_format($payable_total, 2); ?> JOD</strong>
                         </div>
                     </div>
@@ -221,29 +221,29 @@ include 'includes/header.php';
                 <div class="checkout-panel checkout-form-panel">
                     <div class="checkout-panel-header">
                         <div>
-                            <span class="ticket-label">Payment Method</span>
-                            <h2>Choose how to pay</h2>
+                            <span class="ticket-label"><?php echo t('payment_method_title'); ?></span>
+                            <h2><?php echo t('payment_choose_how'); ?></h2>
                         </div>
                     </div>
 
                     <p class="simulation-note">
-                        This is a payment simulation only. Any Visa details entered here stay on this website and are never sent to a real payment gateway.
+                        <?php echo t('payment_note'); ?>
                     </p>
 
                     <?php if (($booking['payment_status'] ?? 'Unpaid') === 'Paid'): ?>
                         <div class="payment-success-panel">
-                            <h3>Payment already completed</h3>
-                            <p>Your booking is already marked as paid with <?php echo htmlspecialchars($booking['payment_method'] ?: 'the selected method'); ?>.</p>
+                            <h3><?php echo t('payment_already_paid_title'); ?></h3>
+                            <p><?php echo t('payment_already_paid_text', ['method' => htmlspecialchars(t('payment_' . strtolower($booking['payment_method'] ?: ''), [], $booking['payment_method'] ?: t('payment_selected_method')))]); ?></p>
                             <div class="booking-ticket-actions">
-                                <a href="my_bookings.php" class="btn">Back to My Bookings</a>
+                                <a href="my_bookings.php" class="btn"><?php echo t('common_back_to_my_bookings'); ?></a>
                             </div>
                         </div>
                     <?php elseif ($booking['status'] === 'Cancelled'): ?>
                         <div class="payment-success-panel payment-blocked-panel">
-                            <h3>Payment unavailable</h3>
-                            <p>This booking has been cancelled, so checkout is no longer available.</p>
+                            <h3><?php echo t('payment_unavailable_title'); ?></h3>
+                            <p><?php echo t('payment_unavailable_text'); ?></p>
                             <div class="booking-ticket-actions">
-                                <a href="my_bookings.php" class="btn">Back to My Bookings</a>
+                                <a href="my_bookings.php" class="btn"><?php echo t('common_back_to_my_bookings'); ?></a>
                             </div>
                         </div>
                     <?php else: ?>
@@ -262,15 +262,15 @@ include 'includes/header.php';
                                             <?php echo $selected_method === $method ? 'checked' : ''; ?>
                                         >
                                         <span class="payment-method-card">
-                                            <strong><?php echo $method; ?></strong>
+                                            <strong><?php echo t('payment_' . strtolower($method), [], $method); ?></strong>
                                             <small>
                                                 <?php
                                                 if ($method === 'Cash') {
-                                                    echo 'Simple counter payment simulation';
+                                                    echo t('payment_cash_text');
                                                 } elseif ($method === 'Visa') {
-                                                    echo 'Demo card form with no real processing';
+                                                    echo t('payment_visa_text');
                                                 } else {
-                                                    echo 'Fast local wallet-style simulation';
+                                                    echo t('payment_cliq_text');
                                                 }
                                                 ?>
                                             </small>
@@ -283,19 +283,19 @@ include 'includes/header.php';
                                 <div class="row g-3">
                                     <div class="col-12">
                                         <div class="form-group">
-                                            <label class="form-label">Card Number</label>
+                                            <label class="form-label"><?php echo t('payment_card_number'); ?></label>
                                             <input type="text" name="card_number" id="card_number" class="form-control" maxlength="23" inputmode="numeric" placeholder="4242 4242 4242 4242" value="<?php echo htmlspecialchars($card_number); ?>">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label class="form-label">Expiry Date</label>
+                                            <label class="form-label"><?php echo t('payment_expiry'); ?></label>
                                             <input type="text" name="expiry_date" id="expiry_date" class="form-control" maxlength="5" placeholder="MM/YY" value="<?php echo htmlspecialchars($expiry_date); ?>">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label class="form-label">CVV</label>
+                                            <label class="form-label"><?php echo t('payment_cvv'); ?></label>
                                             <input type="password" name="cvv" id="cvv" class="form-control" maxlength="4" inputmode="numeric" placeholder="123" value="<?php echo htmlspecialchars($cvv); ?>">
                                         </div>
                                     </div>
@@ -304,9 +304,9 @@ include 'includes/header.php';
 
                             <div class="checkout-submit-row">
                                 <div class="checkout-amount-badge">
-                                    Total: <?php echo number_format($payable_total, 2); ?> JOD
+                                    <?php echo t('payment_total_prefix'); ?> <?php echo number_format($payable_total, 2); ?> JOD
                                 </div>
-                                <button type="submit" class="btn payment-submit-btn">Confirm Simulation</button>
+                                <button type="submit" class="btn payment-submit-btn"><?php echo t('payment_confirm'); ?></button>
                             </div>
                         </form>
                     <?php endif; ?>
