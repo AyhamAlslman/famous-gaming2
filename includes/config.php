@@ -1,5 +1,11 @@
 <?php
-$db_host = 'localhost:3307';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/lang.php';
+
+$db_host = 'localhost';
 $db_user = 'root';
 $db_pass = '';
 $db_name = 'playroom_db';
