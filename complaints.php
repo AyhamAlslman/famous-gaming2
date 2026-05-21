@@ -8,15 +8,15 @@ $success_msg = '';
 $error_msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $customer_name = mysqli_real_escape_string($conn, $_POST['customer_name']);
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $message = mysqli_real_escape_string($conn, $_POST['message']);
+    $customer_name = sanitize_input($_POST['customer_name'] ?? '');
+    $phone = sanitize_input($_POST['phone'] ?? '');
+    $message = sanitize_input($_POST['message'] ?? '');
 
     if (!empty($customer_name) && !empty($message)) {
-        $insert_query = "INSERT INTO complaints (customer_name, phone, message)
-                        VALUES ('$customer_name', '$phone', '$message')";
+        $stmt = mysqli_prepare($conn, "INSERT INTO complaints (customer_name, phone, message) VALUES (?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, "sss", $customer_name, $phone, $message);
 
-        if (mysqli_query($conn, $insert_query)) {
+        if (mysqli_stmt_execute($stmt)) {
             $complaint_id = mysqli_insert_id($conn);
             create_admin_notification(
                 $conn,
@@ -31,6 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             $error_msg = t('complaints_error');
         }
+
+        mysqli_stmt_close($stmt);
     } else {
         $error_msg = t('complaints_required');
     }

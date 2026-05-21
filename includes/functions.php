@@ -383,6 +383,172 @@ function ensure_booking_confirmation_schema($conn) {
         mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN customer_session_token VARCHAR(64) NULL AFTER phone");
         mysqli_query($conn, "ALTER TABLE bookings ADD INDEX idx_customer_session_token (customer_session_token)");
     }
+
+    if (!isset($columns['user_id'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN user_id INT NULL AFTER customer_session_token");
+        mysqli_query($conn, "ALTER TABLE bookings ADD INDEX idx_booking_user_id (user_id)");
+    }
+
+    if (!isset($columns['loyalty_points_earned'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN loyalty_points_earned INT NOT NULL DEFAULT 0 AFTER final_total");
+    }
+}
+
+/**
+ * Ensure customer accounts and loyalty storage exist.
+ */
+function ensure_user_auth_schema($conn) {
+    mysqli_query($conn, "CREATE TABLE IF NOT EXISTS site_users (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        full_name VARCHAR(120) NOT NULL,
+        email VARCHAR(150) NOT NULL UNIQUE,
+        phone VARCHAR(20) DEFAULT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(20) NOT NULL DEFAULT 'user',
+        loyalty_points INT NOT NULL DEFAULT 0,
+        status VARCHAR(20) NOT NULL DEFAULT 'Active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_site_users_role_status (role, status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    ensure_booking_confirmation_schema($conn);
+}
+
+/**
+ * Get the currently logged in site user, if any.
+ */
+function get_current_site_user($conn) {
+    ensure_user_auth_schema($conn);
+
+    $user_id = isset($_SESSION['site_user_id']) ? (int)$_SESSION['site_user_id'] : 0;
+    if ($user_id <= 0) {
+        return null;
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT id, full_name, email, phone, role, loyalty_points, status FROM site_users WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+
+    if (!$user || $user['status'] !== 'Active') {
+        unset($_SESSION['site_user_id'], $_SESSION['site_user_name'], $_SESSION['site_user_role']);
+        return null;
+    }
+
+    return $user;
+}
+
+function calculate_loyalty_points($amount) {
+    return max(1, (int)floor((float)$amount));
+}
+
+function award_loyalty_points($conn, $user_id, $booking_id, $amount) {
+    $user_id = (int)$user_id;
+    $booking_id = (int)$booking_id;
+
+    if ($user_id <= 0 || $booking_id <= 0) {
+        return 0;
+    }
+
+    $points = calculate_loyalty_points($amount);
+
+    $stmt = mysqli_prepare($conn, "UPDATE site_users SET loyalty_points = loyalty_points + ? WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "ii", $points, $user_id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    $stmt = mysqli_prepare($conn, "UPDATE bookings SET loyalty_points_earned = ? WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "ii", $points, $booking_id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    $_SESSION['site_user_loyalty_points'] = (int)($_SESSION['site_user_loyalty_points'] ?? 0) + $points;
+
+    return $points;
+}
+
+function get_current_business_status($conn) {
+    $today = date('Y-m-d');
+    $hours = get_business_hours($conn, $today);
+    $now = strtotime(date('H:i:s'));
+    $opening = strtotime($hours['opening_time']);
+    $closing = strtotime($hours['closing_time']);
+
+    if (empty($hours['is_open'])) {
+        return [
+            'state' => 'closed',
+            'label' => t('status_closed_now'),
+            'hint' => t('status_closed_hint')
+        ];
+    }
+
+    if ($now >= $opening && $now <= $closing) {
+        return [
+            'state' => 'open',
+            'label' => t('status_open_now'),
+            'hint' => t('status_open_until', ['time' => format_time($hours['closing_time'])])
+        ];
+    }
+
+    return [
+        'state' => 'closed',
+        'label' => t('status_closed_now'),
+        'hint' => t('status_opens_at', ['time' => format_time($hours['opening_time'])])
+    ];
+}
+
+function is_valid_luhn_number($number) {
+    $digits = preg_replace('/\D+/', '', (string)$number);
+    if ($digits === '' || strlen($digits) < 13 || strlen($digits) > 19) {
+        return false;
+    }
+
+    $sum = 0;
+    $alternate = false;
+
+    for ($i = strlen($digits) - 1; $i >= 0; $i--) {
+        $n = (int)$digits[$i];
+        if ($alternate) {
+            $n *= 2;
+            if ($n > 9) {
+                $n -= 9;
+            }
+        }
+
+        $sum += $n;
+        $alternate = !$alternate;
+    }
+
+    return $sum % 10 === 0;
+}
+
+function is_valid_future_expiry($expiry_date) {
+    if (!preg_match('/^(0[1-9]|1[0-2])\/([0-9]{2})$/', (string)$expiry_date, $matches)) {
+        return false;
+    }
+
+    $month = (int)$matches[1];
+    $year = 2000 + (int)$matches[2];
+    $expires_at = strtotime(sprintf('%04d-%02d-01 +1 month -1 day 23:59:59', $year, $month));
+
+    return $expires_at !== false && $expires_at >= time();
+}
+
+function safe_local_redirect($target, $fallback = 'index.php') {
+    $target = trim((string)$target);
+
+    if ($target === '' || preg_match('/^https?:\/\//i', $target) || str_contains($target, '..')) {
+        return $fallback;
+    }
+
+    if (!preg_match('/^[a-zA-Z0-9_\/.\-]+(\?[a-zA-Z0-9_=&%.\-]+)?(#[-a-zA-Z0-9_]+)?$/', $target)) {
+        return $fallback;
+    }
+
+    return $target;
 }
 
 /**

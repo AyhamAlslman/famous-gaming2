@@ -1478,3 +1478,179 @@ select:-webkit-autofill:focus {
         left: 0;
     }
 }
+
+/* 2026 admin refinement overrides */
+:root {
+    --admin-bg: #121c2b;
+    --admin-bg-alt: #172235;
+    --admin-surface: #1d2a3d;
+    --admin-surface-soft: #24344b;
+    --admin-text: #f5f8fc;
+    --admin-text-soft: #d8e4f2;
+    --admin-text-muted: #aebdd0;
+    --admin-border: rgba(142, 181, 214, 0.22);
+    --admin-border-strong: rgba(36, 184, 223, 0.3);
+    --admin-accent: #24b8df;
+    --admin-danger: #e54858;
+    --admin-success: #38d19a;
+}
+
+body,
+.admin-body {
+    font-family: 'Tajawal', 'Rajdhani', Arial, sans-serif;
+    background: linear-gradient(180deg, #172235 0%, #111a27 100%);
+    letter-spacing: 0;
+}
+
+body::before,
+.admin-body::before {
+    display: none;
+}
+
+.navbar {
+    background: rgba(23, 34, 53, 0.96);
+}
+
+.navbar .container {
+    align-items: center;
+    gap: 1.1rem;
+}
+
+.logo h2 {
+    letter-spacing: 0;
+    font-size: 1.1rem;
+}
+
+.nav-menu {
+    gap: 0.4rem;
+    flex: 1 1 auto;
+}
+
+.nav-menu a,
+.admin-language-link,
+.admin-notification-trigger {
+    min-height: 38px;
+    padding: 0.5rem 0.78rem;
+    border-radius: 8px;
+    letter-spacing: 0;
+}
+
+.admin-navbar-tools {
+    gap: 0.55rem;
+}
+
+.btn,
+.admin-btn {
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1aa9e5, #38d19a);
+    color: #06131d;
+}
+
+.btn-info,
+.admin-btn-info {
+    background: linear-gradient(135deg, #4c88ff, #24b8df);
+    color: #fff;
+}
+
+.btn-danger,
+.admin-btn-danger {
+    background: linear-gradient(135deg, #e54858, #ff776d);
+    color: #fff;
+}
+
+.btn-success,
+.admin-btn-success {
+    background: linear-gradient(135deg, #27bf86, #38d19a);
+    color: #06131d;
+}
+
+.btn-secondary,
+.admin-btn-secondary {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(142, 181, 214, 0.22);
+    color: var(--admin-text);
+}
+
+.admin-page-header,
+.page-header,
+.admin-card,
+.card,
+.form-container,
+.table-container,
+.modal-content,
+.admin-modal-content,
+.admin-stat-card,
+.stat-card {
+    border-radius: 8px;
+    background: rgba(29, 42, 61, 0.94);
+}
+
+table th {
+    letter-spacing: 0;
+    text-transform: none;
+    background: #22344f;
+}
+
+.admin-login-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+}
+
+.admin-confirm-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
+
+.admin-confirm-modal[hidden] {
+    display: none !important;
+}
+
+.admin-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(7, 13, 23, 0.76);
+    backdrop-filter: blur(10px);
+}
+
+.admin-confirm-dialog {
+    position: relative;
+    width: min(100%, 480px);
+    padding: 1.35rem;
+    border-radius: 8px;
+    border: 1px solid rgba(142, 181, 214, 0.26);
+    background: #1d2a3d;
+    box-shadow: 0 28px 80px rgba(3, 8, 14, 0.46);
+}
+
+.admin-confirm-dialog h3 {
+    color: #fff;
+    margin-bottom: 0.7rem;
+}
+
+.admin-confirm-dialog p {
+    color: var(--admin-text-soft);
+}
+
+.admin-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+body.admin-confirm-open {
+    overflow: hidden;
+}
+
+@media (max-width: 960px) {
+    .admin-navbar-tools {
+        margin-inline-start: 0;
+    }
+}

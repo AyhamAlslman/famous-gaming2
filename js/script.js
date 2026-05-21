@@ -1,4 +1,93 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const modalTexts = window.siteModalTexts || {
+        messageTitle: 'Message',
+        confirmTitle: 'Please confirm',
+        ok: 'Close',
+        yes: 'Yes',
+        no: 'No'
+    };
+    let siteConfirmCallback = null;
+
+    function ensureSiteModal() {
+        let modal = document.getElementById('siteMessageModal');
+
+        if (modal) {
+            return modal;
+        }
+
+        modal = document.createElement('div');
+        modal.id = 'siteMessageModal';
+        modal.className = 'site-modal';
+        modal.hidden = true;
+        modal.innerHTML = [
+            '<div class="site-modal-backdrop" data-site-modal-close></div>',
+            '<div class="site-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="siteMessageModalTitle">',
+            '<button type="button" class="site-modal-close" data-site-modal-close aria-label="' + modalTexts.ok + '">X</button>',
+            '<h3 id="siteMessageModalTitle"></h3>',
+            '<p id="siteMessageModalText"></p>',
+            '<div class="site-modal-actions">',
+            '<button type="button" class="btn payment-secondary-btn" data-site-modal-close data-site-modal-no>' + modalTexts.no + '</button>',
+            '<button type="button" class="btn" data-site-modal-close data-site-modal-ok>' + modalTexts.ok + '</button>',
+            '</div>',
+            '</div>'
+        ].join('');
+        document.body.appendChild(modal);
+
+        modal.querySelectorAll('[data-site-modal-close]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const isConfirmOk = button.hasAttribute('data-site-modal-ok') && modal.dataset.mode === 'confirm';
+                const callback = siteConfirmCallback;
+
+                modal.hidden = true;
+                document.body.classList.remove('site-modal-open');
+                siteConfirmCallback = null;
+
+                if (isConfirmOk && typeof callback === 'function') {
+                    callback();
+                }
+            });
+        });
+
+        return modal;
+    }
+
+    window.showSiteModal = function(options) {
+        const modal = ensureSiteModal();
+        const title = modal.querySelector('#siteMessageModalTitle');
+        const text = modal.querySelector('#siteMessageModalText');
+        const noButton = modal.querySelector('[data-site-modal-no]');
+        const okButton = modal.querySelector('[data-site-modal-ok]');
+
+        modal.dataset.mode = 'message';
+        modal.dataset.type = options && options.type ? options.type : 'info';
+        title.textContent = (options && options.title) || modalTexts.messageTitle;
+        text.textContent = (options && options.message) || '';
+        noButton.hidden = true;
+        okButton.textContent = modalTexts.ok;
+        modal.hidden = false;
+        document.body.classList.add('site-modal-open');
+        okButton.focus();
+    };
+
+    window.showSiteConfirm = function(message, onConfirm, title) {
+        const modal = ensureSiteModal();
+        const titleEl = modal.querySelector('#siteMessageModalTitle');
+        const text = modal.querySelector('#siteMessageModalText');
+        const noButton = modal.querySelector('[data-site-modal-no]');
+        const okButton = modal.querySelector('[data-site-modal-ok]');
+
+        modal.dataset.mode = 'confirm';
+        modal.dataset.type = 'warning';
+        titleEl.textContent = title || modalTexts.confirmTitle;
+        text.textContent = message || modalTexts.confirmTitle;
+        noButton.hidden = false;
+        okButton.textContent = modalTexts.yes;
+        siteConfirmCallback = onConfirm;
+        modal.hidden = false;
+        document.body.classList.add('site-modal-open');
+        okButton.focus();
+    };
+
     const phoneInputs = document.querySelectorAll('input[name="phone"]');
     phoneInputs.forEach(function(input) {
         const error = document.createElement('small');
@@ -84,21 +173,50 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteLinks = document.querySelectorAll('a[href*="delete"]');
     deleteLinks.forEach(function(link) {
         link.addEventListener('click', function(e) {
-            if (!confirm('Are you sure you want to delete?')) {
-                e.preventDefault();
-            }
+            e.preventDefault();
+            window.showSiteConfirm(link.dataset.confirmMessage || modalTexts.confirmTitle, function() {
+                window.location.href = link.href;
+            });
         });
     });
 
     const messages = document.querySelectorAll('.message');
     messages.forEach(function(message) {
-        setTimeout(function() {
-            message.style.transition = 'opacity 0.5s';
-            message.style.opacity = '0';
-            setTimeout(function() {
-                message.style.display = 'none';
-            }, 500);
-        }, 5000);
+        const text = message.innerText.trim();
+        const isError = message.classList.contains('error') || message.classList.contains('alert-danger');
+        const isSuccess = message.classList.contains('success') || message.classList.contains('alert-success');
+
+        if (text) {
+            window.showSiteModal({
+                title: modalTexts.messageTitle,
+                message: text,
+                type: isError ? 'error' : (isSuccess ? 'success' : 'info')
+            });
+            message.hidden = true;
+        }
+    });
+
+    document.querySelectorAll('a[data-confirm-message]').forEach(function(link) {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            window.showSiteConfirm(link.dataset.confirmMessage, function() {
+                window.location.href = link.href;
+            }, link.dataset.confirmTitle);
+        });
+    });
+
+    document.querySelectorAll('form[data-confirm-message]').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (form.dataset.confirmed === '1') {
+                return;
+            }
+
+            event.preventDefault();
+            window.showSiteConfirm(form.dataset.confirmMessage, function() {
+                form.dataset.confirmed = '1';
+                form.submit();
+            }, form.dataset.confirmTitle);
+        });
     });
 
     const dateInput = document.querySelector('input[name="booking_date"]');
@@ -109,7 +227,11 @@ document.addEventListener('DOMContentLoaded', function() {
             today.setHours(0, 0, 0, 0);
 
             if (selectedDate < today) {
-                alert('Cannot book for past dates');
+                window.showSiteModal({
+                    title: modalTexts.messageTitle,
+                    message: 'Cannot book for past dates',
+                    type: 'error'
+                });
                 this.value = '';
             }
         });
@@ -159,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const controls = document.createElement('div');
         controls.className = 'number-input-controls';
-        controls.innerHTML = '<button type="button" class="number-stepper" aria-label="Increase value">▲</button><button type="button" class="number-stepper" aria-label="Decrease value">▼</button>';
+        controls.innerHTML = '<button type="button" class="number-stepper" aria-label="Increase value">+</button><button type="button" class="number-stepper" aria-label="Decrease value">-</button>';
         wrapper.appendChild(controls);
 
         const buttons = controls.querySelectorAll('button');

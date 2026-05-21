@@ -14,7 +14,7 @@ $switch_to_ar = site_switch_language_url('ar');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?><?php echo t('admin_panel_title'); ?></title>
-    <link rel="stylesheet" href="css/admin.css?v=2.1">
+    <link rel="stylesheet" href="css/admin.css?v=2.2">
 
     <link rel="icon" type="image/x-icon" href="../images/favicon.png">
 </head>
@@ -35,7 +35,7 @@ $switch_to_ar = site_switch_language_url('ar');
                 <li><a href="employees.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'employees.php') ? 'class="active"' : ''; ?>><?php echo t('admin_nav_employees'); ?></a></li>
                 <?php endif; ?>
                 <li><a href="complaints_full_crud.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'complaints_full_crud.php') ? 'class="active"' : ''; ?>><?php echo t('admin_nav_complaints'); ?></a></li>
-                <li><a href="logout.php"><?php echo t('admin_nav_logout'); ?></a></li>
+                <li><a href="logout.php" data-admin-confirm-message="<?php echo htmlspecialchars(t('admin_logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-admin-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('admin_nav_logout'); ?></a></li>
             </ul>
             <div class="admin-navbar-tools">
                 <div class="admin-notification-nav">

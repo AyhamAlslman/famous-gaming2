@@ -2,14 +2,31 @@
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
-$page_title = t('booking_page_title');
-include 'includes/header.php';
-
 $success_msg = '';
 $error_msg = '';
 $confirmed_booking = null;
 $preselected_room_id = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
-ensure_booking_confirmation_schema($conn);
+ensure_user_auth_schema($conn);
+$current_site_user = get_current_site_user($conn);
+$loyalty_points_earned = 0;
+
+if (!$current_site_user) {
+    $_SESSION['post_login_redirect'] = 'booking.php';
+    header('Location: login.php?redirect=booking.php');
+    exit;
+}
+
+$available_menu_items = [];
+$menu_result = mysqli_query($conn, "SELECT id, item_name, item_category, item_price, item_description FROM menu_items WHERE is_available = 1 AND item_category IN ('Drinks', 'Snacks') ORDER BY item_category, item_name");
+if ($menu_result) {
+    $available_menu_items = mysqli_fetch_all($menu_result, MYSQLI_ASSOC);
+}
+
+$booking_rooms = [];
+$booking_rooms_result = mysqli_query($conn, "SELECT * FROM rooms WHERE status = 'Available' ORDER BY room_name ASC");
+if ($booking_rooms_result) {
+    $booking_rooms = mysqli_fetch_all($booking_rooms_result, MYSQLI_ASSOC);
+}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Sanitize inputs
@@ -21,6 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $start_time = sanitize_input($_POST['start_time']);
     $hours = intval($_POST['hours']);
     $notes = sanitize_input($_POST['notes']);
+    $selected_menu_quantities = isset($_POST['menu_items']) && is_array($_POST['menu_items']) ? $_POST['menu_items'] : [];
+    $selected_menu_items = [];
+    $addons_total = 0.0;
 
     // Validate inputs
     $validation_errors = [];
@@ -89,21 +109,65 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $error_msg .= implode('<br>', $conflict_times);
                     $error_msg .= '<br>' . t('booking_conflict_outro');
                 } else {
+                    $menu_ids = [];
+                    foreach ($selected_menu_quantities as $menu_item_id => $quantity) {
+                        $menu_item_id = (int)$menu_item_id;
+                        $quantity = max(0, min(20, (int)$quantity));
+
+                        if ($menu_item_id > 0 && $quantity > 0) {
+                            $menu_ids[$menu_item_id] = $quantity;
+                        }
+                    }
+
+                    if (!empty($menu_ids)) {
+                        $item_id_list = implode(',', array_map('intval', array_keys($menu_ids)));
+                        $item_result = mysqli_query($conn, "SELECT id, item_name, item_price FROM menu_items WHERE is_available = 1 AND item_category IN ('Drinks', 'Snacks') AND id IN ($item_id_list)");
+
+                        while ($item_result && ($item = mysqli_fetch_assoc($item_result))) {
+                            $quantity = $menu_ids[(int)$item['id']];
+                            $line_total = (float)$item['item_price'] * $quantity;
+                            $addons_total += $line_total;
+                            $selected_menu_items[] = [
+                                'id' => (int)$item['id'],
+                                'quantity' => $quantity,
+                                'price' => (float)$item['item_price']
+                            ];
+                        }
+                    }
+
                     // Calculate total price
                     $total_price = $room['price_per_hour'] * $hours;
+                    $final_total = $total_price + $addons_total;
                     $booking_code = generate_booking_code();
                     $customer_session_token = get_customer_session_token();
+                    $site_user_id = $current_site_user ? (int)$current_site_user['id'] : null;
                     $_SESSION['customer_booking_token'] = $customer_session_token;
                     $_SESSION['customer_name'] = $customer_name;
                     $_SESSION['customer_phone'] = $phone;
 
                     // Insert booking using prepared statement
-                    $stmt = mysqli_prepare($conn, "INSERT INTO bookings (booking_code, customer_name, phone, customer_session_token, room_id, booking_date, start_time, hours, total_price, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Confirmed', ?)");
+                    $stmt = mysqli_prepare($conn, "INSERT INTO bookings (booking_code, customer_name, phone, customer_session_token, user_id, room_id, booking_date, start_time, hours, total_price, additional_items_total, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Confirmed', ?)");
 
-                    mysqli_stmt_bind_param($stmt, "ssssissids", $booking_code, $customer_name, $phone, $customer_session_token, $room_id, $booking_date, $start_time, $hours, $total_price, $notes);
+                    mysqli_stmt_bind_param($stmt, "ssssiissidds", $booking_code, $customer_name, $phone, $customer_session_token, $site_user_id, $room_id, $booking_date, $start_time, $hours, $total_price, $addons_total, $notes);
 
                     if (mysqli_stmt_execute($stmt)) {
                         $booking_id = mysqli_insert_id($conn);
+
+                        if (!empty($selected_menu_items)) {
+                            $booking_item_stmt = mysqli_prepare($conn, "INSERT INTO booking_items (booking_id, menu_item_id, quantity, item_price) VALUES (?, ?, ?, ?)");
+
+                            foreach ($selected_menu_items as $selected_item) {
+                                mysqli_stmt_bind_param($booking_item_stmt, "iiid", $booking_id, $selected_item['id'], $selected_item['quantity'], $selected_item['price']);
+                                mysqli_stmt_execute($booking_item_stmt);
+                            }
+
+                            mysqli_stmt_close($booking_item_stmt);
+                        }
+
+                        if ($current_site_user) {
+                            $loyalty_points_earned = award_loyalty_points($conn, $site_user_id, $booking_id, $final_total);
+                        }
+
                         create_admin_notification(
                             $conn,
                             'booking_created',
@@ -123,6 +187,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             'booking_details.php?id=' . $booking_id
                         );
                         $success_msg = t('booking_success');
+                        if ($loyalty_points_earned > 0) {
+                            $success_msg .= ' ' . t('loyalty_earned', ['points' => $loyalty_points_earned]);
+                        }
                         $confirmed_booking = get_customer_booking_by_id($conn, $booking_id);
 
                         // Clear form by redirecting
@@ -137,6 +204,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 }
+
+$page_title = t('booking_page_title');
+include 'includes/header.php';
 ?>
 
 <section class="hero">
@@ -196,6 +266,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <span><?php echo t('common_time'); ?></span>
                                 <strong><?php echo format_time($confirmed_booking['start_time']); ?> - <?php echo translated_hours_label($confirmed_booking['hours']); ?></strong>
                             </div>
+                            <div>
+                                <span><?php echo t('common_total'); ?></span>
+                                <strong><?php echo number_format((float)($confirmed_booking['final_total'] ?? $confirmed_booking['total_price']), 2); ?> JOD</strong>
+                            </div>
+                            <div>
+                                <span><?php echo t('loyalty_points'); ?></span>
+                                <strong><?php echo (int)($confirmed_booking['loyalty_points_earned'] ?? 0); ?></strong>
+                            </div>
                         </div>
 
                         <div class="booking-ticket-actions">
@@ -217,20 +295,52 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         <?php endif; ?>
 
+        <?php if (!empty($booking_rooms)): ?>
+            <div class="booking-room-showcase">
+                <div class="home-section-heading">
+                    <span class="ticket-label"><?php echo t('home_rooms_title'); ?></span>
+                    <h2><?php echo t('booking_form_room'); ?></h2>
+                </div>
+                <div class="booking-room-showcase-grid">
+                    <?php foreach ($booking_rooms as $room): ?>
+                        <?php
+                        $room_image = (!empty($room['image_path']) && file_exists($room['image_path']) && filesize($room['image_path']) > 100)
+                            ? $room['image_path']
+                            : 'images/home-hero-background.png';
+                        ?>
+                        <article class="booking-room-detail-card">
+                            <div class="booking-room-detail-media">
+                                <img src="<?php echo htmlspecialchars($room_image); ?>" alt="<?php echo htmlspecialchars($room['room_name']); ?>">
+                            </div>
+                            <div class="booking-room-detail-body">
+                                <span><?php echo htmlspecialchars($room['room_type']); ?></span>
+                                <h3><?php echo htmlspecialchars($room['room_name']); ?></h3>
+                                <p><?php echo htmlspecialchars($room['description'] ?: $room['services']); ?></p>
+                                <div class="booking-room-detail-footer">
+                                    <strong><?php echo number_format((float)$room['price_per_hour'], 2); ?> <?php echo t('home_room_price_suffix'); ?></strong>
+                                    <button type="button" class="btn btn-small" data-booking-room-select="<?php echo (int)$room['id']; ?>"><?php echo t('home_book_room'); ?></button>
+                                </div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <div class="form-container" id="booking-form">
             <form method="POST" action="">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="form-label"><?php echo t('booking_form_name'); ?></label>
-                            <input type="text" name="customer_name" class="form-control" required>
+                            <input type="text" name="customer_name" class="form-control" value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ($current_site_user['full_name'] ?? '')); ?>" required>
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="form-label"><?php echo t('booking_form_phone'); ?></label>
-                            <input type="tel" name="phone" class="form-control" required placeholder="07XXXXXXXX">
+                            <input type="tel" name="phone" class="form-control" value="<?php echo htmlspecialchars($_POST['phone'] ?? ($current_site_user['phone'] ?? '')); ?>" required placeholder="07XXXXXXXX">
                         </div>
                     </div>
 
@@ -244,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 $rooms_result = mysqli_query($conn, $rooms_query);
                                 while ($room = mysqli_fetch_assoc($rooms_result)) {
                                     $selected = ($preselected_room_id === (int)$room['id']) ? ' selected' : '';
-                                    echo '<option value="' . $room['id'] . '"' . $selected . '>';
+                                    echo '<option value="' . $room['id'] . '" data-price="' . htmlspecialchars($room['price_per_hour']) . '"' . $selected . '>';
                                     echo htmlspecialchars($room['room_name']) . ' - ' . htmlspecialchars($room['room_type']);
                                     echo ' (' . number_format($room['price_per_hour'], 2) . ' ' . t('home_room_price_suffix') . ')';
                                     echo '</option>';
@@ -257,14 +367,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="form-label"><?php echo t('booking_form_date'); ?></label>
-                            <input type="date" name="booking_date" id="booking_date" class="form-control" required min="<?php echo date('Y-m-d'); ?>">
+                            <input type="date" name="booking_date" id="booking_date" class="form-control" value="<?php echo htmlspecialchars($_POST['booking_date'] ?? ''); ?>" required min="<?php echo date('Y-m-d'); ?>">
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="form-label"><?php echo t('booking_form_hours'); ?></label>
-                            <input type="number" name="hours" id="hours" class="form-control" required min="1" max="12" value="2">
+                            <input type="number" name="hours" id="hours" class="form-control" required min="1" max="12" value="<?php echo htmlspecialchars($_POST['hours'] ?? '2'); ?>">
                         </div>
                     </div>
                 </div>
@@ -309,7 +419,65 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <div class="form-group mt-3">
                     <label class="form-label"><?php echo t('booking_form_notes'); ?></label>
-                    <textarea name="notes" class="form-control" rows="4"></textarea>
+                    <textarea name="notes" class="form-control" rows="4"><?php echo htmlspecialchars($_POST['notes'] ?? ''); ?></textarea>
+                </div>
+
+                <div class="booking-addons-panel">
+                    <div class="booking-addons-head">
+                        <div>
+                            <h3><?php echo t('booking_addons_title'); ?></h3>
+                            <p><?php echo t('booking_addons_text'); ?></p>
+                        </div>
+                    </div>
+
+                    <?php if (!empty($available_menu_items)): ?>
+                        <div class="booking-addons-grid">
+                            <?php foreach ($available_menu_items as $menu_item): ?>
+                                <?php
+                                $item_id = (int)$menu_item['id'];
+                                $posted_quantity = isset($_POST['menu_items'][$item_id]) ? max(0, min(20, (int)$_POST['menu_items'][$item_id])) : 0;
+                                ?>
+                                <label class="booking-addon-card">
+                                    <span class="booking-addon-category"><?php echo htmlspecialchars($menu_item['item_category']); ?></span>
+                                    <strong><?php echo htmlspecialchars($menu_item['item_name']); ?></strong>
+                                    <?php if (!empty($menu_item['item_description'])): ?>
+                                        <small><?php echo htmlspecialchars($menu_item['item_description']); ?></small>
+                                    <?php endif; ?>
+                                    <span class="booking-addon-price"><?php echo number_format((float)$menu_item['item_price'], 2); ?> JOD</span>
+                                    <span class="booking-addon-qty">
+                                        <?php echo t('booking_addons_quantity'); ?>
+                                        <input
+                                            type="number"
+                                            name="menu_items[<?php echo $item_id; ?>]"
+                                            class="form-control booking-addon-input"
+                                            min="0"
+                                            max="20"
+                                            value="<?php echo $posted_quantity; ?>"
+                                            data-menu-item
+                                            data-price="<?php echo htmlspecialchars($menu_item['item_price']); ?>"
+                                        >
+                                    </span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <p class="booking-addons-empty"><?php echo t('booking_addons_empty'); ?></p>
+                    <?php endif; ?>
+
+                    <div class="booking-total-estimate">
+                        <div>
+                            <span><?php echo t('booking_room_subtotal'); ?></span>
+                            <strong id="booking-room-subtotal">0.00 JOD</strong>
+                        </div>
+                        <div>
+                            <span><?php echo t('booking_addons_subtotal'); ?></span>
+                            <strong id="booking-addons-subtotal">0.00 JOD</strong>
+                        </div>
+                        <div class="booking-total-estimate-final">
+                            <span><?php echo t('booking_total_estimate'); ?></span>
+                            <strong id="booking-total-estimate">0.00 JOD</strong>
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn booking-submit-btn mt-4 w-100">
@@ -352,8 +520,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const slotAvailability = document.getElementById('slot_availability');
     const slotStatus = document.getElementById('slot_status');
     const bookingForm = document.getElementById('booking-form');
+    const menuInputs = Array.from(document.querySelectorAll('[data-menu-item]'));
+    const roomSubtotalEl = document.getElementById('booking-room-subtotal');
+    const addonsSubtotalEl = document.getElementById('booking-addons-subtotal');
+    const totalEstimateEl = document.getElementById('booking-total-estimate');
     const params = new URLSearchParams(window.location.search);
     const requestedRoomId = params.get('room_id');
+    let currentSlots = [];
+
+    function formatJod(amount) {
+        return amount.toFixed(2) + ' JOD';
+    }
+
+    function updateBookingEstimate() {
+        const selectedRoom = roomSelect.options[roomSelect.selectedIndex];
+        const roomPrice = selectedRoom && selectedRoom.dataset.price ? parseFloat(selectedRoom.dataset.price) : 0;
+        const hours = Math.max(0, parseInt(hoursInput.value || '0', 10));
+        const roomSubtotal = roomPrice * hours;
+        let addonsSubtotal = 0;
+
+        menuInputs.forEach(function(input) {
+            const qty = Math.max(0, parseInt(input.value || '0', 10));
+            const price = parseFloat(input.dataset.price || '0');
+            addonsSubtotal += qty * price;
+        });
+
+        if (roomSubtotalEl) {
+            roomSubtotalEl.textContent = formatJod(roomSubtotal);
+        }
+
+        if (addonsSubtotalEl) {
+            addonsSubtotalEl.textContent = formatJod(addonsSubtotal);
+        }
+
+        if (totalEstimateEl) {
+            totalEstimateEl.textContent = formatJod(roomSubtotal + addonsSubtotal);
+        }
+    }
 
     function fetchAvailableSlots() {
         const roomId = roomSelect.value;
@@ -460,9 +663,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Attach event listeners
     roomSelect.addEventListener('change', fetchAvailableSlots);
+    roomSelect.addEventListener('change', updateBookingEstimate);
     dateInput.addEventListener('change', fetchAvailableSlots);
     hoursInput.addEventListener('change', fetchAvailableSlots);
     hoursInput.addEventListener('input', fetchAvailableSlots);
+    hoursInput.addEventListener('input', updateBookingEstimate);
+    hoursInput.addEventListener('change', updateBookingEstimate);
+
+    menuInputs.forEach(function(input) {
+        input.addEventListener('input', updateBookingEstimate);
+        input.addEventListener('change', updateBookingEstimate);
+    });
 
     if (requestedRoomId && roomSelect.querySelector(`option[value="${requestedRoomId}"]`)) {
         roomSelect.value = requestedRoomId;
@@ -471,6 +682,22 @@ document.addEventListener('DOMContentLoaded', function() {
             bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
+
+    document.querySelectorAll('[data-booking-room-select]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const roomId = button.dataset.bookingRoomSelect;
+
+            if (roomSelect && roomSelect.querySelector(`option[value="${roomId}"]`)) {
+                roomSelect.value = roomId;
+                roomSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                if (bookingForm) {
+                    bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+    });
+
+    updateBookingEstimate();
 });
 </script>
 

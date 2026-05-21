@@ -3,6 +3,8 @@ include 'includes/config.php';
 require_once 'includes/functions.php';
 
 $page_title = t('store_page_title');
+$store_can_order = !empty($_SESSION['site_user_id']);
+$store_login_url = 'login.php?redirect=' . urlencode('store.php');
 $allowed_categories = [
     'PlayStation Consoles',
     'Controllers',
@@ -91,6 +93,7 @@ include 'includes/header.php';
                         <?php foreach ($products as $product): ?>
                             <?php
                             $has_image = !empty($product['image_path']) && file_exists(__DIR__ . '/' . $product['image_path']);
+                            $product_image = $has_image ? $product['image_path'] : 'images/store.jpg';
                             $is_in_stock = ((int)$product['stock_quantity'] > 0);
                             $stock_label = !$is_in_stock ? t('store_stock_out') : (((int)$product['stock_quantity'] <= 5) ? t('store_stock_limited') : t('store_stock_in'));
                             $stock_class = !$is_in_stock ? 'store-stock-out' : (((int)$product['stock_quantity'] <= 5) ? 'store-stock-limited' : 'store-stock-in');
@@ -108,19 +111,13 @@ include 'includes/header.php';
                                     data-product-description="<?php echo htmlspecialchars($product['description'], ENT_QUOTES, 'UTF-8'); ?>"
                                     data-product-price="<?php echo number_format((float) $product['price'], 2, '.', ''); ?>"
                                     data-product-stock="<?php echo (int) $product['stock_quantity']; ?>"
-                                    data-product-image="<?php echo $has_image ? htmlspecialchars($product['image_path'], ENT_QUOTES, 'UTF-8') : ''; ?>"
+                                    data-product-image="<?php echo htmlspecialchars($product_image, ENT_QUOTES, 'UTF-8'); ?>"
                                     data-card-title="<?php echo htmlspecialchars($product['product_name'], ENT_QUOTES, 'UTF-8'); ?>"
                                     data-card-type="<?php echo htmlspecialchars(translated_category_label($product['category']), ENT_QUOTES, 'UTF-8'); ?>"
                                     data-card-description="<?php echo htmlspecialchars($product['description'], ENT_QUOTES, 'UTF-8'); ?>"
                                 >
                                     <div class="store-product-media" data-card-media>
-                                        <?php if ($has_image): ?>
-                                            <img src="<?php echo htmlspecialchars($product['image_path']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>" class="img-fluid">
-                                        <?php else: ?>
-                                            <div class="store-product-placeholder" aria-hidden="true">
-                                                <span>FG</span>
-                                            </div>
-                                        <?php endif; ?>
+                                        <img src="<?php echo htmlspecialchars($product_image); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>" class="img-fluid">
                                         <span class="store-category-badge"><?php echo htmlspecialchars(translated_category_label($product['category'])); ?></span>
                                     </div>
 
@@ -139,7 +136,7 @@ include 'includes/header.php';
                                                 data-store-add
                                                 <?php echo !$is_in_stock ? 'disabled' : ''; ?>
                                             >
-                                                <?php echo $is_in_stock ? t('store_add_to_basket') : t('store_unavailable'); ?>
+                                                <?php echo $is_in_stock ? ($store_can_order ? t('store_add_to_basket') : t('nav_login')) : t('store_unavailable'); ?>
                                             </button>
                                         </div>
                                     </div>
@@ -222,6 +219,7 @@ include 'includes/header.php';
         const storeTexts = <?php echo json_encode([
             'addToBasket' => t('store_add_to_basket'),
             'unavailable' => t('store_unavailable'),
+            'login' => t('nav_login'),
             'addedToBasket' => t('store_added_to_basket'),
             'maxStockReached' => t('store_max_stock_reached'),
             'basketCleared' => t('store_basket_cleared'),
@@ -232,6 +230,8 @@ include 'includes/header.php';
             'removeItem' => t('store_remove_item'),
             'bookedOut' => t('booking_slot_booked')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+        const storeCanOrder = <?php echo $store_can_order ? 'true' : 'false'; ?>;
+        const storeLoginUrl = <?php echo json_encode($store_login_url); ?>;
         const filterContainer = document.getElementById('storeFilterChips');
         const cards = Array.from(document.querySelectorAll('[data-store-card]'));
         const filteredEmptyState = document.getElementById('storeFilteredEmptyState');
@@ -359,7 +359,7 @@ include 'includes/header.php';
             }
 
             modalAddButton.disabled = false;
-            modalAddButton.textContent = storeTexts.addToBasket;
+            modalAddButton.textContent = storeCanOrder ? storeTexts.addToBasket : storeTexts.login;
             modalAddButton.dataset.productId = String(productId);
         }
 
@@ -450,6 +450,11 @@ include 'includes/header.php';
         }
 
         function addToCart(productId) {
+            if (!storeCanOrder) {
+                window.location.href = storeLoginUrl;
+                return;
+            }
+
             const product = productMap.get(String(productId));
 
             if (!product || product.stock <= 0) {

@@ -16,7 +16,9 @@ DROP TABLE IF EXISTS time_slots;
 DROP TABLE IF EXISTS business_hours;
 DROP TABLE IF EXISTS complaints;
 DROP TABLE IF EXISTS store_products;
+DROP TABLE IF EXISTS booking_items;
 DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS site_users;
 DROP TABLE IF EXISTS rooms;
 DROP TABLE IF EXISTS admins;
 
@@ -53,6 +55,21 @@ CREATE TABLE rooms (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Site Users Table
+CREATE TABLE site_users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    full_name VARCHAR(120) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    phone VARCHAR(20) DEFAULT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
+    loyalty_points INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_site_users_role_status (role, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Bookings Table
 CREATE TABLE bookings (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -60,6 +77,7 @@ CREATE TABLE bookings (
     customer_name VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL,
     customer_session_token VARCHAR(64) NULL,
+    user_id INT NULL,
     room_id INT NOT NULL,
     booking_date DATE NOT NULL,
     start_time TIME NOT NULL,
@@ -68,6 +86,7 @@ CREATE TABLE bookings (
     total_price DECIMAL(10,2) NOT NULL,
     additional_items_total DECIMAL(10,2) DEFAULT 0.00,
     final_total DECIMAL(10,2) GENERATED ALWAYS AS (total_price + IFNULL(additional_items_total, 0)) STORED,
+    loyalty_points_earned INT NOT NULL DEFAULT 0,
     status VARCHAR(20) NOT NULL DEFAULT 'Pending',
     payment_status VARCHAR(20) DEFAULT 'Unpaid',
     payment_method VARCHAR(20) DEFAULT NULL,
@@ -77,6 +96,7 @@ CREATE TABLE bookings (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
     INDEX idx_customer_session_token (customer_session_token),
+    INDEX idx_booking_user_id (user_id),
     INDEX idx_booking_datetime (room_id, booking_date, start_time, end_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

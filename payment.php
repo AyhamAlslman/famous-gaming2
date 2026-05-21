@@ -45,6 +45,8 @@ $selected_method = sanitize_input($_POST['payment_method'] ?? 'Cash');
 $card_number = sanitize_input($_POST['card_number'] ?? '');
 $expiry_date = sanitize_input($_POST['expiry_date'] ?? '');
 $cvv = sanitize_input($_POST['cvv'] ?? '');
+$otp_code = sanitize_input($_POST['otp_code'] ?? '');
+$otp_confirmed = sanitize_input($_POST['otp_confirmed'] ?? '0');
 
 $booking = null;
 $booking_items = [];
@@ -70,12 +72,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $card_number_digits = preg_replace('/\D+/', '', $card_number);
             $cvv_digits = preg_replace('/\D+/', '', $cvv);
 
-            if (strlen($card_number_digits) < 13 || strlen($card_number_digits) > 19) {
+            if (!is_valid_luhn_number($card_number_digits)) {
                 $error_msg = t('payment_card_invalid');
-            } elseif (!preg_match('/^(0[1-9]|1[0-2])\/[0-9]{2}$/', $expiry_date)) {
+            } elseif (!is_valid_future_expiry($expiry_date)) {
                 $error_msg = t('payment_expiry_invalid');
             } elseif (strlen($cvv_digits) < 3 || strlen($cvv_digits) > 4) {
                 $error_msg = t('payment_cvv_invalid');
+            } elseif ($otp_confirmed !== '1' || !preg_match('/^[0-9]{4,6}$/', $otp_code)) {
+                $error_msg = t('payment_otp_invalid');
             }
         }
 
@@ -250,6 +254,8 @@ include 'includes/header.php';
                         <form method="POST" action="payment.php?booking_id=<?php echo (int)$booking['id']; ?>" class="checkout-form">
                             <input type="hidden" name="booking_id" value="<?php echo (int)$booking['id']; ?>">
                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token()); ?>">
+                            <input type="hidden" name="otp_confirmed" id="otp_confirmed" value="<?php echo htmlspecialchars($otp_confirmed); ?>">
+                            <input type="hidden" name="otp_code" id="otp_code" value="<?php echo htmlspecialchars($otp_code); ?>">
 
                             <div class="payment-method-grid">
                                 <?php foreach (['Cash', 'Visa', 'CliQ'] as $method): ?>
@@ -309,6 +315,24 @@ include 'includes/header.php';
                                 <button type="submit" class="btn payment-submit-btn"><?php echo t('payment_confirm'); ?></button>
                             </div>
                         </form>
+
+                        <div class="site-modal otp-modal" id="paymentOtpModal" hidden>
+                            <div class="site-modal-backdrop" data-otp-close></div>
+                            <div class="site-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="paymentOtpTitle">
+                                <button type="button" class="site-modal-close" data-otp-close aria-label="<?php echo htmlspecialchars(t('common_close'), ENT_QUOTES, 'UTF-8'); ?>">X</button>
+                                <h3 id="paymentOtpTitle"><?php echo t('payment_otp_title'); ?></h3>
+                                <p><?php echo t('payment_otp_text'); ?></p>
+                                <div class="form-group">
+                                    <label class="form-label"><?php echo t('payment_otp_code'); ?></label>
+                                    <input type="text" id="otp_input" class="form-control" maxlength="6" inputmode="numeric" placeholder="123456">
+                                    <small class="booking-time-hint form-text"><?php echo t('payment_otp_hint'); ?></small>
+                                </div>
+                                <div class="site-modal-actions">
+                                    <button type="button" class="btn payment-secondary-btn" data-otp-close><?php echo t('common_cancel'); ?></button>
+                                    <button type="button" class="btn" id="confirmOtpButton"><?php echo t('common_confirm'); ?></button>
+                                </div>
+                            </div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -323,6 +347,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const cardNumberInput = document.getElementById('card_number');
     const expiryDateInput = document.getElementById('expiry_date');
     const cvvInput = document.getElementById('cvv');
+    const checkoutForm = document.querySelector('.checkout-form');
+    const otpModal = document.getElementById('paymentOtpModal');
+    const otpInput = document.getElementById('otp_input');
+    const otpHidden = document.getElementById('otp_code');
+    const otpConfirmed = document.getElementById('otp_confirmed');
+    const confirmOtpButton = document.getElementById('confirmOtpButton');
 
     function toggleVisaFields() {
         const selected = document.querySelector('.payment-method-input:checked');
@@ -366,6 +396,76 @@ document.addEventListener('DOMContentLoaded', function () {
     if (cvvInput) {
         cvvInput.addEventListener('input', function () {
             this.value = this.value.replace(/\D/g, '').slice(0, 4);
+        });
+    }
+
+    if (otpInput) {
+        otpInput.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+        });
+    }
+
+    function openOtpModal() {
+        if (!otpModal) {
+            return;
+        }
+
+        otpModal.hidden = false;
+        document.body.classList.add('site-modal-open');
+        if (otpInput) {
+            otpInput.focus();
+        }
+    }
+
+    function closeOtpModal() {
+        if (!otpModal) {
+            return;
+        }
+
+        otpModal.hidden = true;
+        document.body.classList.remove('site-modal-open');
+    }
+
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function(event) {
+            const selected = document.querySelector('.payment-method-input:checked');
+            const isVisa = selected && selected.value === 'Visa';
+
+            if (isVisa && otpConfirmed && otpConfirmed.value !== '1') {
+                event.preventDefault();
+                openOtpModal();
+            }
+        });
+    }
+
+    document.querySelectorAll('[data-otp-close]').forEach(function(button) {
+        button.addEventListener('click', closeOtpModal);
+    });
+
+    if (confirmOtpButton) {
+        confirmOtpButton.addEventListener('click', function() {
+            const code = otpInput ? otpInput.value.replace(/\D/g, '') : '';
+
+            if (!/^[0-9]{4,6}$/.test(code)) {
+                if (otpInput) {
+                    otpInput.classList.add('is-invalid');
+                    otpInput.focus();
+                }
+                return;
+            }
+
+            if (otpHidden) {
+                otpHidden.value = code;
+            }
+
+            if (otpConfirmed) {
+                otpConfirmed.value = '1';
+            }
+
+            closeOtpModal();
+            if (checkoutForm) {
+                checkoutForm.submit();
+            }
         });
     }
 

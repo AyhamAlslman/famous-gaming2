@@ -1,5 +1,13 @@
 <?php
 include 'includes/config.php';
+include 'includes/functions.php';
+
+$menu_items = [];
+$menu_result = mysqli_query($conn, "SELECT item_name, item_category, item_price, item_description FROM menu_items WHERE is_available = 1 AND item_category IN ('Drinks', 'Snacks') ORDER BY item_category, item_name");
+if ($menu_result) {
+    $menu_items = mysqli_fetch_all($menu_result, MYSQLI_ASSOC);
+}
+
 $page_title = t('services_page_title');
 include 'includes/header.php';
 ?>
@@ -67,6 +75,7 @@ include 'includes/header.php';
                                 <li data-card-detail-item><?php echo t('services_hospitality_item_4'); ?></li>
                                 <li data-card-detail-item><?php echo t('services_hospitality_item_5'); ?></li>
                             </ul>
+                            <a href="#food-menu" class="btn btn-small service-menu-link" onclick="event.stopPropagation();"><?php echo t('services_view_menu'); ?></a>
                         </div>
                     </div>
                 </div>
@@ -100,7 +109,30 @@ include 'includes/header.php';
             </div>
         </div>
 
-        <div class="why-choose-us-container">
+        <div class="service-menu-section" id="food-menu">
+            <div class="home-section-heading">
+                <span class="ticket-label"><?php echo t('services_hospitality_type'); ?></span>
+                <h2><?php echo t('services_menu_title'); ?></h2>
+                <p><?php echo t('services_menu_text'); ?></p>
+            </div>
+
+            <?php if (!empty($menu_items)): ?>
+                <div class="service-menu-grid">
+                    <?php foreach ($menu_items as $item): ?>
+                        <div class="service-menu-item">
+                            <span><?php echo htmlspecialchars($item['item_category']); ?></span>
+                            <h3><?php echo htmlspecialchars($item['item_name']); ?></h3>
+                            <p><?php echo htmlspecialchars($item['item_description']); ?></p>
+                            <strong><?php echo number_format((float)$item['item_price'], 2); ?> JOD</strong>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="home-no-rooms"><?php echo t('booking_addons_empty'); ?></div>
+            <?php endif; ?>
+        </div>
+
+        <div class="why-choose-us-container" hidden>
             <h2 class="section-title why-choose-us-title"><?php echo t('services_why_title'); ?></h2>
             <div class="row g-4 why-choose-us-grid">
                 <div class="col-12 col-sm-6 col-lg-3">

@@ -260,10 +260,10 @@ include 'includes/header.php';
         }
 
         function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this menu item?')) {
+            showAdminConfirm('<?php echo addslashes(t('admin_delete_confirm')); ?>', function() {
                 document.getElementById('delete_id').value = id;
                 document.getElementById('deleteForm').submit();
-            }
+            });
         }
 
         window.onclick = function(event) {

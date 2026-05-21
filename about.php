@@ -3,16 +3,20 @@ include 'includes/config.php';
 $page_title = t('about_page_title');
 include 'includes/header.php';
 ?>
-<section class="hero">
+<section class="hero page-hero arena-page-hero about-page-hero">
     <div class="container">
+        <span class="ticket-label">FAMOUS GAMING 2026</span>
         <h1><?php echo t('about_hero_title'); ?></h1>
         <p><?php echo t('about_hero_text'); ?></p>
     </div>
 </section>
 
-<section class="content">
+<section class="content arena-page-content about-page-content">
     <div class="container">
-        <h2 class="section-title"><?php echo t('about_section_title'); ?></h2>
+        <div class="home-section-heading arena-section-heading">
+            <span class="ticket-label"><?php echo t('about_section_title'); ?></span>
+            <h2><?php echo t('home_intro_title'); ?></h2>
+        </div>
 
         <div class="about-main-container">
             <div class="about-intro-card">

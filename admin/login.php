@@ -124,7 +124,8 @@ mysqli_close($conn);
                     </div>
                 </form>
 
-                <div style="text-align: center; margin-top: 1.5rem;">
+                <div class="admin-login-links" style="text-align: center; margin-top: 1.5rem;">
+                    <a href="../forgot_password.php" class="admin-login-link"><?php echo t('admin_login_forgot'); ?></a>
                     <a href="../index.php" class="admin-login-link"><?php echo t('admin_login_back'); ?></a>
                 </div>
             </div>

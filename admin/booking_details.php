@@ -386,11 +386,11 @@ include 'includes/header.php';
                             <td><?php echo $item['quantity']; ?></td>
                             <td><?php echo number_format($item['item_total'], 2); ?> JOD</td>
                             <td>
-                                <form method="POST" style="display: inline;">
+                                <form method="POST" style="display: inline;" data-admin-confirm-form data-admin-confirm-message="<?php echo htmlspecialchars(t('admin_delete_confirm'), ENT_QUOTES, 'UTF-8'); ?>">
                                     <input type="hidden" name="action" value="remove_item">
                                     <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
                                     <?php echo admin_csrf_input(); ?>
-                                    <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Remove this item?')">Remove</button>
+                                    <button type="submit" class="btn btn-small btn-danger">Remove</button>
                                 </form>
                             </td>
                         </tr>
