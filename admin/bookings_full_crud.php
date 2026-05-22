@@ -98,8 +98,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 $bookings = mysqli_query($conn, "SELECT b.*, r.room_name FROM bookings b LEFT JOIN rooms r ON b.room_id = r.id ORDER BY b.id DESC");
-$rooms = mysqli_query($conn, "SELECT id, room_name FROM rooms ORDER BY room_name");
-$rooms_for_edit = mysqli_query($conn, "SELECT id, room_name FROM rooms ORDER BY room_name");
+$rooms_status_query = "SELECT
+        r.id,
+        r.room_name,
+        r.status,
+        CASE
+            WHEN active_booking.id IS NOT NULL THEN 'Busy'
+            ELSE r.status
+        END AS current_status
+    FROM rooms r
+    LEFT JOIN bookings active_booking
+        ON active_booking.room_id = r.id
+        AND active_booking.status IN ('Pending', 'Confirmed')
+        AND active_booking.booking_date = CURDATE()
+        AND CURTIME() >= active_booking.start_time
+        AND CURTIME() < ADDTIME(active_booking.start_time, SEC_TO_TIME(active_booking.hours * 3600))
+    ORDER BY FIELD(current_status, 'Available', 'Busy'), r.room_name";
+$rooms = mysqli_query($conn, $rooms_status_query);
 
 $page_title = t('admin_bookings_management');
 $active_page = 'bookings';
@@ -110,7 +125,7 @@ include 'includes/header.php';
         <div class="container">
             <div class="page-header">
                 <h1><?php echo t('admin_bookings_management'); ?></h1>
-                <button class="btn" onclick="openAddModal()"><?php echo t('admin_add_booking'); ?></button>
+                <button class="btn" onclick="openBookingModal()"><?php echo t('admin_add_booking'); ?></button>
             </div>
 
             <?php if (!empty($success_message)): ?>
@@ -153,7 +168,7 @@ include 'includes/header.php';
                             </td>
                             <td>
                                 <a href="booking_details.php?id=<?php echo $booking['id']; ?>" class="btn btn-small btn-info"><?php echo t('admin_action_view_details'); ?></a>
-                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($booking); ?>)'><?php echo t('admin_action_edit'); ?></button>
+                                <button class="btn btn-small btn-success" onclick='openBookingModal(<?php echo json_encode($booking); ?>)'><?php echo t('admin_action_edit'); ?></button>
                                 <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $booking['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
                             </td>
                         </tr>
@@ -164,57 +179,59 @@ include 'includes/header.php';
         </div>
     </div>
 
-    <div id="addModal" class="modal">
+    <div id="formModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeAddModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_add_booking'); ?></h2>
+            <span class="close" onclick="closeFormModal()">&times;</span>
+            <h2 id="formModalTitle" style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_add_booking'); ?></h2>
             <form method="POST" action="">
-                <input type="hidden" name="action" value="add">
+                <input type="hidden" name="action" id="form_action" value="add">
+                <input type="hidden" name="id" id="form_id">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_room'); ?></label>
-                    <select name="room_id" required>
+                    <select name="room_id" id="form_room_id" required>
                         <option value=""><?php echo t('booking_form_choose_room'); ?></option>
                         <?php while ($room = mysqli_fetch_assoc($rooms)): ?>
-                        <option value="<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['room_name']); ?></option>
+                        <?php $room_status_label = t('status_' . strtolower($room['current_status']), [], $room['current_status']); ?>
+                        <option value="<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['room_name'] . ' - ' . $room_status_label); ?></option>
                         <?php endwhile; ?>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_customer_name'); ?></label>
-                    <input type="text" name="customer_name" required>
+                    <input type="text" name="customer_name" id="form_customer_name" required>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_phone'); ?></label>
-                    <input type="text" name="phone" required>
+                    <input type="text" name="phone" id="form_phone" required>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_date'); ?></label>
-                    <input type="date" name="booking_date" required>
+                    <input type="date" name="booking_date" id="form_booking_date" required>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_time'); ?></label>
-                    <input type="time" name="start_time" required>
+                    <input type="time" name="start_time" id="form_start_time" required>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_duration'); ?></label>
-                    <input type="number" name="hours" min="1" required>
+                    <input type="number" name="hours" id="form_hours" min="1" required>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_price'); ?> (JOD)</label>
-                    <input type="number" step="0.50" name="total_price" required>
+                    <input type="number" step="0.50" name="total_price" id="form_total_price" required>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_status'); ?></label>
-                    <select name="status" required>
+                    <select name="status" id="form_status" required>
                         <option value="Pending"><?php echo t('status_pending'); ?></option>
                         <option value="Confirmed"><?php echo t('status_confirmed'); ?></option>
                         <option value="Cancelled"><?php echo t('status_cancelled'); ?></option>
@@ -222,72 +239,7 @@ include 'includes/header.php';
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_add_booking'); ?></button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_action_edit'); ?> <?php echo t('admin_add_booking'); ?></h2>
-            <form method="POST" action="">
-                <input type="hidden" name="action" value="edit">
-                <input type="hidden" name="id" id="edit_id">
-                <?php echo admin_csrf_input(); ?>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_room'); ?></label>
-                    <select name="room_id" id="edit_room_id" required>
-                        <option value=""><?php echo t('booking_form_choose_room'); ?></option>
-                        <?php while ($room = mysqli_fetch_assoc($rooms_for_edit)): ?>
-                        <option value="<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['room_name']); ?></option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_customer_name'); ?></label>
-                    <input type="text" name="customer_name" id="edit_customer_name" required>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_phone'); ?></label>
-                    <input type="text" name="phone" id="edit_phone" required>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_date'); ?></label>
-                    <input type="date" name="booking_date" id="edit_booking_date" required>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_time'); ?></label>
-                    <input type="time" name="start_time" id="edit_start_time" required>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_duration'); ?></label>
-                    <input type="number" name="hours" id="edit_hours" min="1" required>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_price'); ?> (JOD)</label>
-                    <input type="number" step="0.50" name="total_price" id="edit_total_price" required>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_status'); ?></label>
-                    <select name="status" id="edit_status" required>
-                        <option value="Pending"><?php echo t('status_pending'); ?></option>
-                        <option value="Confirmed"><?php echo t('status_confirmed'); ?></option>
-                        <option value="Cancelled"><?php echo t('status_cancelled'); ?></option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_update'); ?></button>
+                    <button type="submit" class="btn" id="form_submit" style="width: 100%;"><?php echo t('admin_add_booking'); ?></button>
                 </div>
             </form>
         </div>
@@ -300,29 +252,25 @@ include 'includes/header.php';
     </form>
 
     <script>
-        function openAddModal() {
-            document.getElementById('addModal').style.display = 'block';
+        function openBookingModal(booking) {
+            const isEdit = !!booking;
+            document.getElementById('form_action').value = isEdit ? 'edit' : 'add';
+            document.getElementById('form_id').value = isEdit ? booking.id : '';
+            document.getElementById('form_room_id').value = isEdit ? booking.room_id : '';
+            document.getElementById('form_customer_name').value = isEdit ? booking.customer_name : '';
+            document.getElementById('form_phone').value = isEdit ? booking.phone : '';
+            document.getElementById('form_booking_date').value = isEdit ? booking.booking_date : '';
+            document.getElementById('form_start_time').value = isEdit ? booking.start_time : '';
+            document.getElementById('form_hours').value = isEdit ? booking.hours : '';
+            document.getElementById('form_total_price').value = isEdit ? booking.total_price : '';
+            document.getElementById('form_status').value = isEdit ? booking.status : 'Pending';
+            document.getElementById('formModalTitle').textContent = isEdit ? '<?php echo addslashes(t('admin_action_edit') . ' ' . t('admin_add_booking')); ?>' : '<?php echo addslashes(t('admin_add_booking')); ?>';
+            document.getElementById('form_submit').textContent = isEdit ? '<?php echo addslashes(t('admin_action_update')); ?>' : '<?php echo addslashes(t('admin_add_booking')); ?>';
+            document.getElementById('formModal').style.display = 'block';
         }
 
-        function closeAddModal() {
-            document.getElementById('addModal').style.display = 'none';
-        }
-
-        function openEditModal(booking) {
-            document.getElementById('edit_id').value = booking.id;
-            document.getElementById('edit_room_id').value = booking.room_id;
-            document.getElementById('edit_customer_name').value = booking.customer_name;
-            document.getElementById('edit_phone').value = booking.phone;
-            document.getElementById('edit_booking_date').value = booking.booking_date;
-            document.getElementById('edit_start_time').value = booking.start_time;
-            document.getElementById('edit_hours').value = booking.hours;
-            document.getElementById('edit_total_price').value = booking.total_price;
-            document.getElementById('edit_status').value = booking.status;
-            document.getElementById('editModal').style.display = 'block';
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
+        function closeFormModal() {
+            document.getElementById('formModal').style.display = 'none';
         }
 
         function confirmDelete(id) {
@@ -333,11 +281,8 @@ include 'includes/header.php';
         }
 
         window.onclick = function(event) {
-            if (event.target == document.getElementById('addModal')) {
-                closeAddModal();
-            }
-            if (event.target == document.getElementById('editModal')) {
-                closeEditModal();
+            if (event.target == document.getElementById('formModal')) {
+                closeFormModal();
             }
         }
     </script>

@@ -9,6 +9,9 @@ $preselected_room_id = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 ensure_user_auth_schema($conn);
 $current_site_user = get_current_site_user($conn);
 $loyalty_points_earned = 0;
+$loyalty_settings = get_loyalty_settings($conn);
+$loyalty_earn_display = rtrim(rtrim(number_format((float)$loyalty_settings['earn_per_jod'], 2), '0'), '.');
+$loyalty_redeem_display = rtrim(rtrim(number_format((float)$loyalty_settings['redeem_points_per_jod'], 2), '0'), '.');
 
 if (!$current_site_user) {
     $_SESSION['post_login_redirect'] = 'user/booking.php';
@@ -461,6 +464,7 @@ include dirname(__DIR__) . '/includes/header.php';
                             <p><?php echo t('booking_addons_text'); ?></p>
                         </div>
                     </div>
+                    <p class="booking-addons-note"><?php echo t('booking_addons_note'); ?></p>
 
                     <?php if (!empty($available_menu_items)): ?>
                         <div class="booking-addons-grid">
@@ -523,6 +527,11 @@ include dirname(__DIR__) . '/includes/header.php';
                             <h3><?php echo t('payment_method_title'); ?></h3>
                             <p><?php echo t('payment_choose_how'); ?></p>
                         </div>
+                    </div>
+                    <div class="user-loyalty-rules booking-loyalty-rules">
+                        <b><?php echo t('loyalty_calculation_title'); ?></b>
+                        <span><?php echo t('loyalty_calculation_earn', ['points' => $loyalty_earn_display]); ?></span>
+                        <span><?php echo t('loyalty_calculation_redeem', ['points' => $loyalty_redeem_display]); ?></span>
                     </div>
                     <div class="payment-method-grid">
                         <?php $booking_selected_method = $_POST['payment_method'] ?? 'Cash'; ?>

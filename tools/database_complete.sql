@@ -190,6 +190,7 @@ CREATE TABLE store_orders (
     payment_method VARCHAR(20) DEFAULT NULL,
     paid_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+    stock_deducted TINYINT(1) NOT NULL DEFAULT 0,
     notes TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -384,7 +385,9 @@ INSERT INTO time_slots (room_id, slot_time, slot_label) VALUES
 -- System Settings (only implemented settings included)
 INSERT INTO system_settings (setting_key, setting_value, setting_type, description) VALUES
 ('max_booking_hours', '12', 'integer', 'Maximum hours allowed per booking'),
-('min_booking_hours', '1', 'integer', 'Minimum hours allowed per booking');
+('min_booking_hours', '1', 'integer', 'Minimum hours allowed per booking'),
+('loyalty_points_per_jod', '1', 'decimal', 'Loyalty points earned for each paid JOD'),
+('loyalty_points_per_jod_discount', '10', 'decimal', 'Loyalty points needed for 1 JOD discount');
 
 -- =====================================================
 -- SETUP COMPLETE

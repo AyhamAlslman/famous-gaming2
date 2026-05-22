@@ -1,11 +1,15 @@
-    <footer class="footer">
-        <div class="container">
-            <p><?php echo t('admin_footer'); ?></p>
+            <footer class="footer admin-footer">
+                <div class="container admin-footer-inner">
+                    <p><?php echo t('admin_footer'); ?></p>
+                </div>
+            </footer>
         </div>
-    </footer>
+    </div>
+
     <div class="admin-confirm-modal" id="adminConfirmModal" hidden>
         <div class="admin-confirm-backdrop" data-admin-confirm-cancel></div>
         <div class="admin-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle">
+            <div class="admin-confirm-icon" aria-hidden="true">!</div>
             <h3 id="adminConfirmTitle"><?php echo t('modal_confirm_title'); ?></h3>
             <p id="adminConfirmMessage"></p>
             <div class="admin-confirm-actions">
@@ -14,6 +18,7 @@
             </div>
         </div>
     </div>
+
     <script>
     (function () {
         const modal = document.getElementById('adminConfirmModal');
@@ -42,6 +47,7 @@
             confirmCallback = onConfirm;
             modal.hidden = false;
             document.body.classList.add('admin-confirm-open');
+            yesButton.focus();
         };
 
         window.showAdminMessage = function(message, title) {
@@ -60,6 +66,7 @@
             confirmCallback = null;
             modal.hidden = false;
             document.body.classList.add('admin-confirm-open');
+            yesButton.focus();
         };
 
         function closeConfirm() {
@@ -83,6 +90,12 @@
                 }
             });
         }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && modal && !modal.hidden) {
+                closeConfirm();
+            }
+        });
 
         document.querySelectorAll('.message').forEach(function(message) {
             const text = message.innerText.trim();
@@ -116,6 +129,61 @@
                 }, form.dataset.adminConfirmTitle);
             });
         });
+
+        const navToggles = Array.from(document.querySelectorAll('[data-admin-nav-toggle]'));
+        const navBackdrop = document.querySelector('.admin-sidebar-backdrop');
+        const navButton = document.querySelector('.admin-sidebar-toggle');
+
+        function setNav(open) {
+            document.body.classList.toggle('admin-nav-open', open);
+            if (navBackdrop) {
+                navBackdrop.hidden = !open;
+            }
+            if (navButton) {
+                navButton.setAttribute('aria-expanded', String(open));
+            }
+        }
+
+        navToggles.forEach(function(toggle) {
+            toggle.addEventListener('click', function() {
+                setNav(!document.body.classList.contains('admin-nav-open'));
+            });
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                setNav(false);
+            }
+        });
+
+        const notificationToggle = document.querySelector('[data-admin-notification-toggle]');
+        const notificationMenu = document.getElementById('adminNotificationMenu');
+        if (notificationToggle && notificationMenu) {
+            function closeNotifications() {
+                notificationMenu.hidden = true;
+                notificationToggle.setAttribute('aria-expanded', 'false');
+                notificationToggle.closest('.admin-notification-dropdown')?.classList.remove('is-open');
+            }
+
+            notificationToggle.addEventListener('click', function(event) {
+                event.stopPropagation();
+                const shouldOpen = notificationMenu.hidden;
+                notificationMenu.hidden = !shouldOpen;
+                notificationToggle.setAttribute('aria-expanded', String(shouldOpen));
+                notificationToggle.closest('.admin-notification-dropdown')?.classList.toggle('is-open', shouldOpen);
+            });
+
+            notificationMenu.addEventListener('click', function(event) {
+                event.stopPropagation();
+            });
+
+            document.addEventListener('click', closeNotifications);
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeNotifications();
+                }
+            });
+        }
     })();
     </script>
 </body>

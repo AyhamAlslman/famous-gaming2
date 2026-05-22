@@ -112,7 +112,7 @@ include 'includes/header.php';
         <div class="container">
             <div class="page-header">
                 <h1><?php echo t('admin_employees_management'); ?></h1>
-                <button class="btn" onclick="openAddModal()"><?php echo t('admin_action_add'); ?> <?php echo t('admin_role_employee'); ?></button>
+                <button class="btn" onclick="openEmployeeModal()"><?php echo t('admin_action_add'); ?> <?php echo t('admin_role_employee'); ?></button>
             </div>
 
             <?php if (!empty($success_message)): ?>
@@ -148,7 +148,7 @@ include 'includes/header.php';
                                 </span>
                             </td>
                             <td>
-                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($employee); ?>)'><?php echo t('admin_action_edit'); ?></button>
+                                <button class="btn btn-small btn-success" onclick='openEmployeeModal(<?php echo json_encode($employee); ?>)'><?php echo t('admin_action_edit'); ?></button>
                                 <?php if ($employee['id'] != $_SESSION['admin_id']): ?>
                                 <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $employee['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
                                 <?php endif; ?>
@@ -161,32 +161,33 @@ include 'includes/header.php';
         </div>
     </div>
 
-    <div id="addModal" class="modal">
+    <div id="formModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeAddModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_action_add'); ?> <?php echo t('admin_role_employee'); ?></h2>
+            <span class="close" onclick="closeFormModal()">&times;</span>
+            <h2 id="formModalTitle" style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_action_add'); ?> <?php echo t('admin_role_employee'); ?></h2>
             <form method="POST" action="">
-                <input type="hidden" name="action" value="add">
+                <input type="hidden" name="action" id="form_action" value="add">
+                <input type="hidden" name="id" id="form_id">
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_username'); ?></label>
-                    <input type="text" name="username" required>
+                    <input type="text" name="username" id="form_username" required>
                 </div>
 
                 <div class="form-group">
-                    <label><?php echo t('auth_password'); ?></label>
-                    <input type="password" name="password" required>
+                    <label id="form_password_label"><?php echo t('auth_password'); ?></label>
+                    <input type="password" name="password" id="form_password" required>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo t('auth_full_name'); ?></label>
-                    <input type="text" name="full_name" required>
+                    <input type="text" name="full_name" id="form_full_name" required>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_role'); ?></label>
-                    <select name="role" required>
+                    <select name="role" id="form_role" required>
                         <option value="admin"><?php echo t('admin_role_admin'); ?></option>
                         <option value="employee"><?php echo t('admin_role_employee'); ?></option>
                     </select>
@@ -194,61 +195,14 @@ include 'includes/header.php';
 
                 <div class="form-group">
                     <label><?php echo t('admin_field_status'); ?></label>
-                    <select name="status" required>
+                    <select name="status" id="form_status" required>
                         <option value="Active"><?php echo t('admin_status_active'); ?></option>
                         <option value="Inactive"><?php echo t('admin_status_inactive'); ?></option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_add'); ?></button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2 style="margin-bottom: 1.5rem; color: #fff;"><?php echo t('admin_action_edit'); ?> <?php echo t('admin_role_employee'); ?></h2>
-            <form method="POST" action="">
-                <input type="hidden" name="action" value="edit">
-                <input type="hidden" name="id" id="edit_id">
-                <?php echo admin_csrf_input(); ?>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_username'); ?></label>
-                    <input type="text" name="username" id="edit_username" required>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_password_optional'); ?></label>
-                    <input type="password" name="password" id="edit_password">
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('auth_full_name'); ?></label>
-                    <input type="text" name="full_name" id="edit_full_name" required>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_role'); ?></label>
-                    <select name="role" id="edit_role" required>
-                        <option value="admin"><?php echo t('admin_role_admin'); ?></option>
-                        <option value="employee"><?php echo t('admin_role_employee'); ?></option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label><?php echo t('admin_field_status'); ?></label>
-                    <select name="status" id="edit_status" required>
-                        <option value="Active"><?php echo t('admin_status_active'); ?></option>
-                        <option value="Inactive"><?php echo t('admin_status_inactive'); ?></option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_update'); ?></button>
+                    <button type="submit" class="btn" id="form_submit" style="width: 100%;"><?php echo t('admin_action_add'); ?></button>
                 </div>
             </form>
         </div>
@@ -261,26 +215,24 @@ include 'includes/header.php';
     </form>
 
     <script>
-        function openAddModal() {
-            document.getElementById('addModal').style.display = 'block';
+        function openEmployeeModal(employee) {
+            const isEdit = !!employee;
+            document.getElementById('form_action').value = isEdit ? 'edit' : 'add';
+            document.getElementById('form_id').value = isEdit ? employee.id : '';
+            document.getElementById('form_username').value = isEdit ? employee.username : '';
+            document.getElementById('form_full_name').value = isEdit ? employee.full_name : '';
+            document.getElementById('form_role').value = isEdit ? employee.role : 'employee';
+            document.getElementById('form_status').value = isEdit ? employee.status : 'Active';
+            document.getElementById('form_password').value = '';
+            document.getElementById('form_password').required = !isEdit;
+            document.getElementById('form_password_label').textContent = isEdit ? '<?php echo addslashes(t('admin_password_optional')); ?>' : '<?php echo addslashes(t('auth_password')); ?>';
+            document.getElementById('formModalTitle').textContent = isEdit ? '<?php echo addslashes(t('admin_action_edit') . ' ' . t('admin_role_employee')); ?>' : '<?php echo addslashes(t('admin_action_add') . ' ' . t('admin_role_employee')); ?>';
+            document.getElementById('form_submit').textContent = isEdit ? '<?php echo addslashes(t('admin_action_update')); ?>' : '<?php echo addslashes(t('admin_action_add')); ?>';
+            document.getElementById('formModal').style.display = 'block';
         }
 
-        function closeAddModal() {
-            document.getElementById('addModal').style.display = 'none';
-        }
-
-        function openEditModal(employee) {
-            document.getElementById('edit_id').value = employee.id;
-            document.getElementById('edit_username').value = employee.username;
-            document.getElementById('edit_full_name').value = employee.full_name;
-            document.getElementById('edit_role').value = employee.role;
-            document.getElementById('edit_status').value = employee.status;
-            document.getElementById('edit_password').value = '';
-            document.getElementById('editModal').style.display = 'block';
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
+        function closeFormModal() {
+            document.getElementById('formModal').style.display = 'none';
         }
 
         function confirmDelete(id) {
@@ -291,11 +243,8 @@ include 'includes/header.php';
         }
 
         window.onclick = function(event) {
-            if (event.target == document.getElementById('addModal')) {
-                closeAddModal();
-            }
-            if (event.target == document.getElementById('editModal')) {
-                closeEditModal();
+            if (event.target == document.getElementById('formModal')) {
+                closeFormModal();
             }
         }
     </script>

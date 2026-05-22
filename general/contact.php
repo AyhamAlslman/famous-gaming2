@@ -1,7 +1,7 @@
 <?php
 require_once dirname(__DIR__) . '/includes/config.php';
 $page_title = t('contact_page_title');
-$contact_hero_image = site_url('images/home-neon-sign.jpg');
+$contact_hero_image = site_url('images/home-hero-background.png');
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
@@ -110,11 +110,6 @@ include dirname(__DIR__) . '/includes/header.php';
                 </div>
             </div>
 
-            <div class="contact-cta-container">
-                <h3 class="contact-cta-title"><?php echo t('contact_ready_title'); ?></h3>
-                <p class="contact-cta-text"><?php echo t('contact_ready_text'); ?></p>
-                <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
-            </div>
         </div>
     </div>
 </section>

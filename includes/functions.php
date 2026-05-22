@@ -486,6 +486,7 @@ function ensure_store_orders_schema($conn) {
         payment_method VARCHAR(20) DEFAULT NULL,
         paid_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
         status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+        stock_deducted TINYINT(1) NOT NULL DEFAULT 0,
         notes TEXT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -525,6 +526,10 @@ function ensure_store_orders_schema($conn) {
 
     if (!isset($order_columns['loyalty_points_earned'])) {
         mysqli_query($conn, "ALTER TABLE store_orders ADD COLUMN loyalty_points_earned INT NOT NULL DEFAULT 0 AFTER total_amount");
+    }
+
+    if (!isset($order_columns['stock_deducted'])) {
+        mysqli_query($conn, "ALTER TABLE store_orders ADD COLUMN stock_deducted TINYINT(1) NOT NULL DEFAULT 0 AFTER status");
     }
 }
 
@@ -575,12 +580,64 @@ function ensure_user_auth_schema($conn) {
         INDEX idx_site_users_role_status (role, status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
+    ensure_loyalty_settings_schema($conn);
     ensure_booking_confirmation_schema($conn);
     ensure_booking_items_table($conn);
     ensure_store_products_schema($conn);
     ensure_store_orders_schema($conn);
     ensure_complaints_schema($conn);
     ensure_site_notifications_table($conn);
+}
+
+/**
+ * Store loyalty rules in the database so points stay connected to users and admin data.
+ */
+function ensure_loyalty_settings_schema($conn) {
+    mysqli_query($conn, "CREATE TABLE IF NOT EXISTS system_settings (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT NOT NULL,
+        setting_type VARCHAR(20) NOT NULL DEFAULT 'string',
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    mysqli_query($conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value, setting_type, description) VALUES
+        ('loyalty_points_per_jod', '1', 'decimal', 'Loyalty points earned for each paid JOD'),
+        ('loyalty_points_per_jod_discount', '10', 'decimal', 'Loyalty points needed for 1 JOD discount')");
+}
+
+function get_loyalty_settings($conn = null) {
+    if (!$conn) {
+        global $conn;
+    }
+
+    $settings = [
+        'earn_per_jod' => 1.0,
+        'redeem_points_per_jod' => 10.0
+    ];
+
+    if (!$conn instanceof mysqli) {
+        return $settings;
+    }
+
+    ensure_loyalty_settings_schema($conn);
+    $result = mysqli_query($conn, "SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('loyalty_points_per_jod', 'loyalty_points_per_jod_discount')");
+
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            if ($row['setting_key'] === 'loyalty_points_per_jod') {
+                $settings['earn_per_jod'] = max(0.0, (float)$row['setting_value']);
+            }
+
+            if ($row['setting_key'] === 'loyalty_points_per_jod_discount') {
+                $settings['redeem_points_per_jod'] = max(1.0, (float)$row['setting_value']);
+            }
+        }
+    }
+
+    return $settings;
 }
 
 /**
@@ -612,17 +669,23 @@ function get_current_site_user($conn) {
     return $user;
 }
 
-function calculate_loyalty_points($amount) {
+function calculate_loyalty_points($amount, $conn = null) {
     $amount = (float)$amount;
-    return $amount > 0 ? (int)floor($amount) : 0;
+    $settings = get_loyalty_settings($conn);
+
+    return $amount > 0 ? (int)floor($amount * $settings['earn_per_jod']) : 0;
 }
 
-function loyalty_points_to_amount($points) {
-    return round(max(0, (int)$points) / 10, 2);
+function loyalty_points_to_amount($points, $conn = null) {
+    $settings = get_loyalty_settings($conn);
+
+    return round(max(0, (int)$points) / $settings['redeem_points_per_jod'], 2);
 }
 
-function loyalty_amount_to_points($amount) {
-    return (int)ceil(max(0, (float)$amount) * 10);
+function loyalty_amount_to_points($amount, $conn = null) {
+    $settings = get_loyalty_settings($conn);
+
+    return (int)ceil(max(0, (float)$amount) * $settings['redeem_points_per_jod']);
 }
 
 function refresh_site_user_points_session($conn, $user_id) {
@@ -676,9 +739,9 @@ function redeem_loyalty_points($conn, $user_id, $requested_points, $max_discount
     }
 
     $available_points = refresh_site_user_points_session($conn, $user_id);
-    $max_points_for_discount = loyalty_amount_to_points($max_discount);
+    $max_points_for_discount = loyalty_amount_to_points($max_discount, $conn);
     $points_to_redeem = min($requested_points, $available_points, $max_points_for_discount);
-    $discount = min($max_discount, loyalty_points_to_amount($points_to_redeem));
+    $discount = min($max_discount, loyalty_points_to_amount($points_to_redeem, $conn));
 
     if ($points_to_redeem <= 0 || $discount <= 0) {
         return ['points' => 0, 'discount' => 0.0];
@@ -751,7 +814,7 @@ function award_loyalty_points($conn, $user_id, $booking_id, $amount) {
         return 0;
     }
 
-    $points = calculate_loyalty_points($amount);
+    $points = calculate_loyalty_points($amount, $conn);
 
     add_loyalty_points($conn, $user_id, $points);
 
@@ -771,7 +834,7 @@ function award_store_order_loyalty_points($conn, $user_id, $order_id, $amount) {
         return 0;
     }
 
-    $points = calculate_loyalty_points($amount);
+    $points = calculate_loyalty_points($amount, $conn);
     if ($points <= 0) {
         return 0;
     }

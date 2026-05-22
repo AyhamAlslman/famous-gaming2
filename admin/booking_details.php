@@ -312,19 +312,9 @@ include 'includes/header.php';
                     </div>
                     <?php endif; ?>
 
-                    <!-- Extend Hours Form -->
-                    <form method="POST" style="margin-top: 1.5rem;">
-                        <input type="hidden" name="action" value="extend_hours">
-                        <?php echo admin_csrf_input(); ?>
-                        <h3><?php echo t('admin_extend_booking'); ?></h3>
-                        <div class="form-inline">
-                            <div class="form-group">
-                                <label><?php echo t('admin_extra_hours'); ?></label>
-                                <input type="number" name="extra_hours" min="1" max="12" value="1" required>
-                            </div>
-                            <button type="submit" class="btn btn-success"><?php echo t('admin_extend_booking'); ?></button>
-                        </div>
-                    </form>
+                    <div class="admin-detail-actions">
+                        <button type="button" class="btn btn-success" data-admin-open-modal="extendBookingModal"><?php echo t('admin_extend_booking'); ?></button>
+                    </div>
                 </div>
 
                 <!-- Payment Information -->
@@ -372,42 +362,9 @@ include 'includes/header.php';
                         <?php endif; ?>
                     </div>
 
-                    <!-- Update Payment Form -->
-                    <form method="POST" style="margin-top: 1.5rem;">
-                        <input type="hidden" name="action" value="update_payment">
-                        <?php echo admin_csrf_input(); ?>
-                        <h3><?php echo t('admin_update_payment'); ?></h3>
-                        <div class="form-group">
-                            <label><?php echo t('admin_payment_status'); ?></label>
-                            <select name="payment_status" required>
-                                <option value="Unpaid" <?php echo $booking['payment_status'] == 'Unpaid' ? 'selected' : ''; ?>><?php echo t('status_unpaid'); ?></option>
-                                <option value="Partial" <?php echo $booking['payment_status'] == 'Partial' ? 'selected' : ''; ?>><?php echo t('status_partial'); ?></option>
-                                <option value="Paid" <?php echo $booking['payment_status'] == 'Paid' ? 'selected' : ''; ?>><?php echo t('status_paid'); ?></option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label><?php echo t('admin_payment_method'); ?></label>
-                            <select name="payment_method" required>
-                                <option value=""><?php echo t('admin_select_method'); ?></option>
-                                <option value="Cash" <?php echo $booking['payment_method'] == 'Cash' ? 'selected' : ''; ?>><?php echo t('payment_cash'); ?></option>
-                                <option value="CliQ" <?php echo $booking['payment_method'] == 'CliQ' ? 'selected' : ''; ?>><?php echo t('payment_cliq'); ?></option>
-                                <option value="Visa" <?php echo $booking['payment_method'] == 'Visa' ? 'selected' : ''; ?>><?php echo t('payment_visa'); ?></option>
-                                <option value="Loyalty" <?php echo $booking['payment_method'] == 'Loyalty' ? 'selected' : ''; ?>><?php echo t('payment_loyalty'); ?></option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label><?php echo t('admin_paid_amount'); ?> (JOD)</label>
-                            <input type="number" step="0.01" name="paid_amount" value="<?php echo $booking['paid_amount']; ?>" required>
-                        </div>
-                        <?php if (!empty($booking['user_id'])): ?>
-                            <div class="form-group">
-                                <label><?php echo t('loyalty_redeem_points'); ?></label>
-                                <input type="number" min="0" max="<?php echo $booking_user_loyalty_points; ?>" name="loyalty_points_to_redeem" value="0">
-                                <small><?php echo t('loyalty_redeem_hint'); ?> <?php echo t('loyalty_available', ['points' => $booking_user_loyalty_points]); ?></small>
-                            </div>
-                        <?php endif; ?>
-                        <button type="submit" class="btn btn-success" style="width: 100%;"><?php echo t('admin_update_payment'); ?></button>
-                    </form>
+                    <div class="admin-detail-actions">
+                        <button type="button" class="btn btn-success" data-admin-open-modal="paymentModal"><?php echo t('admin_update_payment'); ?></button>
+                    </div>
                 </div>
             </div>
 
@@ -415,38 +372,9 @@ include 'includes/header.php';
             <div class="card">
                 <h2><?php echo t('admin_orders_services'); ?></h2>
 
-                <!-- Add Item Form -->
-                <form method="POST">
-                    <input type="hidden" name="action" value="add_item">
-                    <?php echo admin_csrf_input(); ?>
-                    <div class="form-inline">
-                        <div class="form-group" style="flex: 2;">
-                            <label><?php echo t('admin_select_item_service'); ?></label>
-                            <select name="menu_item_id" required>
-                                <option value=""><?php echo t('admin_choose_item'); ?></option>
-                                <?php
-                                $current_category = '';
-                                while ($item = mysqli_fetch_assoc($menu_items)):
-                                    if ($current_category != $item['item_category']):
-                                        if ($current_category != '') echo '</optgroup>';
-                                        echo '<optgroup label="' . htmlspecialchars(translated_menu_category_label($item['item_category'])) . '">';
-                                        $current_category = $item['item_category'];
-                                    endif;
-                                ?>
-                                    <option value="<?php echo $item['id']; ?>">
-                                        <?php echo htmlspecialchars($item['item_name']); ?> - <?php echo number_format($item['item_price'], 2); ?> JOD
-                                    </option>
-                                <?php endwhile; ?>
-                                <?php if ($current_category != '') echo '</optgroup>'; ?>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label><?php echo t('admin_quantity'); ?></label>
-                            <input type="number" name="quantity" min="1" value="1" required style="max-width: 100px;">
-                        </div>
-                        <button type="submit" class="btn btn-success"><?php echo t('admin_action_add'); ?></button>
-                    </div>
-                </form>
+                <div class="admin-detail-actions">
+                    <button type="button" class="btn btn-success" data-admin-open-modal="addItemModal"><?php echo t('admin_action_add'); ?> <?php echo t('admin_orders_services'); ?></button>
+                </div>
 
                 <!-- Ordered Items Table -->
                 <?php if (mysqli_num_rows($booking_items) > 0): ?>
@@ -495,7 +423,121 @@ include 'includes/header.php';
         </div>
     </div>
 
+    <div id="extendBookingModal" class="modal admin-action-modal">
+        <div class="modal-content">
+            <span class="close" data-admin-close-modal>&times;</span>
+            <h2><?php echo t('admin_extend_booking'); ?></h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="extend_hours">
+                <?php echo admin_csrf_input(); ?>
+                <div class="form-group">
+                    <label><?php echo t('admin_extra_hours'); ?></label>
+                    <input type="number" name="extra_hours" min="1" max="12" value="1" required>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;"><?php echo t('admin_extend_booking'); ?></button>
+            </form>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal admin-action-modal">
+        <div class="modal-content">
+            <span class="close" data-admin-close-modal>&times;</span>
+            <h2><?php echo t('admin_update_payment'); ?></h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="update_payment">
+                <?php echo admin_csrf_input(); ?>
+                <div class="form-group">
+                    <label><?php echo t('admin_payment_status'); ?></label>
+                    <select name="payment_status" required>
+                        <option value="Unpaid" <?php echo $booking['payment_status'] == 'Unpaid' ? 'selected' : ''; ?>><?php echo t('status_unpaid'); ?></option>
+                        <option value="Partial" <?php echo $booking['payment_status'] == 'Partial' ? 'selected' : ''; ?>><?php echo t('status_partial'); ?></option>
+                        <option value="Paid" <?php echo $booking['payment_status'] == 'Paid' ? 'selected' : ''; ?>><?php echo t('status_paid'); ?></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><?php echo t('admin_payment_method'); ?></label>
+                    <select name="payment_method" required>
+                        <option value=""><?php echo t('admin_select_method'); ?></option>
+                        <option value="Cash" <?php echo $booking['payment_method'] == 'Cash' ? 'selected' : ''; ?>><?php echo t('payment_cash'); ?></option>
+                        <option value="CliQ" <?php echo $booking['payment_method'] == 'CliQ' ? 'selected' : ''; ?>><?php echo t('payment_cliq'); ?></option>
+                        <option value="Visa" <?php echo $booking['payment_method'] == 'Visa' ? 'selected' : ''; ?>><?php echo t('payment_visa'); ?></option>
+                        <option value="Loyalty" <?php echo $booking['payment_method'] == 'Loyalty' ? 'selected' : ''; ?>><?php echo t('payment_loyalty'); ?></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><?php echo t('admin_paid_amount'); ?> (JOD)</label>
+                    <input type="number" step="0.01" name="paid_amount" value="<?php echo $booking['paid_amount']; ?>" required>
+                </div>
+                <?php if (!empty($booking['user_id'])): ?>
+                    <div class="form-group">
+                        <label><?php echo t('loyalty_redeem_points'); ?></label>
+                        <input type="number" min="0" max="<?php echo $booking_user_loyalty_points; ?>" name="loyalty_points_to_redeem" value="0">
+                        <small><?php echo t('loyalty_redeem_hint'); ?> <?php echo t('loyalty_available', ['points' => $booking_user_loyalty_points]); ?></small>
+                    </div>
+                <?php endif; ?>
+                <button type="submit" class="btn btn-success" style="width: 100%;"><?php echo t('admin_update_payment'); ?></button>
+            </form>
+        </div>
+    </div>
+
+    <div id="addItemModal" class="modal admin-action-modal">
+        <div class="modal-content">
+            <span class="close" data-admin-close-modal>&times;</span>
+            <h2><?php echo t('admin_orders_services'); ?></h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="add_item">
+                <?php echo admin_csrf_input(); ?>
+                <div class="form-group">
+                    <label><?php echo t('admin_select_item_service'); ?></label>
+                    <select name="menu_item_id" required>
+                        <option value=""><?php echo t('admin_choose_item'); ?></option>
+                        <?php
+                        $current_category = '';
+                        while ($item = mysqli_fetch_assoc($menu_items)):
+                            if ($current_category != $item['item_category']):
+                                if ($current_category != '') echo '</optgroup>';
+                                echo '<optgroup label="' . htmlspecialchars(translated_menu_category_label($item['item_category'])) . '">';
+                                $current_category = $item['item_category'];
+                            endif;
+                        ?>
+                            <option value="<?php echo $item['id']; ?>">
+                                <?php echo htmlspecialchars($item['item_name']); ?> - <?php echo number_format($item['item_price'], 2); ?> JOD
+                            </option>
+                        <?php endwhile; ?>
+                        <?php if ($current_category != '') echo '</optgroup>'; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><?php echo t('admin_quantity'); ?></label>
+                    <input type="number" name="quantity" min="1" value="1" required>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;"><?php echo t('admin_action_add'); ?></button>
+            </form>
+        </div>
+    </div>
+
     <script>
+        document.querySelectorAll('[data-admin-open-modal]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const modal = document.getElementById(button.dataset.adminOpenModal);
+                if (modal) {
+                    modal.style.display = 'block';
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-admin-close-modal]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                button.closest('.modal').style.display = 'none';
+            });
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target.classList.contains('admin-action-modal')) {
+                event.target.style.display = 'none';
+            }
+        });
+
         // Auto-fade messages after 5 seconds
         setTimeout(function() {
             const messages = document.querySelectorAll('.message');

@@ -2,6 +2,8 @@
 $current_page = basename($_SERVER['PHP_SELF']);
 $switch_to_en = site_switch_language_url('en');
 $switch_to_ar = site_switch_language_url('ar');
+$language_toggle_url = site_language() === 'ar' ? $switch_to_en : $switch_to_ar;
+$language_toggle_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
 $site_user_name = $_SESSION['site_user_name'] ?? '';
 $site_user_id = isset($_SESSION['site_user_id']) ? (int)$_SESSION['site_user_id'] : 0;
 $site_user_points = isset($_SESSION['site_user_loyalty_points']) ? (int)$_SESSION['site_user_loyalty_points'] : 0;
@@ -42,7 +44,8 @@ $site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_
     <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/bootstrap.css'), ENT_QUOTES, 'UTF-8'); ?>">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=6.8">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=7.5">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=1.0">
 
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -104,12 +107,7 @@ $site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_
                         <a class="nav-auth-link nav-auth-primary <?php echo $current_page === 'register.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
                     <?php endif; ?>
 
-                    <?php if (!$is_auth_page || $site_header_is_user): ?>
-                        <div class="nav-language-switcher nav-language-pair" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <a class="nav-language-link <?php echo site_language() === 'ar' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($switch_to_ar, ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('lang_ar'); ?></a>
-                            <a class="nav-language-link <?php echo site_language() === 'en' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($switch_to_en, ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('lang_en'); ?></a>
-                        </div>
-                    <?php endif; ?>
+                    <a class="nav-language-link nav-language-toggle" href="<?php echo htmlspecialchars($language_toggle_url, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($language_toggle_label, ENT_QUOTES, 'UTF-8'); ?></a>
 
                     <?php if ($site_header_is_user): ?>
                         <a class="nav-notification-link <?php echo $current_page === 'notifications.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('nav_notifications'), ENT_QUOTES, 'UTF-8'); ?>">

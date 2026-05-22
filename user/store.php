@@ -63,6 +63,10 @@ include dirname(__DIR__) . '/includes/header.php';
             <div>
                 <h2 class="section-title store-section-title"><?php echo t('store_section_title'); ?></h2>
                 <p class="store-toolbar-text"><?php echo t('store_toolbar_text'); ?></p>
+                <p class="store-scope-note"><?php echo t('store_scope_text'); ?></p>
+                <?php if (!$store_can_order): ?>
+                    <div class="message info store-auth-message"><?php echo t('store_login_required_notice'); ?></div>
+                <?php endif; ?>
             </div>
             <div class="store-filter-chips" id="storeFilterChips">
                 <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>" class="store-filter-chip <?php echo $selected_category === '' ? 'active' : ''; ?>" data-store-filter="all"><?php echo t('store_all_products'); ?></a>
@@ -242,7 +246,8 @@ include dirname(__DIR__) . '/includes/header.php';
             'basketItem' => t('store_basket_item'),
             'basketItems' => t('store_basket_items'),
             'removeItem' => t('store_remove_item'),
-            'bookedOut' => t('booking_slot_booked')
+            'bookedOut' => t('booking_slot_booked'),
+            'loginRequired' => t('store_login_required_notice')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
         const storeCanOrder = <?php echo $store_can_order ? 'true' : 'false'; ?>;
         const storeLoginUrl = <?php echo json_encode($store_login_url); ?>;
@@ -344,6 +349,15 @@ include dirname(__DIR__) . '/includes/header.php';
         }
 
         function showToast(message) {
+            if (typeof window.showSiteModal === 'function') {
+                window.showSiteModal({
+                    title: <?php echo json_encode(t('modal_message_title'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
+                    message: message,
+                    type: 'info'
+                });
+                return;
+            }
+
             if (!toast || !toastText) {
                 return;
             }
@@ -476,7 +490,13 @@ include dirname(__DIR__) . '/includes/header.php';
 
         function addToCart(productId) {
             if (!storeCanOrder) {
-                window.location.href = storeLoginUrl;
+                if (typeof window.showSiteConfirm === 'function') {
+                    window.showSiteConfirm(storeTexts.loginRequired, function () {
+                        window.location.href = storeLoginUrl;
+                    }, <?php echo json_encode(t('modal_message_title'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>);
+                } else {
+                    window.location.href = storeLoginUrl;
+                }
                 return;
             }
 

@@ -234,6 +234,10 @@ $dashboard_links = [
     ]
 ];
 
+$loyalty_settings = get_loyalty_settings($conn);
+$loyalty_earn_display = rtrim(rtrim(number_format((float)$loyalty_settings['earn_per_jod'], 2), '0'), '.');
+$loyalty_redeem_display = rtrim(rtrim(number_format((float)$loyalty_settings['redeem_points_per_jod'], 2), '0'), '.');
+
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
@@ -414,6 +418,12 @@ include dirname(__DIR__) . '/includes/header.php';
                         <span class="ticket-label"><?php echo t('loyalty_points'); ?></span>
                         <strong><?php echo (int)$current_site_user['loyalty_points']; ?></strong>
                         <p><?php echo t('profile_loyalty_text'); ?></p>
+                        <div class="user-loyalty-rules">
+                            <b><?php echo t('loyalty_calculation_title'); ?></b>
+                            <span><?php echo t('loyalty_calculation_earn', ['points' => $loyalty_earn_display]); ?></span>
+                            <span><?php echo t('loyalty_calculation_redeem', ['points' => $loyalty_redeem_display]); ?></span>
+                            <em><?php echo t('loyalty_calculation_balance'); ?></em>
+                        </div>
                         <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-secondary-btn"><?php echo t('nav_my_bookings'); ?></a>
                     </div>
 

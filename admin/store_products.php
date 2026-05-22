@@ -217,7 +217,7 @@ include 'includes/header.php';
         <div class="page-header">
             <h1><?php echo t('admin_store_products_management'); ?></h1>
             <?php if ($store_ready): ?>
-                <button class="btn" onclick="openAddModal()"><?php echo t('admin_action_add'); ?> <?php echo t('admin_product'); ?></button>
+                <button class="btn" onclick="openProductModal()"><?php echo t('admin_action_add'); ?> <?php echo t('admin_product'); ?></button>
             <?php endif; ?>
         </div>
 
@@ -303,7 +303,7 @@ include 'includes/header.php';
                                     </td>
                                     <td class="admin-store-actions-cell">
                                         <div class="admin-store-actions">
-                                            <button class="btn btn-small btn-success admin-store-action-btn" onclick='openEditModal(<?php echo json_encode($product, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>)'><?php echo t('admin_action_edit'); ?></button>
+                                            <button class="btn btn-small btn-success admin-store-action-btn" onclick='openProductModal(<?php echo json_encode($product, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>)'><?php echo t('admin_action_edit'); ?></button>
                                             <button class="btn btn-small btn-danger admin-store-action-btn" onclick="confirmDelete(<?php echo (int)$product['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
                                         </div>
                                     </td>
@@ -318,22 +318,23 @@ include 'includes/header.php';
 </div>
 
 <?php if ($store_ready): ?>
-<div id="addModal" class="modal">
+<div id="formModal" class="modal">
     <div class="modal-content admin-store-modal">
-        <span class="close" onclick="closeAddModal()">&times;</span>
-        <h2><?php echo t('admin_action_add'); ?> <?php echo t('admin_product'); ?></h2>
+        <span class="close" onclick="closeFormModal()">&times;</span>
+        <h2 id="formModalTitle"><?php echo t('admin_action_add'); ?> <?php echo t('admin_product'); ?></h2>
         <form method="POST" action="" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="add">
+            <input type="hidden" name="action" id="form_action" value="add">
+            <input type="hidden" name="id" id="form_id">
             <?php echo admin_csrf_input(); ?>
 
             <div class="form-group">
                 <label><?php echo t('admin_product_name'); ?></label>
-                <input type="text" name="product_name" required>
+                <input type="text" name="product_name" id="form_product_name" required>
             </div>
 
             <div class="form-group">
                 <label><?php echo t('admin_field_category'); ?></label>
-                <select name="category" required>
+                <select name="category" id="form_category" required>
                     <?php foreach ($allowed_categories as $category): ?>
                         <option value="<?php echo htmlspecialchars($category); ?>"><?php echo htmlspecialchars(translated_category_label($category)); ?></option>
                     <?php endforeach; ?>
@@ -342,17 +343,17 @@ include 'includes/header.php';
 
             <div class="form-group">
                 <label><?php echo t('admin_field_price'); ?> (JOD)</label>
-                <input type="number" step="0.01" min="0" name="price" required>
+                <input type="number" step="0.01" min="0" name="price" id="form_price" required>
             </div>
 
             <div class="form-group">
                 <label><?php echo t('admin_field_stock'); ?></label>
-                <input type="number" min="0" name="stock_quantity" required>
+                <input type="number" min="0" name="stock_quantity" id="form_stock_quantity" required>
             </div>
 
             <div class="form-group">
                 <label><?php echo t('admin_field_status'); ?></label>
-                <select name="status" required>
+                <select name="status" id="form_status" required>
                     <?php foreach ($allowed_statuses as $status_option): ?>
                         <option value="<?php echo htmlspecialchars($status_option); ?>"><?php echo htmlspecialchars(t('admin_status_' . strtolower($status_option), [], $status_option)); ?></option>
                     <?php endforeach; ?>
@@ -361,90 +362,30 @@ include 'includes/header.php';
 
             <div class="form-group">
                 <label><?php echo t('admin_field_description'); ?></label>
-                <textarea name="description" rows="4" placeholder="<?php echo htmlspecialchars(t('admin_product_description_placeholder'), ENT_QUOTES, 'UTF-8'); ?>"></textarea>
+                <textarea name="description" id="form_description" rows="4" placeholder="<?php echo htmlspecialchars(t('admin_product_description_placeholder'), ENT_QUOTES, 'UTF-8'); ?>"></textarea>
             </div>
 
-            <div class="form-group">
-                <label><?php echo t('admin_field_image'); ?></label>
-                <input type="file" name="product_image" accept="image/jpeg,image/png,image/gif">
-                <small><?php echo t('admin_upload_hint'); ?></small>
-            </div>
-
-            <div class="form-group">
-                <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_add'); ?></button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="editModal" class="modal">
-    <div class="modal-content admin-store-modal">
-        <span class="close" onclick="closeEditModal()">&times;</span>
-        <h2><?php echo t('admin_action_edit'); ?> <?php echo t('admin_product'); ?></h2>
-        <form method="POST" action="" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="edit">
-            <input type="hidden" name="id" id="edit_id">
-            <?php echo admin_csrf_input(); ?>
-
-            <div class="form-group">
-                <label><?php echo t('admin_product_name'); ?></label>
-                <input type="text" name="product_name" id="edit_product_name" required>
-            </div>
-
-            <div class="form-group">
-                <label><?php echo t('admin_field_category'); ?></label>
-                <select name="category" id="edit_category" required>
-                    <?php foreach ($allowed_categories as $category): ?>
-                        <option value="<?php echo htmlspecialchars($category); ?>"><?php echo htmlspecialchars(translated_category_label($category)); ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label><?php echo t('admin_field_price'); ?> (JOD)</label>
-                <input type="number" step="0.01" min="0" name="price" id="edit_price" required>
-            </div>
-
-            <div class="form-group">
-                <label><?php echo t('admin_field_stock'); ?></label>
-                <input type="number" min="0" name="stock_quantity" id="edit_stock_quantity" required>
-            </div>
-
-            <div class="form-group">
-                <label><?php echo t('admin_field_status'); ?></label>
-                <select name="status" id="edit_status" required>
-                    <?php foreach ($allowed_statuses as $status_option): ?>
-                        <option value="<?php echo htmlspecialchars($status_option); ?>"><?php echo htmlspecialchars(t('admin_status_' . strtolower($status_option), [], $status_option)); ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label><?php echo t('admin_field_description'); ?></label>
-                <textarea name="description" id="edit_description" rows="4"></textarea>
-            </div>
-
-            <div class="form-group">
+            <div class="form-group admin-current-image-group" id="form_current_image_group" hidden>
                 <label><?php echo t('admin_current_image'); ?></label>
-                <div id="edit_current_image" class="admin-store-current-image"></div>
+                <div id="form_current_image" class="admin-store-current-image"></div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group admin-current-image-group" id="form_remove_image_group" hidden>
                 <label>
-                    <input type="checkbox" name="remove_image" id="edit_remove_image" value="1">
+                    <input type="checkbox" name="remove_image" id="form_remove_image" value="1">
                     <?php echo t('admin_remove_current_image'); ?>
                 </label>
                 <small><?php echo t('admin_remove_image_hint'); ?></small>
             </div>
 
             <div class="form-group">
-                <label><?php echo t('admin_replace_image'); ?></label>
-                <input type="file" name="product_image" id="edit_product_image" accept="image/jpeg,image/png,image/gif">
-                <small><?php echo t('admin_replace_image_hint'); ?></small>
+                <label id="form_image_label"><?php echo t('admin_field_image'); ?></label>
+                <input type="file" name="product_image" id="form_product_image" accept="image/jpeg,image/png,image/gif">
+                <small id="form_image_hint"><?php echo t('admin_upload_hint'); ?></small>
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn" style="width: 100%;"><?php echo t('admin_action_update'); ?></button>
+                <button type="submit" class="btn" id="form_submit" style="width: 100%;"><?php echo t('admin_action_add'); ?></button>
             </div>
         </form>
     </div>
@@ -472,7 +413,7 @@ include 'includes/header.php';
     }
 
     function renderEditProductImage(imagePath) {
-        const imageContainer = document.getElementById('edit_current_image');
+        const imageContainer = document.getElementById('form_current_image');
         const imageUrl = resolveAdminAssetUrl(imagePath);
 
         if (imageUrl) {
@@ -482,33 +423,33 @@ include 'includes/header.php';
         }
     }
 
-    function openAddModal() {
-        document.getElementById('addModal').style.display = 'block';
+    function openProductModal(product) {
+        const isEdit = !!product;
+        document.getElementById('form_action').value = isEdit ? 'edit' : 'add';
+        document.getElementById('form_id').value = isEdit ? product.id : '';
+        document.getElementById('form_product_name').value = isEdit ? product.product_name : '';
+        document.getElementById('form_category').value = isEdit ? product.category : '<?php echo addslashes($allowed_categories[0]); ?>';
+        document.getElementById('form_price').value = isEdit ? product.price : '';
+        document.getElementById('form_stock_quantity').value = isEdit ? product.stock_quantity : '';
+        document.getElementById('form_status').value = isEdit ? product.status : 'Active';
+        document.getElementById('form_description').value = isEdit ? (product.description || '') : '';
+        document.getElementById('form_remove_image').checked = false;
+        document.getElementById('form_product_image').value = '';
+        document.getElementById('form_current_image_group').hidden = !isEdit;
+        document.getElementById('form_remove_image_group').hidden = !isEdit;
+        document.getElementById('form_image_label').textContent = isEdit ? '<?php echo addslashes(t('admin_replace_image')); ?>' : '<?php echo addslashes(t('admin_field_image')); ?>';
+        document.getElementById('form_image_hint').textContent = isEdit ? '<?php echo addslashes(t('admin_replace_image_hint')); ?>' : '<?php echo addslashes(t('admin_upload_hint')); ?>';
+        document.getElementById('formModalTitle').textContent = isEdit ? '<?php echo addslashes(t('admin_action_edit') . ' ' . t('admin_product')); ?>' : '<?php echo addslashes(t('admin_action_add') . ' ' . t('admin_product')); ?>';
+        document.getElementById('form_submit').textContent = isEdit ? '<?php echo addslashes(t('admin_action_update')); ?>' : '<?php echo addslashes(t('admin_action_add')); ?>';
+
+        document.getElementById('form_current_image').dataset.imagePath = isEdit ? (product.image_path || '') : '';
+        renderEditProductImage(isEdit ? (product.image_path || '') : '');
+
+        document.getElementById('formModal').style.display = 'block';
     }
 
-    function closeAddModal() {
-        document.getElementById('addModal').style.display = 'none';
-    }
-
-    function openEditModal(product) {
-        document.getElementById('edit_id').value = product.id;
-        document.getElementById('edit_product_name').value = product.product_name;
-        document.getElementById('edit_category').value = product.category;
-        document.getElementById('edit_price').value = product.price;
-        document.getElementById('edit_stock_quantity').value = product.stock_quantity;
-        document.getElementById('edit_status').value = product.status;
-        document.getElementById('edit_description').value = product.description || '';
-        document.getElementById('edit_remove_image').checked = false;
-        document.getElementById('edit_product_image').value = '';
-
-        document.getElementById('edit_current_image').dataset.imagePath = product.image_path || '';
-        renderEditProductImage(product.image_path || '');
-
-        document.getElementById('editModal').style.display = 'block';
-    }
-
-    function closeEditModal() {
-        document.getElementById('editModal').style.display = 'none';
+    function closeFormModal() {
+        document.getElementById('formModal').style.display = 'none';
     }
 
     function confirmDelete(id) {
@@ -519,20 +460,15 @@ include 'includes/header.php';
     }
 
     window.onclick = function(event) {
-        const addModal = document.getElementById('addModal');
-        const editModal = document.getElementById('editModal');
+        const formModal = document.getElementById('formModal');
 
-        if (event.target === addModal) {
-            closeAddModal();
-        }
-
-        if (event.target === editModal) {
-            closeEditModal();
+        if (event.target === formModal) {
+            closeFormModal();
         }
     };
 
-    document.getElementById('edit_remove_image').addEventListener('change', function() {
-        const currentImagePath = document.getElementById('edit_current_image').dataset.imagePath || '';
+    document.getElementById('form_remove_image').addEventListener('change', function() {
+        const currentImagePath = document.getElementById('form_current_image').dataset.imagePath || '';
         renderEditProductImage(this.checked ? '' : currentImagePath);
     });
 </script>

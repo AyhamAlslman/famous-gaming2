@@ -9,7 +9,7 @@ $is_logged_in = !empty($_SESSION['site_user_id']);
 $home_hero_image = site_url('images/home-hero-2026.png');
 $home_booking_image = site_url('images/home-game-collage.jpg');
 $home_food_image = site_url('images/service-food.png');
-$home_events_image = site_url('images/home-neon-sign.jpg');
+$home_store_image = site_url('images/store.jpg');
 
 include dirname(__DIR__) . '/includes/header.php';
 ?>
@@ -51,30 +51,30 @@ include dirname(__DIR__) . '/includes/header.php';
         </div>
 
         <div class="home-service-grid home-service-grid-three">
-            <a href="<?php echo htmlspecialchars(site_url('general/service_gaming.php'), ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
+            <a href="<?php echo htmlspecialchars(site_url('store.php'), ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
+                <img src="<?php echo htmlspecialchars($home_store_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('home_store_card_title'), ENT_QUOTES, 'UTF-8'); ?>">
+                <div class="index-service-card-copy">
+                    <span><?php echo t('store_eyebrow'); ?></span>
+                    <h3><?php echo t('home_store_card_title'); ?></h3>
+                    <p><?php echo t('home_store_card_text'); ?></p>
+                </div>
+            </a>
+
+            <a href="<?php echo htmlspecialchars($is_logged_in ? site_url('user/booking.php') : $booking_login_link, ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
                 <img src="<?php echo htmlspecialchars($home_booking_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('home_book_card_title'), ENT_QUOTES, 'UTF-8'); ?>">
-                <div>
-                    <span><?php echo t('services_gaming_type'); ?></span>
-                    <h3><?php echo t('services_gaming_title'); ?></h3>
-                    <p><?php echo t('services_gaming_desc'); ?></p>
+                <div class="index-service-card-copy">
+                    <span><?php echo t('home_rooms_title'); ?></span>
+                    <h3><?php echo t('home_book_card_title'); ?></h3>
+                    <p><?php echo t('home_book_card_text'); ?></p>
                 </div>
             </a>
 
             <a href="<?php echo htmlspecialchars(site_url('general/service_hospitality.php'), ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
                 <img src="<?php echo htmlspecialchars($home_food_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('home_snacks_card_title'), ENT_QUOTES, 'UTF-8'); ?>">
-                <div>
-                    <span><?php echo t('services_hospitality_type'); ?></span>
-                    <h3><?php echo t('services_hospitality_title'); ?></h3>
-                    <p><?php echo t('services_hospitality_desc'); ?></p>
-                </div>
-            </a>
-
-            <a href="<?php echo htmlspecialchars(site_url('general/service_events.php'), ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
-                <img src="<?php echo htmlspecialchars($home_events_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('services_events_title'), ENT_QUOTES, 'UTF-8'); ?>">
-                <div>
-                    <span><?php echo t('services_events_type'); ?></span>
-                    <h3><?php echo t('services_events_title'); ?></h3>
-                    <p><?php echo t('services_events_desc'); ?></p>
+                <div class="index-service-card-copy">
+                    <span><?php echo t('home_menu_title'); ?></span>
+                    <h3><?php echo t('home_snacks_card_title'); ?></h3>
+                    <p><?php echo t('home_snacks_card_text'); ?></p>
                 </div>
             </a>
         </div>

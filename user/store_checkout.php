@@ -30,6 +30,9 @@ $otp_code = sanitize_input($_POST['otp_code'] ?? '');
 $otp_confirmed = sanitize_input($_POST['otp_confirmed'] ?? '0');
 $subtotal = 0.0;
 $payable_total = 0.0;
+$loyalty_settings = get_loyalty_settings($conn);
+$loyalty_earn_display = rtrim(rtrim(number_format((float)$loyalty_settings['earn_per_jod'], 2), '0'), '.');
+$loyalty_redeem_display = rtrim(rtrim(number_format((float)$loyalty_settings['redeem_points_per_jod'], 2), '0'), '.');
 
 if (!in_array($selected_method, ['Cash', 'Visa', 'CliQ'], true)) {
     $selected_method = 'Cash';
@@ -351,6 +354,11 @@ include dirname(__DIR__) . '/includes/header.php';
                     <div class="payment-success-panel">
                         <h3><?php echo t('store_checkout_order_ready'); ?></h3>
                         <p><?php echo t('store_checkout_success_points', ['points' => (int)$success_order['loyalty_points_earned']]); ?></p>
+                        <div class="user-loyalty-rules checkout-loyalty-rules">
+                            <b><?php echo t('loyalty_calculation_title'); ?></b>
+                            <span><?php echo t('loyalty_calculation_earn', ['points' => $loyalty_earn_display]); ?></span>
+                            <span><?php echo t('loyalty_calculation_redeem', ['points' => $loyalty_redeem_display]); ?></span>
+                        </div>
                         <div class="booking-ticket-actions">
                             <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('payment_go_to_bookings'); ?></a>
                             <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-secondary-btn"><?php echo t('store_checkout_back_store'); ?></a>
@@ -404,6 +412,11 @@ include dirname(__DIR__) . '/includes/header.php';
                     </div>
 
                     <p class="simulation-note"><?php echo t('payment_note'); ?></p>
+                    <div class="user-loyalty-rules checkout-loyalty-rules">
+                        <b><?php echo t('loyalty_calculation_title'); ?></b>
+                        <span><?php echo t('loyalty_calculation_earn', ['points' => $loyalty_earn_display]); ?></span>
+                        <span><?php echo t('loyalty_calculation_redeem', ['points' => $loyalty_redeem_display]); ?></span>
+                    </div>
 
                     <form method="POST" action="<?php echo htmlspecialchars(site_url('user/store_checkout.php'), ENT_QUOTES, 'UTF-8'); ?>" class="checkout-form">
                         <input type="hidden" name="checkout_action" value="confirm">

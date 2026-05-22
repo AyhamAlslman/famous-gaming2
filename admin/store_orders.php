@@ -87,27 +87,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
 
                 if (mysqli_stmt_execute($stmt)) {
-                    mysqli_commit($conn);
-                    $success_message = t('store_order_update_success');
-                    $selected_order_id = $order_id;
-                    create_admin_notification(
-                        $conn,
-                        'store_order_updated',
-                        'Store order updated',
-                        'Store order ' . $order['order_code'] . ' was updated.',
-                        'store_orders',
-                        $order_id,
-                        'store_orders.php?order_id=' . $order_id
-                    );
-                    create_site_notification(
-                        $conn,
-                        (int)$order['user_id'],
-                        'store_order_updated',
-                        t('store_order_update_success'),
-                        t('store_order_user_update'),
-                        'user/my_bookings.php'
-                    );
-                    log_admin_action($conn, $_SESSION['admin_id'], 'UPDATE_STORE_ORDER', 'store_orders', $order_id);
+                    $stock_update_ok = true;
+                    $should_deduct_stock = in_array($status, ['Confirmed', 'Completed'], true) && (int)($order['stock_deducted'] ?? 0) === 0;
+
+                    if ($should_deduct_stock) {
+                        $items = [];
+                        $items_stmt = mysqli_prepare($conn, "SELECT product_id, quantity FROM store_order_items WHERE order_id = ?");
+                        mysqli_stmt_bind_param($items_stmt, "i", $order_id);
+                        mysqli_stmt_execute($items_stmt);
+                        $items_result = mysqli_stmt_get_result($items_stmt);
+                        if ($items_result) {
+                            $items = mysqli_fetch_all($items_result, MYSQLI_ASSOC);
+                        }
+                        mysqli_stmt_close($items_stmt);
+
+                        foreach ($items as $item) {
+                            $quantity = (int)($item['quantity'] ?? 0);
+                            $product_id = (int)($item['product_id'] ?? 0);
+
+                            if ($quantity <= 0 || $product_id <= 0) {
+                                continue;
+                            }
+
+                            $stock_stmt = mysqli_prepare(
+                                $conn,
+                                "UPDATE store_products
+                                 SET stock_quantity = stock_quantity - ?
+                                 WHERE id = ? AND stock_quantity >= ?"
+                            );
+                            mysqli_stmt_bind_param($stock_stmt, "iii", $quantity, $product_id, $quantity);
+                            mysqli_stmt_execute($stock_stmt);
+                            $stock_updated = mysqli_stmt_affected_rows($stock_stmt);
+                            mysqli_stmt_close($stock_stmt);
+
+                            if ($stock_updated <= 0) {
+                                $stock_update_ok = false;
+                                break;
+                            }
+                        }
+
+                        if ($stock_update_ok) {
+                            $stock_flag_stmt = mysqli_prepare($conn, "UPDATE store_orders SET stock_deducted = 1 WHERE id = ?");
+                            mysqli_stmt_bind_param($stock_flag_stmt, "i", $order_id);
+                            $stock_update_ok = mysqli_stmt_execute($stock_flag_stmt);
+                            mysqli_stmt_close($stock_flag_stmt);
+                        }
+                    }
+
+                    if ($stock_update_ok) {
+                        mysqli_commit($conn);
+                        $success_message = t('store_order_update_success');
+                        $selected_order_id = $order_id;
+                        create_admin_notification(
+                            $conn,
+                            'store_order_updated',
+                            'Store order updated',
+                            'Store order ' . $order['order_code'] . ' was updated.',
+                            'store_orders',
+                            $order_id,
+                            'store_orders.php?order_id=' . $order_id
+                        );
+                        create_site_notification(
+                            $conn,
+                            (int)$order['user_id'],
+                            'store_order_updated',
+                            t('store_order_update_success'),
+                            t('store_order_user_update'),
+                            'user/my_bookings.php'
+                        );
+                        log_admin_action($conn, $_SESSION['admin_id'], 'UPDATE_STORE_ORDER', 'store_orders', $order_id);
+                    } else {
+                        mysqli_rollback($conn);
+                        $error_message = t('store_order_stock_update_error');
+                    }
                 } else {
                     mysqli_rollback($conn);
                     $error_message = t('store_order_update_error');

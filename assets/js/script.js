@@ -23,7 +23,10 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const showing = input.type === 'text';
             input.type = showing ? 'password' : 'text';
-            button.textContent = showing ? button.dataset.showLabel : button.dataset.hideLabel;
+            const nextLabel = showing ? button.dataset.showLabel : button.dataset.hideLabel;
+            button.setAttribute('aria-label', nextLabel);
+            button.setAttribute('title', nextLabel);
+            button.classList.toggle('is-visible', !showing);
         });
     });
 

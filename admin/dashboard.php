@@ -18,8 +18,15 @@ $stats['total_users'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) 
 $stats['menu_items'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM menu_items"))['count'] ?? 0;
 $stats['store_products'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM store_products"))['count'] ?? 0;
 $stats['store_orders'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM store_orders"))['count'] ?? 0;
+$stats['pending_store_orders'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM store_orders WHERE status = 'Pending'"))['count'] ?? 0;
 $stats['busy_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms WHERE status = 'Busy'"))['count'] ?? 0;
 $stats['pending_menu_orders'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT b.id) as count FROM booking_items bi INNER JOIN bookings b ON bi.booking_id = b.id WHERE b.status IN ('Pending', 'Confirmed') AND b.booking_date >= CURDATE()"))['count'] ?? 0;
+$stats['pending_orders_total'] = (int)$stats['pending_bookings'] + (int)$stats['pending_store_orders'] + (int)$stats['pending_menu_orders'];
+$stats['loyalty_points_balance'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(loyalty_points), 0) as total FROM site_users"))['total'] ?? 0;
+$booking_points = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(loyalty_points_earned), 0) as earned, IFNULL(SUM(loyalty_points_redeemed), 0) as redeemed FROM bookings")) ?: ['earned' => 0, 'redeemed' => 0];
+$store_points = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(loyalty_points_earned), 0) as earned, IFNULL(SUM(loyalty_points_redeemed), 0) as redeemed FROM store_orders")) ?: ['earned' => 0, 'redeemed' => 0];
+$stats['loyalty_points_earned'] = (int)$booking_points['earned'] + (int)$store_points['earned'];
+$stats['loyalty_points_redeemed'] = (int)$booking_points['redeemed'] + (int)$store_points['redeemed'];
 $booking_revenue = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) as total FROM bookings WHERE payment_status = 'Paid'"))['total'] ?? 0;
 $store_revenue = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) as total FROM store_orders WHERE payment_status = 'Paid'"))['total'] ?? 0;
 $stats['paid_revenue'] = (float)$booking_revenue + (float)$store_revenue;
@@ -138,12 +145,8 @@ include 'includes/header.php';
                     <div class="stat-number"><?php echo $stats['busy_rooms']; ?></div>
                 </a>
                 <a href="bookings_full_crud.php" class="stat-card admin-stat-link admin-overview-widget">
-                    <h3><?php echo t('admin_dashboard_pending_bookings'); ?></h3>
-                    <div class="stat-number"><?php echo $stats['pending_bookings']; ?></div>
-                </a>
-                <a href="store_orders.php" class="stat-card admin-stat-link admin-overview-widget">
-                    <h3><?php echo t('admin_dashboard_store_orders'); ?></h3>
-                    <div class="stat-number"><?php echo $stats['pending_menu_orders']; ?></div>
+                    <h3><?php echo t('admin_dashboard_pending_orders'); ?></h3>
+                    <div class="stat-number"><?php echo $stats['pending_orders_total']; ?></div>
                 </a>
                 <a href="notifications.php" class="stat-card admin-stat-link admin-overview-widget">
                     <h3><?php echo t('admin_notifications'); ?></h3>
@@ -209,6 +212,27 @@ include 'includes/header.php';
                     </div>
                 </section>
             </div>
+
+            <section class="admin-overview-panel admin-loyalty-report">
+                <div class="admin-panel-heading">
+                    <span><?php echo t('admin_dashboard_secondary_report'); ?></span>
+                    <h2><?php echo t('admin_dashboard_loyalty_points'); ?></h2>
+                </div>
+                <div class="admin-loyalty-report-grid">
+                    <div>
+                        <span><?php echo t('loyalty_points'); ?></span>
+                        <strong><?php echo (int)$stats['loyalty_points_balance']; ?></strong>
+                    </div>
+                    <div>
+                        <span><?php echo t('admin_loyalty_earned'); ?></span>
+                        <strong><?php echo (int)$stats['loyalty_points_earned']; ?></strong>
+                    </div>
+                    <div>
+                        <span><?php echo t('admin_loyalty_redeemed'); ?></span>
+                        <strong><?php echo (int)$stats['loyalty_points_redeemed']; ?></strong>
+                    </div>
+                </div>
+            </section>
 
             <h2 class="section-title"><?php echo t('admin_dashboard_todays_bookings'); ?> (<?php echo date('Y-m-d'); ?>)</h2>
 
