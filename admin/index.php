@@ -16,7 +16,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
     exit();
 } else {
     // Redirect to unified login page
-    header('Location: ' . site_url('auth/login.php?redirect=admin/dashboard.php'));
+    header('Location: ' . site_url('general/login.php?redirect=admin/dashboard.php'));
     exit();
 }
 ?>

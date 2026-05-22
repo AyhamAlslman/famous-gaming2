@@ -7,7 +7,7 @@ $current_site_user = get_current_site_user($conn);
 
 if (!$current_site_user) {
     $_SESSION['post_login_redirect'] = 'user/user_dashboard.php';
-    header('Location: ' . site_url('auth/login.php?redirect=user/user_dashboard.php'));
+    header('Location: ' . site_url('general/login.php?redirect=user/user_dashboard.php'));
     exit;
 }
 

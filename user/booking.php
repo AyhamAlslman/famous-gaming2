@@ -12,7 +12,7 @@ $loyalty_points_earned = 0;
 
 if (!$current_site_user) {
     $_SESSION['post_login_redirect'] = 'user/booking.php';
-    header('Location: ' . site_url('auth/login.php?redirect=user/booking.php'));
+    header('Location: ' . site_url('general/login.php?redirect=user/booking.php'));
     exit;
 }
 

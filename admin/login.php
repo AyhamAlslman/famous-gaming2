@@ -6,6 +6,6 @@ if (!empty($_SESSION['admin_logged_in'])) {
     exit;
 }
 
-header('Location: ' . site_url('auth/login.php?redirect=admin/dashboard.php'));
+header('Location: ' . site_url('general/login.php?redirect=admin/dashboard.php'));
 exit;
 ?>

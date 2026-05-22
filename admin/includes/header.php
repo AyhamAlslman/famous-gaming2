@@ -37,7 +37,7 @@ $admin_language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang
                 <li><a href="employees.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'employees.php') ? 'class="active"' : ''; ?>><?php echo t('admin_nav_employees'); ?></a></li>
                 <?php endif; ?>
                 <li><a href="complaints_full_crud.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'complaints_full_crud.php') ? 'class="active"' : ''; ?>><?php echo t('admin_nav_complaints'); ?></a></li>
-                <li><a href="<?php echo htmlspecialchars(site_url('auth/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-admin-confirm-message="<?php echo htmlspecialchars(t('admin_logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-admin-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('admin_nav_logout'); ?></a></li>
+                <li><a href="<?php echo htmlspecialchars(site_url('general/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-admin-confirm-message="<?php echo htmlspecialchars(t('admin_logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-admin-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('admin_nav_logout'); ?></a></li>
             </ul>
             <div class="admin-navbar-tools">
                 <div class="admin-notification-nav">

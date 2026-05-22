@@ -378,7 +378,7 @@ body {
 .hero {
     background:
         linear-gradient(120deg, rgba(3, 8, 18, 0.94) 0%, rgba(3, 8, 18, 0.72) 45%, rgba(4, 8, 18, 0.94) 100%),
-        url('../images/hero-bg.jpg') center/cover no-repeat;
+        url('../../images/home-hero-background.png') center/cover no-repeat;
     padding: 6rem 0 5.5rem;
     text-align: center;
     border-bottom: 1px solid rgba(39, 211, 255, 0.24);
@@ -1868,7 +1868,7 @@ body.rtl-layout {
 }
 
 .booking-info-list li::before {
-    content: '•';
+    content: 'â€¢';
     color: var(--cyan);
     font-weight: bold;
     position: absolute;
@@ -5246,7 +5246,7 @@ body.site-modal-open {
     border-bottom: 1px solid rgba(73, 181, 255, 0.26);
     background:
         linear-gradient(90deg, rgba(7, 18, 36, 0.94), rgba(10, 33, 57, 0.84)),
-        url('../images/home-neon-sign.jpg') center / cover;
+        url('../../images/home-neon-sign.jpg') center / cover;
     backdrop-filter: blur(18px);
     box-shadow: 0 14px 34px rgba(2, 8, 22, 0.28);
 }
@@ -5431,7 +5431,7 @@ body.site-modal-open {
     border-top: 4px solid #168bff;
     background:
         linear-gradient(90deg, rgba(6, 24, 45, 0.94), rgba(7, 34, 58, 0.88)),
-        url('../images/home-neon-sign.jpg') center / cover;
+        url('../../images/home-neon-sign.jpg') center / cover;
 }
 
 .site-footer::before {
@@ -5561,7 +5561,7 @@ body.site-modal-open {
 body {
     background:
         linear-gradient(180deg, rgba(5, 13, 29, 0.92), rgba(7, 18, 36, 0.96)),
-        url('../images/home-hero-background.png') center top / cover fixed;
+        url('../../images/home-hero-background.png') center top / cover fixed;
 }
 
 .navbar {
@@ -5574,7 +5574,7 @@ body {
     border-radius: 16px;
     background:
         linear-gradient(90deg, rgba(6, 16, 35, 0.88), rgba(7, 31, 56, 0.78)),
-        url('../images/home-neon-sign.jpg') center / cover !important;
+        url('../../images/home-neon-sign.jpg') center / cover !important;
     box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.34),
         0 0 26px rgba(19, 178, 255, 0.18);
@@ -5635,7 +5635,7 @@ body {
     padding: 1.4rem;
     background:
         linear-gradient(180deg, rgba(8, 21, 45, 0.94), rgba(10, 29, 55, 0.92)),
-        url('../images/home-neon-sign.jpg') center / cover;
+        url('../../images/home-neon-sign.jpg') center / cover;
 }
 
 .arena-home-frame .home-intro-panel,
@@ -5711,19 +5711,19 @@ body {
     border-bottom: 1px solid rgba(86, 208, 255, 0.3);
     background:
         linear-gradient(90deg, rgba(5, 13, 29, 0.93), rgba(7, 27, 52, 0.7), rgba(5, 13, 29, 0.36)),
-        url('../images/home-hero-background.png') center / cover;
+        url('../../images/home-hero-background.png') center / cover;
 }
 
 .about-page-hero {
     background:
         linear-gradient(90deg, rgba(5, 13, 29, 0.93), rgba(7, 27, 52, 0.68), rgba(5, 13, 29, 0.28)),
-        url('../images/home-game-collage.jpg') center / cover;
+        url('../../images/home-game-collage.jpg') center / cover;
 }
 
 .contact-page-hero {
     background:
         linear-gradient(90deg, rgba(5, 13, 29, 0.93), rgba(7, 27, 52, 0.72), rgba(5, 13, 29, 0.3)),
-        url('../images/home-neon-sign.jpg') center / cover;
+        url('../../images/home-neon-sign.jpg') center / cover;
 }
 
 .arena-page-hero .container {
@@ -5838,7 +5838,7 @@ body {
     padding-bottom: 4rem;
     background:
         linear-gradient(90deg, rgba(5, 13, 29, 0.92), rgba(7, 31, 56, 0.72), rgba(5, 13, 29, 0.28)),
-        url('../images/home-hero-background.png') center / cover !important;
+        url('../../images/home-hero-background.png') center / cover !important;
     border-bottom: 1px solid rgba(86, 208, 255, 0.3);
 }
 
@@ -5875,7 +5875,7 @@ body {
 .store-product-media {
     background:
         linear-gradient(145deg, rgba(11, 31, 58, 0.92), rgba(5, 13, 29, 0.98)),
-        url('../images/store.jpg') center / cover;
+        url('../../images/store.jpg') center / cover;
 }
 
 .store-product-media img {
@@ -5965,7 +5965,7 @@ body {
 body {
     background:
         linear-gradient(180deg, rgba(20, 32, 51, 0.92), rgba(15, 26, 42, 0.96)),
-        url('../images/home-hero-background.png') center top / cover fixed;
+        url('../../images/home-hero-background.png') center top / cover fixed;
     color: var(--fg-text);
 }
 
@@ -5982,7 +5982,7 @@ body,
     border-color: rgba(132, 204, 255, 0.34);
     background:
         linear-gradient(90deg, rgba(18, 32, 53, 0.94), rgba(18, 47, 74, 0.86)),
-        url('../images/home-neon-sign.jpg') center / cover !important;
+        url('../../images/home-neon-sign.jpg') center / cover !important;
 }
 
 .nav-actions {
@@ -6376,7 +6376,7 @@ body,
     border-top-color: rgba(56, 189, 248, 0.58);
     background:
         linear-gradient(90deg, rgba(18, 32, 53, 0.96), rgba(19, 52, 79, 0.9)),
-        url('../images/home-neon-sign.jpg') center / cover;
+        url('../../images/home-neon-sign.jpg') center / cover;
 }
 
 @media (max-width: 1100px) {
@@ -6444,14 +6444,14 @@ body,
 body {
     background:
         linear-gradient(180deg, rgba(24, 38, 58, 0.94), rgba(18, 30, 48, 0.97)),
-        url('../images/home-hero-background.png') center top / cover fixed;
+        url('../../images/home-hero-background.png') center top / cover fixed;
     color: var(--fg-text);
 }
 
 .navbar {
     background:
         linear-gradient(90deg, rgba(30, 47, 72, 0.96), rgba(24, 58, 82, 0.9)),
-        url('../images/home-neon-sign.jpg') center / cover !important;
+        url('../../images/home-neon-sign.jpg') center / cover !important;
     border-color: var(--fg-line);
     box-shadow: 0 20px 55px rgba(5, 13, 26, 0.28);
 }
@@ -6796,7 +6796,7 @@ body {
     padding: clamp(0.75rem, 1.5vw, 1.15rem);
     background:
         linear-gradient(180deg, rgba(10, 26, 52, 0.9), rgba(5, 13, 29, 0.96)),
-        url('../images/home-neon-sign.jpg') center / cover;
+        url('../../images/home-neon-sign.jpg') center / cover;
     border-bottom: 1px solid rgba(94, 215, 255, 0.24);
 }
 
@@ -7044,7 +7044,7 @@ body {
     inset: -18px;
     z-index: -1;
     border-radius: 18px;
-    background: url('../images/home-hero-arena-board.png') center / cover no-repeat;
+    background: url('../../images/home-hero-2026.png') center / cover no-repeat;
     filter: blur(18px) saturate(1.18);
     opacity: 0.58;
 }
@@ -7201,7 +7201,7 @@ body {
     padding: clamp(2.4rem, 4vw, 3.4rem) 0 1.35rem;
     background:
         linear-gradient(90deg, rgba(7, 22, 42, 0.96), rgba(8, 34, 56, 0.9)),
-        url('../images/home-neon-sign.jpg') center / cover;
+        url('../../images/home-neon-sign.jpg') center / cover;
 }
 
 .site-footer-grid {
@@ -7382,7 +7382,7 @@ body {
     background:
         linear-gradient(90deg, rgba(2, 8, 18, 0.88) 0%, rgba(2, 8, 18, 0.55) 34%, rgba(2, 8, 18, 0.18) 62%, rgba(2, 8, 18, 0.62) 100%),
         linear-gradient(180deg, rgba(2, 8, 18, 0.12) 0%, rgba(2, 8, 18, 0.18) 48%, rgba(2, 8, 18, 0.9) 100%),
-        url('../images/home-hero-2026.png') center 48% / cover no-repeat;
+        url('../../images/home-hero-2026.png') center 48% / cover no-repeat;
 }
 
 .index-hero-redesign::before {
@@ -7671,7 +7671,7 @@ body {
     background:
         linear-gradient(90deg, rgba(2, 8, 18, 0.9) 0%, rgba(2, 8, 18, 0.62) 32%, rgba(2, 8, 18, 0.18) 64%, rgba(2, 8, 18, 0.5) 100%),
         linear-gradient(180deg, rgba(2, 8, 18, 0.06) 0%, rgba(2, 8, 18, 0.2) 55%, rgba(2, 8, 18, 0.92) 100%),
-        url('../images/home-hero-2026.png') center center / cover no-repeat;
+        url('../../images/home-hero-2026.png') center center / cover no-repeat;
 }
 
 .index-hero-layout {
@@ -7726,7 +7726,7 @@ body {
     background:
         linear-gradient(270deg, rgba(2, 8, 18, 0.9) 0%, rgba(2, 8, 18, 0.62) 32%, rgba(2, 8, 18, 0.18) 64%, rgba(2, 8, 18, 0.5) 100%),
         linear-gradient(180deg, rgba(2, 8, 18, 0.06) 0%, rgba(2, 8, 18, 0.2) 55%, rgba(2, 8, 18, 0.92) 100%),
-        url('../images/home-hero-2026.png') center center / cover no-repeat;
+        url('../../images/home-hero-2026.png') center center / cover no-repeat;
 }
 
 [dir="rtl"] .index-hero-layout {
@@ -7785,7 +7785,7 @@ body {
         padding-bottom: 3.5rem;
         background:
             linear-gradient(180deg, rgba(2, 8, 18, 0.2) 0%, rgba(2, 8, 18, 0.52) 42%, rgba(2, 8, 18, 0.94) 100%),
-            url('../images/home-hero-2026.png') center top / cover no-repeat;
+            url('../../images/home-hero-2026.png') center top / cover no-repeat;
     }
 
     .index-hero-layout,
@@ -7896,7 +7896,7 @@ body {
     content: '';
     position: absolute;
     inset: -24px;
-    background: url('../images/home-hero-2026.png') center / contain no-repeat;
+    background: url('../../images/home-hero-2026.png') center / contain no-repeat;
     filter: blur(22px) saturate(1.14);
     opacity: 0.38;
 }
@@ -8367,7 +8367,7 @@ body {
     padding: clamp(6.8rem, 9vw, 8.2rem) 0 clamp(2rem, 5vw, 4rem);
     background:
         linear-gradient(180deg, rgba(5, 14, 28, 0.86), rgba(6, 18, 34, 0.94)),
-        url('../images/home-hero-2026.png') center / cover no-repeat;
+        url('../../images/home-hero-2026.png') center / cover no-repeat;
 }
 
 .auth-page-content .container {
@@ -8513,7 +8513,7 @@ body {
     border-radius: 8px;
     background:
         linear-gradient(180deg, rgba(4, 14, 30, 0.34), rgba(4, 14, 30, 0.92)),
-        url('../images/home-hero-2026.png') center / cover no-repeat;
+        url('../../images/home-hero-2026.png') center / cover no-repeat;
     color: #ffffff;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
     overflow: hidden;
@@ -8622,14 +8622,14 @@ body {
     background:
         linear-gradient(90deg, rgba(3, 11, 24, 0.88) 0%, rgba(3, 11, 24, 0.58) 36%, rgba(3, 11, 24, 0.22) 66%, rgba(3, 11, 24, 0.56) 100%),
         linear-gradient(180deg, rgba(3, 11, 24, 0.1) 0%, rgba(3, 11, 24, 0.1) 58%, rgba(3, 11, 24, 0.86) 100%),
-        url('../images/home-hero-2026.png') center / cover no-repeat;
+        url('../../images/home-hero-2026.png') center / cover no-repeat;
 }
 
 [dir="rtl"] .index-hero-redesign {
     background:
         linear-gradient(270deg, rgba(3, 11, 24, 0.88) 0%, rgba(3, 11, 24, 0.58) 36%, rgba(3, 11, 24, 0.22) 66%, rgba(3, 11, 24, 0.56) 100%),
         linear-gradient(180deg, rgba(3, 11, 24, 0.1) 0%, rgba(3, 11, 24, 0.1) 58%, rgba(3, 11, 24, 0.86) 100%),
-        url('../images/home-hero-2026.png') center / cover no-repeat;
+        url('../../images/home-hero-2026.png') center / cover no-repeat;
 }
 
 .index-hero-redesign::before {
@@ -8848,13 +8848,13 @@ body {
     isolation: isolate;
     background:
         linear-gradient(90deg, rgba(3, 11, 24, 0.9), rgba(3, 11, 24, 0.45), rgba(3, 11, 24, 0.75)),
-        url('../images/home-hero-2026.png') center / cover no-repeat !important;
+        url('../../images/home-hero-2026.png') center / cover no-repeat !important;
 }
 
 [dir="rtl"] .arena-page-hero {
     background:
         linear-gradient(270deg, rgba(3, 11, 24, 0.9), rgba(3, 11, 24, 0.45), rgba(3, 11, 24, 0.75)),
-        url('../images/home-hero-2026.png') center / cover no-repeat !important;
+        url('../../images/home-hero-2026.png') center / cover no-repeat !important;
 }
 
 .arena-page-hero .container {
@@ -9054,7 +9054,7 @@ body {
     border-top: 1px solid rgba(118, 226, 255, 0.26);
     background:
         linear-gradient(180deg, rgba(7, 17, 31, 0.96), rgba(9, 22, 36, 0.98)),
-        url('../images/home-neon-sign.jpg') center / cover no-repeat;
+        url('../../images/home-neon-sign.jpg') center / cover no-repeat;
 }
 
 .site-footer-grid {
@@ -9498,5 +9498,104 @@ body {
 
     .index-page-shell .home-service-card-large {
         min-height: 290px;
+    }
+}
+
+/* Final image path overrides for pages loaded from general/ */
+.index-hero-redesign,
+[dir="rtl"] .index-hero-redesign {
+    background:
+        linear-gradient(90deg, rgba(3, 11, 24, 0.88) 0%, rgba(3, 11, 24, 0.58) 36%, rgba(3, 11, 24, 0.22) 66%, rgba(3, 11, 24, 0.56) 100%),
+        linear-gradient(180deg, rgba(3, 11, 24, 0.1) 0%, rgba(3, 11, 24, 0.1) 58%, rgba(3, 11, 24, 0.86) 100%),
+        var(--page-hero-image, url('../../images/home-hero-2026.png')) center / cover no-repeat !important;
+}
+
+[dir="rtl"] .index-hero-redesign {
+    background:
+        linear-gradient(270deg, rgba(3, 11, 24, 0.88) 0%, rgba(3, 11, 24, 0.58) 36%, rgba(3, 11, 24, 0.22) 66%, rgba(3, 11, 24, 0.56) 100%),
+        linear-gradient(180deg, rgba(3, 11, 24, 0.1) 0%, rgba(3, 11, 24, 0.1) 58%, rgba(3, 11, 24, 0.86) 100%),
+        var(--page-hero-image, url('../../images/home-hero-2026.png')) center / cover no-repeat !important;
+}
+
+.index-hero-media {
+    display: grid !important;
+    position: absolute;
+    inset: clamp(6.8rem, 10vw, 9rem) clamp(1rem, 4vw, 4rem) clamp(2rem, 5vw, 4rem) min(47%, 680px);
+    z-index: 1;
+    place-items: center;
+    pointer-events: none;
+}
+
+[dir="rtl"] .index-hero-media {
+    inset: clamp(6.8rem, 10vw, 9rem) min(47%, 680px) clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 4rem);
+}
+
+.index-hero-media::before {
+    background: var(--page-hero-image, url('../../images/home-hero-2026.png')) center / contain no-repeat !important;
+}
+
+.index-hero-media img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.index-hero-copy {
+    position: relative;
+    z-index: 2;
+}
+
+.arena-page-hero,
+[dir="rtl"] .arena-page-hero {
+    background:
+        linear-gradient(90deg, rgba(3, 11, 24, 0.92), rgba(3, 11, 24, 0.58), rgba(3, 11, 24, 0.34)),
+        var(--page-hero-image, url('../../images/home-hero-2026.png')) center / cover no-repeat !important;
+}
+
+[dir="rtl"] .arena-page-hero {
+    background:
+        linear-gradient(270deg, rgba(3, 11, 24, 0.92), rgba(3, 11, 24, 0.58), rgba(3, 11, 24, 0.34)),
+        var(--page-hero-image, url('../../images/home-hero-2026.png')) center / cover no-repeat !important;
+}
+
+.arena-page-hero .page-hero-visual {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.72;
+    pointer-events: none;
+}
+
+.arena-page-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(3, 11, 24, 0.92), rgba(3, 11, 24, 0.56), rgba(3, 11, 24, 0.32));
+}
+
+[dir="rtl"] .arena-page-hero::after {
+    background: linear-gradient(270deg, rgba(3, 11, 24, 0.92), rgba(3, 11, 24, 0.56), rgba(3, 11, 24, 0.32));
+}
+
+.arena-page-hero .container {
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 900px) {
+    .index-hero-media,
+    [dir="rtl"] .index-hero-media {
+        position: relative;
+        inset: auto;
+        order: 2;
+        width: 100%;
+        aspect-ratio: 2348 / 1215;
+        margin-top: 1.35rem;
     }
 }

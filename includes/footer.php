@@ -28,10 +28,10 @@
                 <?php if ($footer_user_logged_in): ?>
                     <a href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_notifications'); ?></a>
                     <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_my_bookings'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('auth/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('general/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                 <?php else: ?>
-                    <a href="<?php echo htmlspecialchars(site_url('auth/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('auth/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
                 <?php endif; ?>
             </div>
 
@@ -57,7 +57,7 @@
     </footer>
 
     <!-- Bootstrap JS (Local) -->
-    <script src="<?php echo htmlspecialchars(site_url('js/bootstrap.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+    <script src="<?php echo htmlspecialchars(site_url('assets/js/bootstrap.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 
     <!-- Custom JS -->
     <script>
@@ -74,6 +74,6 @@
             'estimatedTotal' => t('booking_total_estimate')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
     </script>
-    <script src="<?php echo htmlspecialchars(site_url('js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=2.6"></script>
+    <script src="<?php echo htmlspecialchars(site_url('assets/js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=2.6"></script>
 </body>
 </html>

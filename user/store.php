@@ -6,7 +6,7 @@ ensure_user_auth_schema($conn);
 
 $page_title = t('store_page_title');
 $store_can_order = !empty($_SESSION['site_user_id']);
-$store_login_url = site_url('auth/login.php?redirect=' . urlencode('user/store.php'));
+$store_login_url = site_url('general/login.php?redirect=' . urlencode('user/store.php'));
 $allowed_categories = [
     'PlayStation Consoles',
     'Controllers',

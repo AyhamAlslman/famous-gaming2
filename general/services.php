@@ -92,7 +92,7 @@ include dirname(__DIR__) . '/includes/header.php';
                         data-card-description="<?php echo htmlspecialchars(t('services_events_desc'), ENT_QUOTES, 'UTF-8'); ?>"
                     >
                         <div class="service-image" data-card-media>
-                            <img src="<?php echo htmlspecialchars(site_url('images/service-event.png'), ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('services_events_type'), ENT_QUOTES, 'UTF-8'); ?>" class="img-fluid">
+                            <img src="<?php echo htmlspecialchars(site_url('images/home-game-collage.jpg'), ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('services_events_type'), ENT_QUOTES, 'UTF-8'); ?>" class="img-fluid">
                         </div>
                         <div class="service-card-content">
                             <h3><?php echo t('services_events_title'); ?></h3>

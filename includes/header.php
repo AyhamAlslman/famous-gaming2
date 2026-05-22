@@ -10,7 +10,7 @@ $site_user_notification_count = $site_user_logged_in ? count_unread_site_notific
 $language_target_url = site_language() === 'ar' ? $switch_to_en : $switch_to_ar;
 $language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
 $is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_password.php'], true);
-$is_direct_group_page = preg_match('#/(auth|general|user)/#', str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '')) === 1;
+$is_direct_group_page = preg_match('#/(general|user)/#', str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '')) === 1;
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars(site_language(), ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars(site_direction(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -23,10 +23,10 @@ $is_direct_group_page = preg_match('#/(auth|general|user)/#', str_replace('\\', 
     <?php endif; ?>
 
     <!-- Bootstrap CSS (Local) -->
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('css/bootstrap.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/bootstrap.css'), ENT_QUOTES, 'UTF-8'); ?>">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=6.4">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=6.5">
 
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -99,10 +99,10 @@ $is_direct_group_page = preg_match('#/(auth|general|user)/#', str_replace('\\', 
                             <span class="nav-user-name"><?php echo htmlspecialchars($site_user_name); ?></span>
                             <span class="nav-user-points"><?php echo t('loyalty_points'); ?>: <?php echo $site_user_points; ?></span>
                         </a>
-                        <a class="nav-auth-link nav-auth-secondary" href="<?php echo htmlspecialchars(site_url('auth/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
+                        <a class="nav-auth-link nav-auth-secondary" href="<?php echo htmlspecialchars(site_url('general/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                     <?php else: ?>
-                        <a class="nav-auth-link nav-auth-secondary <?php echo $current_page === 'login.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('auth/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
-                        <a class="nav-auth-link nav-auth-primary <?php echo $current_page === 'register.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('auth/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
+                        <a class="nav-auth-link nav-auth-secondary <?php echo $current_page === 'login.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
+                        <a class="nav-auth-link nav-auth-primary <?php echo $current_page === 'register.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
                     <?php endif; ?>
                 </div>
             </div>
