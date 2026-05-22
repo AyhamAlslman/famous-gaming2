@@ -58,6 +58,9 @@ $payable_total = 0.0;
 
 if ($booking_id > 0 && (!empty($customer_session_token) || $current_site_user)) {
     $booking = get_checkout_booking($conn, $booking_id, $customer_session_token, $current_site_user ? (int)$current_site_user['id'] : 0);
+    if ($booking && $_SERVER['REQUEST_METHOD'] !== 'POST' && empty($_GET['method']) && in_array($booking['payment_method'] ?? '', ['Cash', 'Visa', 'CliQ'], true)) {
+        $selected_method = $booking['payment_method'];
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

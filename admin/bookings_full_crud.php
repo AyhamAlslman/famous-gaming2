@@ -2,6 +2,8 @@
 require_once 'auth_check.php';
 include '../includes/config.php';
 
+ensure_user_auth_schema($conn);
+
 $success_message = '';
 $error_message = '';
 
@@ -18,13 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $hours = intval($_POST['hours']);
             $total_price = floatval($_POST['total_price']);
             $status = $_POST['status'];
+            $booking_code = generate_booking_code();
 
             $stmt = mysqli_prepare(
                 $conn,
-                "INSERT INTO bookings (room_id, customer_name, phone, booking_date, start_time, hours, total_price, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO bookings (booking_code, room_id, customer_name, phone, booking_date, start_time, hours, total_price, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
-            mysqli_stmt_bind_param($stmt, "issssids", $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $total_price, $status);
+            mysqli_stmt_bind_param($stmt, "sissssids", $booking_code, $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $total_price, $status);
 
             if (mysqli_stmt_execute($stmt)) {
                 $booking_id = mysqli_insert_id($conn);

@@ -68,7 +68,12 @@
             'yes' => t('common_yes'),
             'no' => t('common_no')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+        window.siteValidationTexts = <?php echo json_encode([
+            'phoneInvalid' => t('booking_validation_phone'),
+            'datePast' => t('booking_validation_date'),
+            'estimatedTotal' => t('booking_total_estimate')
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
     </script>
-    <script src="js/script.js?v=2.4"></script>
+    <script src="js/script.js?v=2.5"></script>
 </body>
 </html>

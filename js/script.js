@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', function() {
         yes: 'Yes',
         no: 'No'
     };
+    const validationTexts = window.siteValidationTexts || {
+        phoneInvalid: 'Please enter a valid phone number',
+        datePast: 'Cannot book for past dates',
+        estimatedTotal: 'Estimated Total'
+    };
     let siteConfirmCallback = null;
 
     function ensureSiteModal() {
@@ -92,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
     phoneInputs.forEach(function(input) {
         const error = document.createElement('small');
         error.className = 'phone-validation-error';
-        error.textContent = 'Please enter a valid phone number';
+        error.textContent = validationTexts.phoneInvalid;
         error.hidden = true;
         input.insertAdjacentElement('afterend', error);
 
@@ -113,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
             error.hidden = !shouldShowError;
 
             if (input.required && shouldShowError) {
-                input.setCustomValidity('Please enter a valid phone number');
+                input.setCustomValidity(validationTexts.phoneInvalid);
             } else {
                 input.setCustomValidity('');
             }
@@ -229,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selectedDate < today) {
                 window.showSiteModal({
                     title: modalTexts.messageTitle,
-                    message: 'Cannot book for past dates',
+                    message: validationTexts.datePast,
                     type: 'error'
                 });
                 this.value = '';
@@ -260,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         hoursSelect.closest('.form-group').after(totalDisplay);
                     }
 
-                    totalDisplay.innerHTML = '<strong>Estimated Total: $' + total.toFixed(2) + '</strong>';
+                    totalDisplay.innerHTML = '<strong>' + validationTexts.estimatedTotal + ': $' + total.toFixed(2) + '</strong>';
                 }
             }
         }

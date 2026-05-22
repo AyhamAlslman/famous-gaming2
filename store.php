@@ -2,6 +2,8 @@
 include 'includes/config.php';
 require_once 'includes/functions.php';
 
+ensure_user_auth_schema($conn);
+
 $page_title = t('store_page_title');
 $store_can_order = !empty($_SESSION['site_user_id']);
 $store_login_url = 'login.php?redirect=' . urlencode('store.php');

@@ -88,18 +88,11 @@ mysqli_close($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo t('admin_login_page_title'); ?></title>
-    <link rel="stylesheet" href="css/admin.css?v=2.0">
+    <link rel="stylesheet" href="css/admin.css?v=2.3">
 </head>
 <body class="admin-body admin-login-page <?php echo site_is_rtl() ? 'admin-rtl' : ''; ?>">
     <section class="content admin-login-content">
         <div class="container admin-login-container">
-            <div class="admin-login-language-switcher">
-                <?php
-                $admin_login_language_url = site_language() === 'ar' ? site_switch_language_url('en') : site_switch_language_url('ar');
-                $admin_login_language_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
-                ?>
-                <a href="<?php echo htmlspecialchars($admin_login_language_url, ENT_QUOTES, 'UTF-8'); ?>" class="active"><?php echo htmlspecialchars($admin_login_language_label, ENT_QUOTES, 'UTF-8'); ?></a>
-            </div>
             <h2 class="section-title"><?php echo t('admin_login_heading'); ?></h2>
 
             <?php if (!empty($error_message)): ?>

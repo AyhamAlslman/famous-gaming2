@@ -78,60 +78,62 @@ $active_page = 'menu_items';
 include 'includes/header.php';
 ?>
 
-    <div class="container" style="margin-top: 2rem;">
-        <div class="page-header">
-            <h2><?php echo t('admin_menu_items_management'); ?></h2>
-            <button onclick="openAddModal()" class="btn"><?php echo t('admin_action_add'); ?> <?php echo t('admin_nav_menu_items'); ?></button>
-        </div>
+    <div class="content">
+        <div class="container">
+            <div class="page-header">
+                <h1><?php echo t('admin_menu_items_management'); ?></h1>
+                <button onclick="openAddModal()" class="btn"><?php echo t('admin_action_add'); ?> <?php echo t('admin_nav_menu_items'); ?></button>
+            </div>
 
-        <?php if ($success_message): ?>
-            <div class="message success"><?php echo $success_message; ?></div>
-        <?php endif; ?>
+            <?php if ($success_message): ?>
+                <div class="message success"><?php echo htmlspecialchars($success_message); ?></div>
+            <?php endif; ?>
 
-        <?php if ($error_message): ?>
-            <div class="message error"><?php echo $error_message; ?></div>
-        <?php endif; ?>
+            <?php if ($error_message): ?>
+                <div class="message error"><?php echo htmlspecialchars($error_message); ?></div>
+            <?php endif; ?>
 
-        <div style="margin-top: 2rem;">
-            <table>
-                <thead>
-                    <tr>
-                        <th><?php echo t('admin_field_id'); ?></th>
-                        <th><?php echo t('admin_field_item_name'); ?></th>
-                        <th><?php echo t('admin_field_category'); ?></th>
-                        <th><?php echo t('admin_field_price'); ?> (JOD)</th>
-                        <th><?php echo t('admin_field_description'); ?></th>
-                        <th><?php echo t('admin_field_status'); ?></th>
-                        <th><?php echo t('admin_field_actions'); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($item = mysqli_fetch_assoc($items)): ?>
+            <div class="table-container">
+                <table>
+                    <thead>
                         <tr>
-                            <td><?php echo $item['id']; ?></td>
-                            <td><?php echo htmlspecialchars($item['item_name']); ?></td>
-                            <td>
-                                <span class="category-badge category-<?php echo strtolower($item['item_category']); ?>">
-                                    <?php echo htmlspecialchars(translated_menu_category_label($item['item_category'])); ?>
-                                </span>
-                            </td>
-                            <td><?php echo number_format($item['item_price'], 2); ?> JOD</td>
-                            <td><?php echo htmlspecialchars($item['item_description']); ?></td>
-                            <td>
-                                <?php if ($item['is_available']): ?>
-                                    <span class="status-badge status-available"><?php echo t('status_available'); ?></span>
-                                <?php else: ?>
-                                    <span class="status-badge status-busy"><?php echo t('store_unavailable'); ?></span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($item); ?>)'><?php echo t('admin_action_edit'); ?></button>
-                                <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $item['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
-                            </td>
+                            <th><?php echo t('admin_field_id'); ?></th>
+                            <th><?php echo t('admin_field_item_name'); ?></th>
+                            <th><?php echo t('admin_field_category'); ?></th>
+                            <th><?php echo t('admin_field_price'); ?> (JOD)</th>
+                            <th><?php echo t('admin_field_description'); ?></th>
+                            <th><?php echo t('admin_field_status'); ?></th>
+                            <th><?php echo t('admin_field_actions'); ?></th>
                         </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php while ($item = mysqli_fetch_assoc($items)): ?>
+                            <tr>
+                                <td><?php echo $item['id']; ?></td>
+                                <td><?php echo htmlspecialchars($item['item_name']); ?></td>
+                                <td>
+                                    <span class="category-badge category-<?php echo strtolower($item['item_category']); ?>">
+                                        <?php echo htmlspecialchars(translated_menu_category_label($item['item_category'])); ?>
+                                    </span>
+                                </td>
+                                <td><?php echo number_format($item['item_price'], 2); ?> JOD</td>
+                                <td><?php echo htmlspecialchars($item['item_description']); ?></td>
+                                <td>
+                                    <?php if ($item['is_available']): ?>
+                                        <span class="status-badge status-available"><?php echo t('status_available'); ?></span>
+                                    <?php else: ?>
+                                        <span class="status-badge status-busy"><?php echo t('store_unavailable'); ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <button class="btn btn-small btn-success" onclick='openEditModal(<?php echo json_encode($item); ?>)'><?php echo t('admin_action_edit'); ?></button>
+                                    <button class="btn btn-small btn-danger" onclick="confirmDelete(<?php echo $item['id']; ?>)"><?php echo t('admin_action_delete'); ?></button>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

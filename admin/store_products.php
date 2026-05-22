@@ -3,6 +3,8 @@ require_once 'auth_check.php';
 require_once '../includes/config.php';
 require_once '../includes/functions.php';
 
+ensure_store_products_schema($conn);
+
 if (!isAdmin()) {
     header('Location: dashboard.php');
     exit;
@@ -273,10 +275,11 @@ include 'includes/header.php';
                             </tr>
                         <?php else: ?>
                             <?php foreach ($products as $product): ?>
+                                <?php $admin_product_has_image = !empty($product['image_path']) && file_exists(__DIR__ . '/../' . $product['image_path']); ?>
                                 <tr>
                                     <td><?php echo (int)$product['id']; ?></td>
                                     <td class="admin-store-image-cell">
-                                        <?php if (!empty($product['image_path'])): ?>
+                                        <?php if ($admin_product_has_image): ?>
                                             <img src="../<?php echo htmlspecialchars($product['image_path']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>" class="admin-store-thumb">
                                         <?php else: ?>
                                             <div class="admin-store-thumb admin-store-thumb-placeholder">FG</div>

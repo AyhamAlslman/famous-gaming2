@@ -389,8 +389,99 @@ function ensure_booking_confirmation_schema($conn) {
         mysqli_query($conn, "ALTER TABLE bookings ADD INDEX idx_booking_user_id (user_id)");
     }
 
+    if (!isset($columns['additional_items_total'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN additional_items_total DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER total_price");
+    }
+
+    if (!isset($columns['final_total'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN final_total DECIMAL(10,2) GENERATED ALWAYS AS (total_price + IFNULL(additional_items_total, 0)) STORED AFTER additional_items_total");
+    }
+
     if (!isset($columns['loyalty_points_earned'])) {
-        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN loyalty_points_earned INT NOT NULL DEFAULT 0 AFTER final_total");
+        $final_total_check = mysqli_query($conn, "SHOW COLUMNS FROM bookings LIKE 'final_total'");
+        $after_column = ($final_total_check && mysqli_num_rows($final_total_check) > 0) ? 'final_total' : 'additional_items_total';
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN loyalty_points_earned INT NOT NULL DEFAULT 0 AFTER " . $after_column);
+    }
+
+    if (!isset($columns['payment_status'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN payment_status VARCHAR(20) DEFAULT 'Unpaid' AFTER status");
+    }
+
+    if (!isset($columns['payment_method'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN payment_method VARCHAR(20) DEFAULT NULL AFTER payment_status");
+    }
+
+    if (!isset($columns['paid_amount'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN paid_amount DECIMAL(10,2) DEFAULT 0.00 AFTER payment_method");
+    }
+
+    if (!isset($columns['notes'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN notes TEXT NULL AFTER paid_amount");
+    }
+}
+
+/**
+ * Ensure booking add-on order rows exist.
+ */
+function ensure_booking_items_table($conn) {
+    mysqli_query($conn, "CREATE TABLE IF NOT EXISTS booking_items (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        booking_id INT NOT NULL,
+        menu_item_id INT NOT NULL,
+        quantity INT NOT NULL DEFAULT 1,
+        item_price DECIMAL(10,2) NOT NULL,
+        item_total DECIMAL(10,2) GENERATED ALWAYS AS (quantity * item_price) STORED,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_booking_items_booking (booking_id),
+        INDEX idx_booking_items_menu_item (menu_item_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+/**
+ * Ensure public store inventory exists.
+ */
+function ensure_store_products_schema($conn) {
+    mysqli_query($conn, "CREATE TABLE IF NOT EXISTS store_products (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        product_name VARCHAR(150) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        description TEXT,
+        image_path VARCHAR(255) DEFAULT NULL,
+        stock_quantity INT NOT NULL DEFAULT 0,
+        status VARCHAR(20) NOT NULL DEFAULT 'Active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_store_products_status_category (status, category)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+/**
+ * Ensure support/complaint records can be linked back to registered customers.
+ */
+function ensure_complaints_schema($conn) {
+    mysqli_query($conn, "CREATE TABLE IF NOT EXISTS complaints (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NULL,
+        customer_name VARCHAR(100) NOT NULL,
+        phone VARCHAR(20) DEFAULT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_complaints_user_created (user_id, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    $columns = [];
+    $result = mysqli_query($conn, "SHOW COLUMNS FROM complaints");
+
+    if ($result) {
+        while ($column = mysqli_fetch_assoc($result)) {
+            $columns[$column['Field']] = true;
+        }
+    }
+
+    if (!isset($columns['user_id'])) {
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN user_id INT NULL AFTER id");
+        mysqli_query($conn, "ALTER TABLE complaints ADD INDEX idx_complaints_user_created (user_id, created_at)");
     }
 }
 
@@ -413,6 +504,9 @@ function ensure_user_auth_schema($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     ensure_booking_confirmation_schema($conn);
+    ensure_booking_items_table($conn);
+    ensure_store_products_schema($conn);
+    ensure_complaints_schema($conn);
     ensure_site_notifications_table($conn);
 }
 

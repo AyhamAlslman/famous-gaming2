@@ -160,10 +160,13 @@ CREATE TABLE store_products (
 -- Complaints Table
 CREATE TABLE complaints (
     id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NULL,
     customer_name VARCHAR(100) NOT NULL,
     phone VARCHAR(20) DEFAULT NULL,
     message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES site_users(id) ON DELETE SET NULL,
+    INDEX idx_complaints_user_created (user_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Admin Notifications Table

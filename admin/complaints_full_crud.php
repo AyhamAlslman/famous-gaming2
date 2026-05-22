@@ -2,6 +2,8 @@
 require_once 'auth_check.php';
 include '../includes/config.php';
 
+ensure_user_auth_schema($conn);
+
 $success_message = '';
 $error_message = '';
 
@@ -23,7 +25,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$complaints = mysqli_query($conn, "SELECT * FROM complaints ORDER BY id DESC");
+$complaints = mysqli_query(
+    $conn,
+    "SELECT c.*, u.full_name AS site_user_name, u.email AS site_user_email
+     FROM complaints c
+     LEFT JOIN site_users u ON c.user_id = u.id
+     ORDER BY c.id DESC"
+);
 
 $page_title = t('admin_complaints_management');
 $active_page = 'complaints';
@@ -52,6 +60,7 @@ include 'includes/header.php';
                             <th><?php echo t('admin_field_id'); ?></th>
                             <th><?php echo t('admin_field_customer_name'); ?></th>
                             <th><?php echo t('admin_field_phone'); ?></th>
+                            <th><?php echo t('nav_account'); ?></th>
                             <th><?php echo t('admin_field_message'); ?></th>
                             <th><?php echo t('admin_field_submitted'); ?></th>
                             <th><?php echo t('admin_field_actions'); ?></th>
@@ -63,6 +72,14 @@ include 'includes/header.php';
                             <td><?php echo $complaint['id']; ?></td>
                             <td><?php echo htmlspecialchars($complaint['customer_name']); ?></td>
                             <td><?php echo htmlspecialchars($complaint['phone'] ?? 'N/A'); ?></td>
+                            <td>
+                                <?php if (!empty($complaint['site_user_email'])): ?>
+                                    <strong><?php echo htmlspecialchars($complaint['site_user_name']); ?></strong><br>
+                                    <span class="admin-muted"><?php echo htmlspecialchars($complaint['site_user_email']); ?></span>
+                                <?php else: ?>
+                                    <span class="admin-muted">N/A</span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <div class="complaint-text">
                                     <?php echo htmlspecialchars($complaint['message']); ?>
@@ -92,6 +109,7 @@ include 'includes/header.php';
                 <p><strong>ID:</strong> <span id="view_id"></span></p>
                 <p><strong><?php echo t('admin_field_customer_name'); ?>:</strong> <span id="view_customer_name"></span></p>
                 <p><strong><?php echo t('admin_field_phone'); ?>:</strong> <span id="view_phone"></span></p>
+                <p><strong><?php echo t('nav_account'); ?>:</strong> <span id="view_account"></span></p>
                 <p><strong><?php echo t('admin_field_submitted'); ?>:</strong> <span id="view_date"></span></p>
                 <h3><?php echo t('admin_field_message'); ?>:</h3>
                 <p id="view_message" style="line-height: 1.8; white-space: pre-wrap;"></p>
@@ -110,6 +128,7 @@ include 'includes/header.php';
             document.getElementById('view_id').textContent = complaint.id;
             document.getElementById('view_customer_name').textContent = complaint.customer_name;
             document.getElementById('view_phone').textContent = complaint.phone || 'N/A';
+            document.getElementById('view_account').textContent = complaint.site_user_email ? (complaint.site_user_name + ' - ' + complaint.site_user_email) : 'N/A';
             document.getElementById('view_message').textContent = complaint.message;
             document.getElementById('view_date').textContent = new Date(complaint.created_at).toLocaleString();
             document.getElementById('viewModal').style.display = 'block';

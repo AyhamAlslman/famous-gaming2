@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $start_time = sanitize_input($_POST['start_time']);
     $hours = intval($_POST['hours']);
     $notes = sanitize_input($_POST['notes']);
+    $selected_payment_method = sanitize_input($_POST['payment_method'] ?? 'Cash');
     $selected_menu_quantities = isset($_POST['menu_items']) && is_array($_POST['menu_items']) ? $_POST['menu_items'] : [];
     $selected_menu_items = [];
     $addons_total = 0.0;
@@ -70,6 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($hours < $min_hours || $hours > $max_hours) {
         $validation_errors[] = t('booking_validation_hours_range', ['min' => $min_hours, 'max' => $max_hours]);
+    }
+
+    if (!in_array($selected_payment_method, ['Cash', 'Visa', 'CliQ'], true)) {
+        $validation_errors[] = t('payment_method_invalid');
     }
 
     if (count($validation_errors) > 0) {
@@ -146,9 +151,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $_SESSION['customer_phone'] = $phone;
 
                     // Insert booking using prepared statement
-                    $stmt = mysqli_prepare($conn, "INSERT INTO bookings (booking_code, customer_name, phone, customer_session_token, user_id, room_id, booking_date, start_time, hours, total_price, additional_items_total, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Confirmed', ?)");
+                    $stmt = mysqli_prepare($conn, "INSERT INTO bookings (booking_code, customer_name, phone, customer_session_token, user_id, room_id, booking_date, start_time, hours, total_price, additional_items_total, status, payment_method, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Confirmed', ?, ?)");
 
-                    mysqli_stmt_bind_param($stmt, "ssssiissidds", $booking_code, $customer_name, $phone, $customer_session_token, $site_user_id, $room_id, $booking_date, $start_time, $hours, $total_price, $addons_total, $notes);
+                    mysqli_stmt_bind_param($stmt, "ssssiissiddss", $booking_code, $customer_name, $phone, $customer_session_token, $site_user_id, $room_id, $booking_date, $start_time, $hours, $total_price, $addons_total, $selected_payment_method, $notes);
 
                     if (mysqli_stmt_execute($stmt)) {
                         $booking_id = mysqli_insert_id($conn);
@@ -286,6 +291,7 @@ include 'includes/header.php';
 
                         <div class="booking-ticket-actions">
                             <button type="button" class="btn download-ticket-btn"><?php echo t('booking_save_ticket'); ?></button>
+                            <a href="payment.php?booking_id=<?php echo (int)$confirmed_booking['id']; ?>&method=<?php echo urlencode($confirmed_booking['payment_method'] ?: 'Cash'); ?>" class="btn payment-checkout-btn"><?php echo t('my_bookings_simulate_payment'); ?></a>
                             <a href="my_bookings.php" class="btn"><?php echo t('booking_view_bookings'); ?></a>
                         </div>
                     </div>
@@ -485,6 +491,43 @@ include 'includes/header.php';
                             <span><?php echo t('booking_total_estimate'); ?></span>
                             <strong id="booking-total-estimate">0.00 JOD</strong>
                         </div>
+                    </div>
+                </div>
+
+                <div class="booking-addons-panel booking-payment-panel">
+                    <div class="booking-addons-head">
+                        <div>
+                            <h3><?php echo t('payment_method_title'); ?></h3>
+                            <p><?php echo t('payment_choose_how'); ?></p>
+                        </div>
+                    </div>
+                    <div class="payment-method-grid">
+                        <?php $booking_selected_method = $_POST['payment_method'] ?? 'Cash'; ?>
+                        <?php foreach (['Cash', 'Visa', 'CliQ'] as $method): ?>
+                            <label class="payment-method-option">
+                                <input
+                                    type="radio"
+                                    name="payment_method"
+                                    value="<?php echo $method; ?>"
+                                    class="payment-method-input"
+                                    <?php echo $booking_selected_method === $method ? 'checked' : ''; ?>
+                                >
+                                <span class="payment-method-card">
+                                    <strong><?php echo t('payment_' . strtolower($method), [], $method); ?></strong>
+                                    <small>
+                                        <?php
+                                        if ($method === 'Cash') {
+                                            echo t('payment_cash_text');
+                                        } elseif ($method === 'Visa') {
+                                            echo t('payment_visa_text');
+                                        } else {
+                                            echo t('payment_cliq_text');
+                                        }
+                                        ?>
+                                    </small>
+                                </span>
+                            </label>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 

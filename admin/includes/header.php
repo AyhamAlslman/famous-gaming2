@@ -16,7 +16,7 @@ $admin_language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?><?php echo t('admin_panel_title'); ?></title>
-    <link rel="stylesheet" href="css/admin.css?v=2.2">
+    <link rel="stylesheet" href="css/admin.css?v=2.3">
 
     <link rel="icon" type="image/x-icon" href="../images/favicon.png">
 </head>

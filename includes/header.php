@@ -22,7 +22,7 @@ $is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_pa
     <link rel="stylesheet" href="css/bootstrap.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css?v=5.3">
+    <link rel="stylesheet" href="css/style.css?v=6.1">
 
     <link rel="icon" type="image/svg+xml" href="images/logo-mark.svg">
     <link rel="icon" type="image/png" href="images/favicon.png">

@@ -22,6 +22,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $updated = mysqli_stmt_affected_rows($stmt);
         mysqli_stmt_close($stmt);
 
+        if ($updated > 0) {
+            create_admin_notification(
+                $conn,
+                'booking_cancelled',
+                'Booking cancelled',
+                'Booking #' . $ticket_id . ' was cancelled by the customer.',
+                'bookings',
+                $ticket_id,
+                'booking_details.php?id=' . $ticket_id
+            );
+
+            if ($site_user_id > 0) {
+                create_site_notification(
+                    $conn,
+                    $site_user_id,
+                    'booking_cancelled',
+                    t('my_bookings_cancel_success'),
+                    t('my_bookings_cancel_success'),
+                    'my_bookings.php'
+                );
+            }
+        }
+
         $success_msg = $updated > 0 ? t('my_bookings_cancel_success') : t('my_bookings_cancel_error');
     } elseif ($ticket_action === 'cancel') {
         $error_msg = t('my_bookings_session_missing');
@@ -36,8 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $feedback_message .= ': ' . $rating_message;
         }
 
-        $stmt = mysqli_prepare($conn, "INSERT INTO complaints (customer_name, phone, message) VALUES (?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "sss", $customer_name, $phone, $feedback_message);
+        $rating_user_id = $current_site_user ? (int)$current_site_user['id'] : null;
+        $stmt = mysqli_prepare($conn, "INSERT INTO complaints (user_id, customer_name, phone, message) VALUES (?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, "isss", $rating_user_id, $customer_name, $phone, $feedback_message);
 
         if (mysqli_stmt_execute($stmt)) {
             $complaint_id = mysqli_insert_id($conn);

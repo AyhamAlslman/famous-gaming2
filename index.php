@@ -16,24 +16,34 @@ if ($menu_result) {
 include 'includes/header.php';
 ?>
 
-<main class="arena-home-frame">
-<section class="home-hero home-hero-clean home-hero-user-image" style="background-image: linear-gradient(90deg, rgba(5, 12, 28, 0.72) 0%, rgba(8, 19, 42, 0.32) 48%, rgba(5, 12, 28, 0.18) 100%), url('images/home-hero-2026.jpg');">
-    <div class="container home-hero-layout home-hero-layout-clean">
-        <div class="home-hero-copy">
+<main class="index-page-shell">
+<section class="index-hero-redesign" aria-label="<?php echo htmlspecialchars(t('home_hero_title'), ENT_QUOTES, 'UTF-8'); ?>">
+    <div class="container index-hero-layout">
+        <div class="index-hero-copy">
             <span class="home-status-pill status-<?php echo htmlspecialchars($business_status['state']); ?>">
                 <?php echo htmlspecialchars($business_status['label']); ?>
             </span>
+            <span class="index-hero-kicker">PS5 ARENA PLAY</span>
             <h1><?php echo t('home_hero_title'); ?></h1>
             <p><?php echo t('home_hero_line_1'); ?></p>
-            <p class="home-hero-support"><?php echo t('home_hero_line_2'); ?></p>
-            <div class="home-hero-actions">
+            <p class="index-hero-support"><?php echo t('home_hero_line_2'); ?></p>
+            <div class="index-hero-actions">
                 <a href="<?php echo $is_logged_in ? 'booking.php' : $booking_login_link; ?>" class="btn"><?php echo t('home_cta'); ?></a>
+                <a href="store.php" class="btn index-hero-secondary-btn"><?php echo t('nav_store'); ?></a>
             </div>
+            <div class="index-hero-badges" aria-hidden="true">
+                <span>PS5</span>
+                <span><?php echo t('nav_store'); ?></span>
+                <span><?php echo t('services_hospitality_type'); ?></span>
+            </div>
+        </div>
+        <div class="index-hero-media" aria-hidden="true">
+            <img src="images/home-hero-2026.png" alt="">
         </div>
     </div>
 </section>
 
-<section class="home-dashboard home-dashboard-clean">
+<section class="index-experience-section">
     <div class="container">
         <div class="home-intro-panel">
             <span class="ticket-label">FAMOUS GAMING 2026</span>

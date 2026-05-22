@@ -7,6 +7,7 @@ $success_msg = '';
 $error_msg = '';
 ensure_user_auth_schema($conn);
 $current_site_user = get_current_site_user($conn);
+$current_site_user_id = $current_site_user ? (int)$current_site_user['id'] : null;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $customer_name = sanitize_input($_POST['customer_name'] ?? '');
@@ -14,8 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $message = sanitize_input($_POST['message'] ?? '');
 
     if (!empty($customer_name) && !empty($message)) {
-        $stmt = mysqli_prepare($conn, "INSERT INTO complaints (customer_name, phone, message) VALUES (?, ?, ?)");
-        mysqli_stmt_bind_param($stmt, "sss", $customer_name, $phone, $message);
+        $stmt = mysqli_prepare($conn, "INSERT INTO complaints (user_id, customer_name, phone, message) VALUES (?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, "isss", $current_site_user_id, $customer_name, $phone, $message);
 
         if (mysqli_stmt_execute($stmt)) {
             $complaint_id = mysqli_insert_id($conn);
@@ -28,14 +29,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $complaint_id,
                 'complaints_full_crud.php'
             );
-            create_site_notification(
-                $conn,
-                (int)($current_site_user['id'] ?? 0),
-                'support_sent',
-                t('complaints_success'),
-                t('user_notification_support_sent'),
-                'complaints.php'
-            );
+            if ($current_site_user_id) {
+                create_site_notification(
+                    $conn,
+                    $current_site_user_id,
+                    'support_sent',
+                    t('complaints_success'),
+                    t('user_notification_support_sent'),
+                    'complaints.php'
+                );
+            }
             $success_msg = t('complaints_success');
         } else {
             $error_msg = t('complaints_error');
