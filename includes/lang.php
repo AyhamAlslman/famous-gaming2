@@ -1085,7 +1085,7 @@ function t($key, $replacements = [], $fallback = null) {
             'my_bookings_rating_title' => 'قيّم حجزك',
             'my_bookings_rating_saved' => 'شكراً لك. تم حفظ تقييمك كملاحظة للمالك.',
             'user_dashboard_page_title' => 'لوحة التحكم للمستخدِم',
-            'user_dashboard_heading' => 'أهلاً بك مجدداً، %name%! 🎮',
+            'user_dashboard_heading' => 'مرحباً بك من جديد، :name!',
             'user_dashboard_subtitle' => 'من هنا يمكنك إدارة حجز أجهزتك، تتبع نقاط الولاء، والشراء المباشر من المتجر.',
             'user_dashboard_total_bookings' => 'مجموع الحجوزات',
             'user_dashboard_paid_bookings' => 'الحجوزات المدفوعة',

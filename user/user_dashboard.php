@@ -201,63 +201,51 @@ if ($stats_result && ($stats_row = mysqli_fetch_assoc($stats_result))) {
 }
 mysqli_stmt_close($stats_stmt);
 
-$dashboard_links = [
-    [
-        'url' => site_url('general/services.php'),
-        'label' => t('nav_services'),
-        'title' => t('home_services_title'),
-        'text' => t('services_hero_text')
-    ],
-    [
-        'url' => site_url('user/booking.php'),
-        'label' => t('nav_book_now'),
-        'title' => t('user_dashboard_choose_booking'),
-        'text' => t('user_dashboard_choose_booking_text')
-    ],
-    [
-        'url' => site_url('user/store.php'),
-        'label' => t('nav_store'),
-        'title' => t('user_dashboard_store'),
-        'text' => t('user_dashboard_store_text')
-    ],
-    [
-        'url' => site_url('user/my_bookings.php'),
-        'label' => t('nav_my_bookings'),
-        'title' => t('user_dashboard_history'),
-        'text' => t('user_dashboard_history_text')
-    ],
-    [
-        'url' => site_url('user/complaints.php'),
-        'label' => t('nav_feedback'),
-        'title' => t('user_dashboard_support'),
-        'text' => t('user_dashboard_support_text')
-    ]
-];
-
 $loyalty_settings = get_loyalty_settings($conn);
 $loyalty_earn_display = rtrim(rtrim(number_format((float)$loyalty_settings['earn_per_jod'], 2), '0'), '.');
 $loyalty_redeem_display = rtrim(rtrim(number_format((float)$loyalty_settings['redeem_points_per_jod'], 2), '0'), '.');
+$dashboard_initial = function_exists('mb_substr') ? mb_substr($current_site_user['full_name'], 0, 1, 'UTF-8') : substr($current_site_user['full_name'], 0, 1);
+$dashboard_room_cards = array_slice($rooms, 0, 4);
+$dashboard_recent_activity = array_slice($recent_bookings, 0, 3);
 
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
-<main class="user-overview-page">
-    <section class="hero user-dashboard-hero user-overview-hero">
-        <div class="container user-overview-hero-grid">
-            <div>
-                <span class="ticket-label"><?php echo t('nav_account'); ?></span>
-                <h1><?php echo t('user_dashboard_heading', ['name' => htmlspecialchars($current_site_user['full_name'])]); ?></h1>
-                <p><?php echo t('user_dashboard_subtitle'); ?></p>
-            </div>
-            <div class="user-overview-hero-actions">
-                <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
-                <a href="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-secondary-btn"><?php echo t('nav_feedback'); ?></a>
-            </div>
+<main class="user-dashboard-v2" id="dashboard-home">
+    <aside class="user-dashboard-rail" aria-label="<?php echo htmlspecialchars(t('nav_account'), ENT_QUOTES, 'UTF-8'); ?>">
+        <div class="dashboard-rail-profile">
+            <span><?php echo htmlspecialchars($dashboard_initial, ENT_QUOTES, 'UTF-8'); ?></span>
+            <strong><?php echo htmlspecialchars($current_site_user['full_name'], ENT_QUOTES, 'UTF-8'); ?></strong>
+            <em><?php echo (int)$current_site_user['loyalty_points']; ?> <?php echo t('loyalty_points_short'); ?></em>
         </div>
-    </section>
+        <a class="active" href="#dashboard-home" aria-label="<?php echo htmlspecialchars(t('nav_home'), ENT_QUOTES, 'UTF-8'); ?>">
+            <span class="dashboard-rail-icon">H</span>
+            <span class="dashboard-rail-text"><strong><?php echo t('nav_home'); ?></strong><em><?php echo t('common_view'); ?></em></span>
+        </a>
+        <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('nav_book_now'), ENT_QUOTES, 'UTF-8'); ?>">
+            <span class="dashboard-rail-icon">B</span>
+            <span class="dashboard-rail-text"><strong><?php echo t('nav_book_now'); ?></strong><em><?php echo t('home_rooms_title'); ?></em></span>
+        </a>
+        <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('nav_store'), ENT_QUOTES, 'UTF-8'); ?>">
+            <span class="dashboard-rail-icon">S</span>
+            <span class="dashboard-rail-text"><strong><?php echo t('nav_store'); ?></strong><em><?php echo t('user_dashboard_store'); ?></em></span>
+        </a>
+        <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('nav_my_bookings'), ENT_QUOTES, 'UTF-8'); ?>">
+            <span class="dashboard-rail-icon">M</span>
+            <span class="dashboard-rail-text"><strong><?php echo t('nav_my_bookings'); ?></strong><em><?php echo t('common_schedule'); ?></em></span>
+        </a>
+        <a href="#dashboard-feedback" aria-label="<?php echo htmlspecialchars(t('nav_feedback'), ENT_QUOTES, 'UTF-8'); ?>">
+            <span class="dashboard-rail-icon">F</span>
+            <span class="dashboard-rail-text"><strong><?php echo t('nav_feedback'); ?></strong><em><?php echo t('dashboard_feedback_title'); ?></em></span>
+        </a>
+        <a href="#profile-details" aria-label="<?php echo htmlspecialchars(t('profile_title'), ENT_QUOTES, 'UTF-8'); ?>">
+            <span class="dashboard-rail-icon">P</span>
+            <span class="dashboard-rail-text"><strong><?php echo t('profile_title'); ?></strong><em><?php echo t('nav_account'); ?></em></span>
+        </a>
+    </aside>
 
-    <section class="content user-dashboard-content user-overview-content">
-        <div class="container">
+    <section class="user-dashboard-stage">
+        <div class="user-dashboard-inner">
             <?php if ($profile_success_msg): ?>
                 <div class="message success"><?php echo $profile_success_msg; ?></div>
             <?php endif; ?>
@@ -274,98 +262,82 @@ include dirname(__DIR__) . '/includes/header.php';
                 <div class="message error"><?php echo $feedback_error_msg; ?></div>
             <?php endif; ?>
 
-            <div class="user-overview-layout">
-                <div class="user-overview-main">
-                    <div class="user-stats-grid" aria-label="<?php echo htmlspecialchars(t('user_dashboard_page_title'), ENT_QUOTES, 'UTF-8'); ?>">
-                        <a class="user-stat-card" href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <span><?php echo t('user_dashboard_total_bookings'); ?></span>
-                            <strong><?php echo $dashboard_stats['bookings']; ?></strong>
-                        </a>
-                        <a class="user-stat-card" href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <span><?php echo t('status_confirmed'); ?></span>
-                            <strong><?php echo $dashboard_stats['upcoming']; ?></strong>
-                        </a>
-                        <a class="user-stat-card" href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <span><?php echo t('user_dashboard_paid_bookings'); ?></span>
-                            <strong><?php echo $dashboard_stats['paid']; ?></strong>
-                        </a>
-                        <a class="user-stat-card" href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <span><?php echo t('nav_notifications'); ?></span>
-                            <strong><?php echo $dashboard_stats['unread']; ?></strong>
-                        </a>
-                    </div>
+            <section class="user-dashboard-v2-hero">
+                <div class="user-dashboard-v2-avatar"><?php echo htmlspecialchars($dashboard_initial, ENT_QUOTES, 'UTF-8'); ?></div>
+                <div>
+                    <span><?php echo t('nav_account'); ?></span>
+                    <h1><?php echo t('user_dashboard_heading', ['name' => htmlspecialchars($current_site_user['full_name'])]); ?></h1>
+                    <p><?php echo t('user_dashboard_subtitle'); ?></p>
+                </div>
+            </section>
 
-                    <section class="user-panel user-next-panel">
-                        <div class="home-section-heading user-panel-heading">
-                            <span class="ticket-label"><?php echo t('common_schedule'); ?></span>
-                            <h2><?php echo t('my_bookings_hero_title'); ?></h2>
+            <div class="user-dashboard-v2-layout">
+                <div class="user-dashboard-v2-main">
+                    <section class="dashboard-v2-card dashboard-v2-activity">
+                        <div class="dashboard-v2-card-head">
+                            <div>
+                                <span><?php echo t('common_schedule'); ?></span>
+                                <h2><?php echo t('nav_my_bookings'); ?></h2>
+                            </div>
+                            <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('common_view'); ?></a>
                         </div>
 
-                        <?php if ($next_booking): ?>
-                            <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="user-next-booking-card">
-                                <div>
-                                    <span><?php echo htmlspecialchars($next_booking['booking_code'] ?: ('FG-' . str_pad($next_booking['id'], 6, '0', STR_PAD_LEFT))); ?></span>
-                                    <h3><?php echo htmlspecialchars($next_booking['room_name']); ?> - <?php echo htmlspecialchars($next_booking['room_type']); ?></h3>
-                                    <p><?php echo format_date($next_booking['booking_date']); ?>, <?php echo format_time($next_booking['start_time']); ?> - <?php echo translated_hours_label($next_booking['hours']); ?></p>
-                                </div>
-                                <strong><?php echo htmlspecialchars(t('status_' . strtolower($next_booking['status']), [], $next_booking['status'])); ?></strong>
-                            </a>
-                        <?php else: ?>
-                            <div class="empty-bookings user-dashboard-empty user-compact-empty">
-                                <h2><?php echo t('my_bookings_empty_title'); ?></h2>
+                        <?php if (empty($dashboard_recent_activity)): ?>
+                            <div class="dashboard-v2-empty">
+                                <strong><?php echo t('my_bookings_empty_title'); ?></strong>
                                 <p><?php echo t('my_bookings_empty_text'); ?></p>
-                                <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-small"><?php echo t('nav_book_now'); ?></a>
+                            </div>
+                        <?php else: ?>
+                            <div class="dashboard-v2-activity-list">
+                                <?php foreach ($dashboard_recent_activity as $booking): ?>
+                                    <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="dashboard-v2-activity-row">
+                                        <strong><?php echo htmlspecialchars($booking['booking_code'] ?: ('FG-' . str_pad($booking['id'], 6, '0', STR_PAD_LEFT))); ?></strong>
+                                        <span><?php echo htmlspecialchars($booking['room_name']); ?> - <?php echo format_date($booking['booking_date']); ?></span>
+                                        <em><?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?></em>
+                                    </a>
+                                <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
-                    </section>
 
-                    <section class="user-panel">
-                        <div class="home-section-heading user-panel-heading">
-                            <span class="ticket-label">FAMOUS GAMING</span>
-                            <h2><?php echo t('nav_services'); ?></h2>
-                            <p><?php echo t('user_dashboard_subtitle'); ?></p>
-                        </div>
-
-                        <div class="user-action-grid">
-                            <?php foreach ($dashboard_links as $link): ?>
-                                <a href="<?php echo htmlspecialchars($link['url'], ENT_QUOTES, 'UTF-8'); ?>" class="user-action-card">
-                                    <span><?php echo $link['label']; ?></span>
-                                    <h3><?php echo $link['title']; ?></h3>
-                                    <p><?php echo $link['text']; ?></p>
-                                </a>
-                            <?php endforeach; ?>
+                        <div class="dashboard-v2-mini-stats">
+                            <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><span><?php echo t('user_dashboard_total_bookings'); ?></span><strong><?php echo $dashboard_stats['bookings']; ?></strong></a>
+                            <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><span><?php echo t('status_confirmed'); ?></span><strong><?php echo $dashboard_stats['upcoming']; ?></strong></a>
+                            <a href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>"><span><?php echo t('nav_notifications'); ?></span><strong><?php echo $dashboard_stats['unread']; ?></strong></a>
                         </div>
                     </section>
 
-                    <section class="user-panel">
-                        <div class="home-section-heading user-panel-heading">
-                            <span class="ticket-label"><?php echo t('home_rooms_title'); ?></span>
-                            <h2><?php echo t('user_dashboard_pick_room'); ?></h2>
-                            <p><?php echo t('user_dashboard_pick_room_text'); ?></p>
+                    <section class="dashboard-v2-card dashboard-v2-rooms">
+                        <div class="dashboard-v2-card-head">
+                            <div>
+                                <span><?php echo t('home_rooms_title'); ?></span>
+                                <h2><?php echo t('user_dashboard_pick_room'); ?></h2>
+                            </div>
+                            <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_book_now'); ?></a>
                         </div>
 
-                        <?php if (empty($rooms)): ?>
-                            <div class="home-no-rooms"><?php echo t('booking_addons_empty'); ?></div>
+                        <?php if (empty($dashboard_room_cards)): ?>
+                            <div class="dashboard-v2-empty"><?php echo t('booking_addons_empty'); ?></div>
                         <?php else: ?>
-                            <div class="user-room-status-grid">
-                                <?php foreach ($rooms as $room): ?>
+                            <div class="dashboard-v2-room-grid">
+                                <?php foreach ($dashboard_room_cards as $room): ?>
                                     <?php
                                     $room_status_key = strtolower((string)$room['status']);
-                                    $room_status_class = preg_replace('/[^a-z0-9_-]+/i', '-', $room_status_key);
                                     $is_available = $room['status'] === 'Available';
                                     $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background.png');
                                     ?>
-                                    <article class="user-room-status-card status-<?php echo htmlspecialchars($room_status_class, ENT_QUOTES, 'UTF-8'); ?>">
-                                        <img class="user-room-status-image" src="<?php echo htmlspecialchars($room_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($room['room_name'], ENT_QUOTES, 'UTF-8'); ?>">
-                                        <div>
-                                            <span><?php echo htmlspecialchars($room['room_type']); ?></span>
-                                            <h3><?php echo htmlspecialchars($room['room_name']); ?></h3>
+                                    <article class="dashboard-v2-room-card">
+                                        <div class="dashboard-v2-room-main">
+                                            <img src="<?php echo htmlspecialchars($room_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($room['room_name'], ENT_QUOTES, 'UTF-8'); ?>">
+                                            <div>
+                                                <span><?php echo htmlspecialchars($room['room_type']); ?></span>
+                                                <h3><?php echo htmlspecialchars($room['room_name']); ?></h3>
+                                                <em class="<?php echo $is_available ? 'is-live' : 'is-busy'; ?>"><?php echo htmlspecialchars(t('status_' . $room_status_key, [], $room['status'])); ?></em>
+                                            </div>
                                         </div>
-                                        <strong><?php echo htmlspecialchars(t('status_' . $room_status_key, [], $room['status'])); ?></strong>
                                         <?php if ($is_available): ?>
-                                            <a href="<?php echo htmlspecialchars(site_url('user/booking.php?room_id=' . (int)$room['id'] . '#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-small"><?php echo t('home_book_room'); ?></a>
+                                            <a href="<?php echo htmlspecialchars(site_url('user/booking.php?room_id=' . (int)$room['id'] . '#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="dashboard-v2-book-btn"><?php echo t('home_book_room'); ?></a>
                                         <?php else: ?>
-                                            <span class="user-room-hold"><?php echo number_format((float)$room['price_per_hour'], 2); ?> <?php echo t('home_room_price_suffix'); ?></span>
+                                            <span class="dashboard-v2-hold"><?php echo number_format((float)$room['price_per_hour'], 2); ?> <?php echo t('home_room_price_suffix'); ?></span>
                                         <?php endif; ?>
                                     </article>
                                 <?php endforeach; ?>
@@ -373,71 +345,87 @@ include dirname(__DIR__) . '/includes/header.php';
                         <?php endif; ?>
                     </section>
 
-                    <section class="user-panel dashboard-feedback-section" id="dashboard-feedback">
-                        <div class="home-section-heading user-panel-heading">
-                            <span class="ticket-label"><?php echo t('nav_feedback'); ?></span>
-                            <h2><?php echo t('dashboard_feedback_title'); ?></h2>
-                            <p><?php echo t('dashboard_feedback_text'); ?></p>
+                    <section class="dashboard-v2-card dashboard-v2-next">
+                        <div class="dashboard-v2-card-head">
+                            <div>
+                                <span><?php echo t('common_schedule'); ?></span>
+                                <h2><?php echo t('my_bookings_hero_title'); ?></h2>
+                            </div>
                         </div>
+                        <?php if ($next_booking): ?>
+                            <a class="dashboard-v2-session" href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>">
+                                <time><?php echo date('M d', strtotime($next_booking['booking_date'])); ?></time>
+                                <div>
+                                    <strong><?php echo htmlspecialchars($next_booking['room_name']); ?> - <?php echo htmlspecialchars($next_booking['room_type']); ?></strong>
+                                    <span><?php echo format_time($next_booking['start_time']); ?> - <?php echo translated_hours_label($next_booking['hours']); ?></span>
+                                </div>
+                            </a>
+                        <?php else: ?>
+                            <div class="dashboard-v2-empty">
+                                <strong><?php echo t('my_bookings_empty_title'); ?></strong>
+                                <p><?php echo t('my_bookings_empty_text'); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </section>
+                </div>
+
+                <aside class="user-dashboard-v2-side">
+                    <section class="dashboard-v2-card dashboard-v2-side-profile">
+                        <div class="dashboard-v2-side-avatar"><?php echo htmlspecialchars($dashboard_initial, ENT_QUOTES, 'UTF-8'); ?></div>
+                        <strong><?php echo htmlspecialchars($current_site_user['full_name'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                        <span><?php echo htmlspecialchars($current_site_user['email'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    </section>
+
+                    <section class="dashboard-v2-card dashboard-v2-loyalty" id="profile-loyalty">
+                        <div class="dashboard-v2-card-head">
+                            <div>
+                                <span><?php echo t('loyalty_points_short'); ?></span>
+                                <h2><?php echo t('loyalty_points'); ?></h2>
+                            </div>
+                        </div>
+                        <div class="dashboard-v2-loyalty-score">
+                            <span><?php echo t('loyalty_points_short'); ?></span>
+                            <strong><?php echo (int)$current_site_user['loyalty_points']; ?></strong>
+                        </div>
+                        <details class="dashboard-v2-details">
+                            <summary><?php echo t('loyalty_calculation_title'); ?></summary>
+                            <p><?php echo t('loyalty_calculation_earn', ['points' => $loyalty_earn_display]); ?></p>
+                            <p><?php echo t('loyalty_calculation_redeem', ['points' => $loyalty_redeem_display]); ?></p>
+                        </details>
+                    </section>
+
+                    <section class="dashboard-v2-card dashboard-v2-actions">
+                        <h2><?php echo t('footer_quick_links'); ?></h2>
+                        <div>
+                            <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><span>S</span><?php echo t('nav_store'); ?></a>
+                            <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><span>M</span><?php echo t('nav_my_bookings'); ?></a>
+                            <a href="#profile-details"><span>P</span><?php echo t('profile_title'); ?></a>
+                        </div>
+                    </section>
+
+                    <details class="dashboard-v2-card dashboard-v2-collapsible" id="dashboard-feedback" <?php echo $feedback_error_msg ? 'open' : ''; ?>>
+                        <summary>
+                            <span><?php echo t('nav_feedback'); ?></span>
+                            <strong><?php echo t('dashboard_feedback_title'); ?></strong>
+                            <em><?php echo t('dashboard_feedback_text'); ?></em>
+                        </summary>
                         <form method="POST" action="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#dashboard-feedback'), ENT_QUOTES, 'UTF-8'); ?>" class="dashboard-feedback-form">
                             <input type="hidden" name="profile_action" value="dashboard_feedback">
                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                             <textarea name="feedback_message" class="form-control" rows="4" required placeholder="<?php echo htmlspecialchars(t('complaints_message_placeholder'), ENT_QUOTES, 'UTF-8'); ?>"></textarea>
                             <button type="submit" class="btn"><?php echo t('complaints_submit'); ?></button>
                         </form>
-                    </section>
+                    </details>
 
-                    <section class="user-panel">
-                        <div class="home-section-heading user-panel-heading">
-                            <span class="ticket-label"><?php echo t('my_bookings_history_title'); ?></span>
-                            <h2><?php echo t('user_dashboard_recent_bookings'); ?></h2>
-                        </div>
-
-                        <?php if (empty($recent_bookings)): ?>
-                            <div class="empty-bookings user-dashboard-empty user-compact-empty">
-                                <h2><?php echo t('my_bookings_empty_title'); ?></h2>
-                                <p><?php echo t('my_bookings_empty_text'); ?></p>
-                            </div>
-                        <?php else: ?>
-                            <div class="user-bookings-mini-list">
-                                <?php foreach ($recent_bookings as $booking): ?>
-                                    <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="user-booking-mini-card">
-                                        <div>
-                                            <span><?php echo htmlspecialchars($booking['booking_code'] ?: ('FG-' . str_pad($booking['id'], 6, '0', STR_PAD_LEFT))); ?></span>
-                                            <h3><?php echo htmlspecialchars($booking['room_name']); ?> - <?php echo htmlspecialchars($booking['room_type']); ?></h3>
-                                            <p><?php echo format_date($booking['booking_date']); ?>, <?php echo format_time($booking['start_time']); ?> - <?php echo translated_hours_label($booking['hours']); ?></p>
-                                        </div>
-                                        <strong><?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?></strong>
-                                    </a>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </section>
-                </div>
-
-                <aside class="user-overview-sidebar">
-                    <div class="profile-side-card user-loyalty-card" id="profile-loyalty">
-                        <span class="ticket-label"><?php echo t('loyalty_points'); ?></span>
-                        <strong><?php echo (int)$current_site_user['loyalty_points']; ?></strong>
-                        <p><?php echo t('profile_loyalty_text'); ?></p>
-                        <div class="user-loyalty-rules">
-                            <b><?php echo t('loyalty_calculation_title'); ?></b>
-                            <span><?php echo t('loyalty_calculation_earn', ['points' => $loyalty_earn_display]); ?></span>
-                            <span><?php echo t('loyalty_calculation_redeem', ['points' => $loyalty_redeem_display]); ?></span>
-                            <em><?php echo t('loyalty_calculation_balance'); ?></em>
-                        </div>
-                        <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-secondary-btn"><?php echo t('nav_my_bookings'); ?></a>
-                    </div>
-
-                    <details class="user-dashboard-profile-panel" id="profile-details">
+                    <details class="dashboard-v2-card dashboard-v2-collapsible" id="profile-details" <?php echo $profile_error_msg ? 'open' : ''; ?>>
                         <summary>
-                            <span><?php echo t('profile_label'); ?></span>
+                            <span><?php echo t('nav_profile'); ?></span>
                             <strong><?php echo t('profile_title'); ?></strong>
+                            <em><?php echo htmlspecialchars($current_site_user['email'], ENT_QUOTES, 'UTF-8'); ?></em>
                         </summary>
                         <form method="POST" action="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#profile-details'), ENT_QUOTES, 'UTF-8'); ?>" class="form-container profile-card user-profile-form">
                             <input type="hidden" name="profile_action" value="update_profile">
                             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-
                             <div class="form-group">
                                 <label class="form-label"><?php echo t('auth_full_name'); ?></label>
                                 <input type="text" name="full_name" class="form-control" value="<?php echo htmlspecialchars($_POST['full_name'] ?? $current_site_user['full_name']); ?>" required>
@@ -461,8 +449,6 @@ include dirname(__DIR__) . '/includes/header.php';
                             <button type="submit" class="btn w-100"><?php echo t('profile_update_button'); ?></button>
                         </form>
                     </details>
-
-                    <a class="user-sidebar-logout" href="<?php echo htmlspecialchars(site_url('general/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                 </aside>
             </div>
         </div>
