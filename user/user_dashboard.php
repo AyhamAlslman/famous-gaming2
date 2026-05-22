@@ -175,32 +175,6 @@ if ($next_result) {
 }
 mysqli_stmt_close($next_stmt);
 
-$dashboard_stats = [
-    'bookings' => 0,
-    'paid' => 0,
-    'upcoming' => 0,
-    'unread' => count_unread_site_notifications($conn, $site_user_id)
-];
-
-$stats_stmt = mysqli_prepare(
-    $conn,
-    "SELECT
-        COUNT(*) AS bookings_count,
-        SUM(CASE WHEN payment_status = 'Paid' THEN 1 ELSE 0 END) AS paid_count,
-        SUM(CASE WHEN status IN ('Pending', 'Confirmed') AND booking_date >= CURDATE() THEN 1 ELSE 0 END) AS upcoming_count
-     FROM bookings
-     WHERE user_id = ?"
-);
-mysqli_stmt_bind_param($stats_stmt, "i", $site_user_id);
-mysqli_stmt_execute($stats_stmt);
-$stats_result = mysqli_stmt_get_result($stats_stmt);
-if ($stats_result && ($stats_row = mysqli_fetch_assoc($stats_result))) {
-    $dashboard_stats['bookings'] = (int)$stats_row['bookings_count'];
-    $dashboard_stats['paid'] = (int)$stats_row['paid_count'];
-    $dashboard_stats['upcoming'] = (int)$stats_row['upcoming_count'];
-}
-mysqli_stmt_close($stats_stmt);
-
 $loyalty_settings = get_loyalty_settings($conn);
 $loyalty_earn_display = rtrim(rtrim(number_format((float)$loyalty_settings['earn_per_jod'], 2), '0'), '.');
 $loyalty_redeem_display = rtrim(rtrim(number_format((float)$loyalty_settings['redeem_points_per_jod'], 2), '0'), '.');
@@ -234,7 +208,7 @@ include dirname(__DIR__) . '/includes/header.php';
             <span class="dashboard-rail-icon">M</span>
             <span class="dashboard-rail-text"><strong><?php echo t('nav_my_bookings'); ?></strong><em><?php echo t('common_schedule'); ?></em></span>
         </a>
-        <a href="#dashboard-feedback" aria-label="<?php echo htmlspecialchars(t('nav_feedback'), ENT_QUOTES, 'UTF-8'); ?>">
+        <a href="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('nav_feedback'), ENT_QUOTES, 'UTF-8'); ?>">
             <span class="dashboard-rail-icon">F</span>
             <span class="dashboard-rail-text"><strong><?php echo t('nav_feedback'); ?></strong><em><?php echo t('dashboard_feedback_title'); ?></em></span>
         </a>
@@ -271,7 +245,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 </div>
             </section>
 
-            <div class="user-dashboard-v2-layout">
+            <div class="user-dashboard-v2-layout web-dashboard-container">
                 <div class="user-dashboard-v2-main">
                     <section class="dashboard-v2-card dashboard-v2-activity">
                         <div class="dashboard-v2-card-head">
@@ -298,12 +272,6 @@ include dirname(__DIR__) . '/includes/header.php';
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
-
-                        <div class="dashboard-v2-mini-stats">
-                            <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><span><?php echo t('user_dashboard_total_bookings'); ?></span><strong><?php echo $dashboard_stats['bookings']; ?></strong></a>
-                            <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><span><?php echo t('status_confirmed'); ?></span><strong><?php echo $dashboard_stats['upcoming']; ?></strong></a>
-                            <a href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>"><span><?php echo t('nav_notifications'); ?></span><strong><?php echo $dashboard_stats['unread']; ?></strong></a>
-                        </div>
                     </section>
 
                     <section class="dashboard-v2-card dashboard-v2-rooms">
@@ -398,24 +366,10 @@ include dirname(__DIR__) . '/includes/header.php';
                         <h2><?php echo t('footer_quick_links'); ?></h2>
                         <div>
                             <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><span>S</span><?php echo t('nav_store'); ?></a>
+                            <a href="<?php echo htmlspecialchars(site_url('user/menu.php'), ENT_QUOTES, 'UTF-8'); ?>"><span>N</span><?php echo t('booking_step_menu'); ?></a>
                             <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><span>M</span><?php echo t('nav_my_bookings'); ?></a>
-                            <a href="#profile-details"><span>P</span><?php echo t('profile_title'); ?></a>
                         </div>
                     </section>
-
-                    <details class="dashboard-v2-card dashboard-v2-collapsible" id="dashboard-feedback" <?php echo $feedback_error_msg ? 'open' : ''; ?>>
-                        <summary>
-                            <span><?php echo t('nav_feedback'); ?></span>
-                            <strong><?php echo t('dashboard_feedback_title'); ?></strong>
-                            <em><?php echo t('dashboard_feedback_text'); ?></em>
-                        </summary>
-                        <form method="POST" action="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#dashboard-feedback'), ENT_QUOTES, 'UTF-8'); ?>" class="dashboard-feedback-form">
-                            <input type="hidden" name="profile_action" value="dashboard_feedback">
-                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-                            <textarea name="feedback_message" class="form-control" rows="4" required placeholder="<?php echo htmlspecialchars(t('complaints_message_placeholder'), ENT_QUOTES, 'UTF-8'); ?>"></textarea>
-                            <button type="submit" class="btn"><?php echo t('complaints_submit'); ?></button>
-                        </form>
-                    </details>
 
                     <details class="dashboard-v2-card dashboard-v2-collapsible" id="profile-details" <?php echo $profile_error_msg ? 'open' : ''; ?>>
                         <summary>

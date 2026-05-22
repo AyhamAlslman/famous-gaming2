@@ -319,23 +319,23 @@ include dirname(__DIR__) . '/includes/header.php';
                     <span class="ticket-label"><?php echo t('home_rooms_title'); ?></span>
                     <h2><?php echo t('booking_form_room'); ?></h2>
                 </div>
-                <div class="booking-room-showcase-grid">
+                <div class="booking-room-compact-list">
                     <?php foreach ($booking_rooms as $room): ?>
                         <?php
                         $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background.png');
                         ?>
-                        <article class="booking-room-detail-card">
-                            <div class="booking-room-detail-media">
+                        <article class="live-room-row-item booking-room-row">
+                            <div class="booking-room-row-media">
                                 <img src="<?php echo htmlspecialchars($room_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($room['room_name']); ?>">
                             </div>
-                            <div class="booking-room-detail-body">
+                            <div class="booking-room-row-copy">
                                 <span><?php echo htmlspecialchars($room['room_type']); ?></span>
                                 <h3><?php echo htmlspecialchars($room['room_name']); ?></h3>
                                 <p><?php echo htmlspecialchars($room['description'] ?: $room['services']); ?></p>
-                                <div class="booking-room-detail-footer">
-                                    <strong><?php echo number_format((float)$room['price_per_hour'], 2); ?> <?php echo t('home_room_price_suffix'); ?></strong>
-                                    <button type="button" class="btn btn-small" data-booking-room-select="<?php echo (int)$room['id']; ?>"><?php echo t('home_book_room'); ?></button>
-                                </div>
+                            </div>
+                            <div class="booking-room-row-actions">
+                                <strong><?php echo number_format((float)$room['price_per_hour'], 2); ?> <?php echo t('home_room_price_suffix'); ?></strong>
+                                <button type="button" class="btn btn-small" data-booking-room-select="<?php echo (int)$room['id']; ?>"><?php echo t('home_book_room'); ?></button>
                             </div>
                         </article>
                     <?php endforeach; ?>

@@ -251,3 +251,323 @@ html[dir="rtl"] .site-footer .site-footer-socials {
 .checkout-loyalty-rules {
     margin-top: 0;
 }
+
+/* Famous Gaming unified web dashboard layout */
+.web-dashboard-container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 25px;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.web-app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 25px;
+    padding: 15px 30px;
+    border: 1px solid rgba(0, 242, 254, 0.1);
+    border-radius: 12px;
+    background: #141923;
+}
+
+.user-dashboard-v2 .web-dashboard-container {
+    width: 100%;
+    padding: 1.1rem 0 0;
+}
+
+.dashboard-v2-mini-stats,
+.dashboard-v2-wallet-grid {
+    display: none !important;
+}
+
+.dashboard-v2-rooms {
+    order: -2;
+}
+
+.dashboard-v2-activity {
+    order: -1;
+}
+
+.dashboard-v2-activity-list {
+    padding-bottom: 1.1rem !important;
+}
+
+.dashboard-v2-activity-row {
+    grid-template-columns: minmax(110px, 0.8fr) minmax(180px, 1.5fr) auto !important;
+    align-items: center !important;
+    min-height: 54px;
+    padding: 0.7rem 1.1rem !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+.dashboard-v2-actions > div {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.minimal-data-table {
+    width: 100%;
+    overflow: hidden;
+    border-collapse: collapse;
+    border: 1px solid rgba(93, 214, 255, 0.14);
+    border-radius: 12px;
+    background: #141923;
+}
+
+.minimal-data-table th,
+.minimal-data-table td {
+    padding: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+    color: #ffffff;
+    font-size: 0.95rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.minimal-data-table th {
+    background: #0d111a;
+    color: #00f2fe;
+    font-weight: 800;
+}
+
+.minimal-data-table tbody tr:hover {
+    background: rgba(93, 214, 255, 0.06);
+}
+
+.table-action-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.table-action-group form {
+    margin: 0;
+}
+
+.table-action-group .btn {
+    min-height: 34px;
+    padding: 0.38rem 0.62rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.booking-ticket-modal.ticket-preview-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+}
+
+.booking-ticket-modal.ticket-preview-modal.is-hidden {
+    display: none;
+}
+
+.live-room-row-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 12px;
+    padding: 15px 20px;
+    border: 1px solid rgba(93, 214, 255, 0.16);
+    border-inline-start: 4px solid #00f2fe;
+    border-radius: 12px;
+    background: #141923;
+}
+
+.booking-room-compact-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.booking-room-row-media {
+    flex: 0 0 180px;
+}
+
+.booking-room-row-media img {
+    width: 180px;
+    height: 88px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.booking-room-row-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.booking-room-row-copy span,
+.menu-preview-card span {
+    color: #79eafa;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.booking-room-row-copy h3,
+.menu-preview-card h3 {
+    margin: 0.12rem 0 0.25rem;
+    color: #ffffff;
+    font-size: 1.08rem;
+}
+
+.booking-room-row-copy p,
+.menu-preview-card p {
+    overflow: hidden;
+    display: -webkit-box;
+    margin: 0;
+    color: rgba(226, 238, 250, 0.72);
+    line-height: 1.45;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.booking-room-row-actions {
+    display: grid;
+    justify-items: end;
+    gap: 0.55rem;
+    flex: 0 0 150px;
+}
+
+.booking-room-row-actions strong {
+    color: #ffffff;
+}
+
+.booking-room-row-actions .btn,
+.live-room-row-item .btn {
+    width: 100%;
+    min-height: 40px;
+    background: linear-gradient(135deg, #00f2fe, #58e0c2);
+    color: #07111d;
+}
+
+.menu-hero {
+    background:
+        linear-gradient(135deg, rgba(8, 18, 32, 0.88), rgba(15, 44, 58, 0.76)),
+        url('../../images/home-neon-sign.jpg') center / cover;
+}
+
+.menu-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.menu-preview-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.85rem;
+    min-height: 112px;
+    padding: 1rem;
+    border: 1px solid rgba(93, 214, 255, 0.16);
+    border-radius: 12px;
+    background:
+        linear-gradient(145deg, rgba(20, 55, 70, 0.86), rgba(13, 20, 32, 0.95)),
+        #141923;
+}
+
+.menu-preview-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    background: rgba(0, 242, 254, 0.13);
+    color: #90f8ff;
+    font-weight: 900;
+}
+
+.menu-preview-card strong {
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.menu-booking-cta {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.25rem;
+}
+
+@media (max-width: 1199px) {
+    .web-dashboard-container,
+    .user-dashboard-v2 .web-dashboard-container {
+        grid-template-columns: 1fr;
+    }
+
+    .menu-preview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .web-dashboard-container,
+    .user-dashboard-v2 .web-dashboard-container {
+        padding: 0.8rem 0 0;
+    }
+
+    .web-app-header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .live-room-row-item {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px;
+        text-align: center;
+    }
+
+    .booking-room-row-media {
+        flex-basis: auto;
+    }
+
+    .booking-room-row-media img {
+        width: 100%;
+        height: 150px;
+    }
+
+    .booking-room-row-actions {
+        justify-items: stretch;
+        flex-basis: auto;
+    }
+
+    .responsive-table-wrapper {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .minimal-data-table {
+        min-width: 860px;
+    }
+
+    .minimal-data-table th,
+    .minimal-data-table td {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .dashboard-v2-activity-row {
+        grid-template-columns: 1fr !important;
+        text-align: start;
+    }
+
+    .menu-preview-grid,
+    .menu-preview-card {
+        grid-template-columns: 1fr;
+    }
+
+    .menu-preview-card {
+        text-align: center;
+    }
+
+    .menu-preview-icon {
+        margin-inline: auto;
+    }
+}

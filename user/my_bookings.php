@@ -178,82 +178,80 @@ include dirname(__DIR__) . '/includes/header.php';
                 <?php endif; ?>
             </div>
 
-            <div class="my-bookings-list">
-                <?php foreach ($bookings as $booking): ?>
-                    <div class="booking-ticket ticket-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>"
-                         data-ticket-code="<?php echo htmlspecialchars($booking['booking_code'] ?: ('FG-' . str_pad($booking['id'], 6, '0', STR_PAD_LEFT))); ?>"
-                         data-ticket-customer="<?php echo htmlspecialchars($booking['customer_name']); ?>"
-                         data-ticket-device="<?php echo htmlspecialchars($booking['room_name'] . ' - ' . $booking['room_type']); ?>"
-                         data-ticket-date="<?php echo htmlspecialchars(format_date($booking['booking_date'])); ?>"
-                         data-ticket-time="<?php echo htmlspecialchars(format_time($booking['start_time']) . ' - ' . translated_hours_label($booking['hours'])); ?>"
-                         data-ticket-status="<?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?>">
-                        <div class="booking-ticket-header">
-                            <div>
-                                <span class="ticket-label"><?php echo t('booking_ticket_label'); ?></span>
-                                <h2><?php echo t('booking_ticket_ready'); ?></h2>
-                                <p><?php echo t('booking_ticket_arrival'); ?></p>
-                            </div>
-                            <span class="ticket-status status-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>"><?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?></span>
-                        </div>
-
-                        <div class="booking-ticket-code">
-                            <span><?php echo t('booking_barcode'); ?></span>
-                            <div class="ticket-barcode" aria-label="<?php echo htmlspecialchars(t('booking_barcode'), ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php echo render_booking_barcode($booking['booking_code'] ?: $booking['id']); ?>
-                            </div>
-                        </div>
-
-                        <div class="booking-ticket-grid">
-                            <div>
-                                <span><?php echo t('common_customer'); ?></span>
-                                <strong><?php echo htmlspecialchars($booking['customer_name']); ?></strong>
-                            </div>
-                            <div>
-                                <span><?php echo t('booking_device_session'); ?></span>
-                                <strong><?php echo htmlspecialchars($booking['room_name']); ?> - <?php echo htmlspecialchars($booking['room_type']); ?></strong>
-                            </div>
-                            <div>
-                                <span><?php echo t('common_date'); ?></span>
-                                <strong><?php echo format_date($booking['booking_date']); ?></strong>
-                            </div>
-                            <div>
-                                <span><?php echo t('common_time'); ?></span>
-                                <strong><?php echo format_time($booking['start_time']); ?> - <?php echo translated_hours_label($booking['hours']); ?></strong>
-                            </div>
-                            <div>
-                                <span><?php echo t('common_payment'); ?></span>
-                                <strong><?php echo htmlspecialchars(t('status_' . strtolower($booking['payment_status'] ?? 'Unpaid'), [], $booking['payment_status'] ?? 'Unpaid')); ?></strong>
-                            </div>
-                            <div>
-                                <span><?php echo t('common_total'); ?></span>
-                                <strong><?php echo number_format((float)($booking['final_total'] ?? $booking['total_price']), 2); ?> JOD</strong>
-                            </div>
-                            <div>
-                                <span><?php echo t('loyalty_points'); ?></span>
-                                <strong><?php echo (int)($booking['loyalty_points_earned'] ?? 0); ?></strong>
-                            </div>
-                        </div>
-
-                        <div class="booking-ticket-actions">
-                            <button type="button" class="btn download-ticket-btn"><?php echo t('booking_save_ticket'); ?></button>
-                            <button type="button" class="btn payment-secondary-btn" data-invoice-open><?php echo t('my_bookings_invoice'); ?></button>
-                            <?php if ($booking['status'] !== 'Cancelled'): ?>
-                                <button type="button" class="btn payment-secondary-btn" data-rating-open data-booking-id="<?php echo (int)$booking['id']; ?>"><?php echo t('my_bookings_rate'); ?></button>
-                            <?php endif; ?>
-                            <?php if ($booking['status'] !== 'Cancelled' && ($booking['payment_status'] ?? 'Unpaid') !== 'Paid'): ?>
-                                <a href="<?php echo htmlspecialchars(site_url('user/payment.php?booking_id=' . (int)$booking['id']), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-checkout-btn"><?php echo t('my_bookings_simulate_payment'); ?></a>
-                            <?php endif; ?>
-                            <?php if ($booking['status'] === 'Confirmed'): ?>
-                                <form method="POST" action="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="ticket-action-form" data-confirm-message="<?php echo htmlspecialchars(t('my_bookings_cancel_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>">
-                                    <input type="hidden" name="booking_id" value="<?php echo (int)$booking['id']; ?>">
-                                    <input type="hidden" name="ticket_action" value="cancel">
-                                    <button type="submit" class="btn ticket-cancel-btn"><?php echo t('my_bookings_cancel'); ?></button>
-                                </form>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+            <?php if (!empty($bookings)): ?>
+                <div class="responsive-table-wrapper">
+                    <table class="minimal-data-table bookings-data-table">
+                        <thead>
+                            <tr>
+                                <th><?php echo t('booking_code_label'); ?></th>
+                                <th><?php echo t('common_customer'); ?></th>
+                                <th><?php echo t('booking_device_session'); ?></th>
+                                <th><?php echo t('common_date'); ?></th>
+                                <th><?php echo t('common_time'); ?></th>
+                                <th><?php echo t('common_payment'); ?></th>
+                                <th><?php echo t('common_total'); ?></th>
+                                <th><?php echo t('common_status'); ?></th>
+                                <th><?php echo t('common_actions'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($bookings as $booking): ?>
+                                <?php
+                                $ticket_code = $booking['booking_code'] ?: ('FG-' . str_pad($booking['id'], 6, '0', STR_PAD_LEFT));
+                                $ticket_device = trim(($booking['room_name'] ?? '') . ' - ' . ($booking['room_type'] ?? ''), ' -');
+                                $ticket_status = t('status_' . strtolower($booking['status']), [], $booking['status']);
+                                $ticket_payment = t('status_' . strtolower($booking['payment_status'] ?? 'Unpaid'), [], $booking['payment_status'] ?? 'Unpaid');
+                                $ticket_total = number_format((float)($booking['final_total'] ?? $booking['total_price']), 2) . ' JOD';
+                                $ticket_time = format_time($booking['start_time']) . ' - ' . translated_hours_label($booking['hours']);
+                                ?>
+                                <tr>
+                                    <td><strong><?php echo htmlspecialchars($ticket_code); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($booking['customer_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($ticket_device); ?></td>
+                                    <td><?php echo format_date($booking['booking_date']); ?></td>
+                                    <td><?php echo htmlspecialchars($ticket_time); ?></td>
+                                    <td><?php echo htmlspecialchars($ticket_payment); ?></td>
+                                    <td><?php echo htmlspecialchars($ticket_total); ?></td>
+                                    <td><span class="ticket-status status-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>"><?php echo htmlspecialchars($ticket_status); ?></span></td>
+                                    <td>
+                                        <div class="table-action-group">
+                                            <button
+                                                type="button"
+                                                class="btn btn-small payment-secondary-btn"
+                                                data-ticket-open
+                                                data-ticket-code="<?php echo htmlspecialchars($ticket_code, ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-ticket-customer="<?php echo htmlspecialchars($booking['customer_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-ticket-device="<?php echo htmlspecialchars($ticket_device, ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-ticket-date="<?php echo htmlspecialchars(format_date($booking['booking_date']), ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-ticket-time="<?php echo htmlspecialchars($ticket_time, ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-ticket-status="<?php echo htmlspecialchars($ticket_status, ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-ticket-payment="<?php echo htmlspecialchars($ticket_payment, ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-ticket-total="<?php echo htmlspecialchars($ticket_total, ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-ticket-points="<?php echo (int)($booking['loyalty_points_earned'] ?? 0); ?>"
+                                                data-ticket-barcode="<?php echo htmlspecialchars(render_booking_barcode($booking['booking_code'] ?: $booking['id']), ENT_QUOTES, 'UTF-8'); ?>"
+                                            ><?php echo t('booking_ticket_label'); ?></button>
+                                            <button type="button" class="btn btn-small payment-secondary-btn" data-invoice-open><?php echo t('my_bookings_invoice'); ?></button>
+                                            <?php if ($booking['status'] !== 'Cancelled'): ?>
+                                                <button type="button" class="btn btn-small payment-secondary-btn" data-rating-open data-booking-id="<?php echo (int)$booking['id']; ?>"><?php echo t('my_bookings_rate'); ?></button>
+                                            <?php endif; ?>
+                                            <?php if ($booking['status'] !== 'Cancelled' && ($booking['payment_status'] ?? 'Unpaid') !== 'Paid'): ?>
+                                                <a href="<?php echo htmlspecialchars(site_url('user/payment.php?booking_id=' . (int)$booking['id']), ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-small payment-checkout-btn"><?php echo t('my_bookings_simulate_payment'); ?></a>
+                                            <?php endif; ?>
+                                            <?php if ($booking['status'] === 'Confirmed'): ?>
+                                                <form method="POST" action="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="ticket-action-form" data-confirm-message="<?php echo htmlspecialchars(t('my_bookings_cancel_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>">
+                                                    <input type="hidden" name="booking_id" value="<?php echo (int)$booking['id']; ?>">
+                                                    <input type="hidden" name="ticket_action" value="cancel">
+                                                    <button type="submit" class="btn btn-small ticket-cancel-btn"><?php echo t('my_bookings_cancel'); ?></button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
             <?php if (!empty($store_orders)): ?>
                 <div class="store-order-history-section">
                     <div class="home-section-heading">
@@ -318,6 +316,42 @@ include dirname(__DIR__) . '/includes/header.php';
     </div>
 </section>
 
+<div class="booking-ticket-modal ticket-preview-modal is-hidden" id="ticketPreviewModal" hidden>
+    <div class="booking-ticket-modal-backdrop" data-ticket-preview-close></div>
+    <div class="booking-ticket-modal-panel">
+        <button type="button" class="booking-ticket-close" data-ticket-preview-close aria-label="<?php echo htmlspecialchars(t('booking_close_ticket'), ENT_QUOTES, 'UTF-8'); ?>">X</button>
+        <div class="booking-ticket" id="ticketPreviewCard">
+            <div class="booking-ticket-header">
+                <div>
+                    <span class="ticket-label"><?php echo t('booking_ticket_label'); ?></span>
+                    <h2><?php echo t('booking_ticket_ready'); ?></h2>
+                    <p><?php echo t('booking_ticket_arrival'); ?></p>
+                </div>
+                <span class="ticket-status" data-ticket-preview-status></span>
+            </div>
+
+            <div class="booking-ticket-code">
+                <span><?php echo t('booking_barcode'); ?></span>
+                <div class="ticket-barcode" data-ticket-preview-barcode aria-label="<?php echo htmlspecialchars(t('booking_barcode'), ENT_QUOTES, 'UTF-8'); ?>"></div>
+            </div>
+
+            <div class="booking-ticket-grid">
+                <div><span><?php echo t('common_customer'); ?></span><strong data-ticket-preview-customer></strong></div>
+                <div><span><?php echo t('booking_device_session'); ?></span><strong data-ticket-preview-device></strong></div>
+                <div><span><?php echo t('common_date'); ?></span><strong data-ticket-preview-date></strong></div>
+                <div><span><?php echo t('common_time'); ?></span><strong data-ticket-preview-time></strong></div>
+                <div><span><?php echo t('common_payment'); ?></span><strong data-ticket-preview-payment></strong></div>
+                <div><span><?php echo t('common_total'); ?></span><strong data-ticket-preview-total></strong></div>
+                <div><span><?php echo t('loyalty_points'); ?></span><strong data-ticket-preview-points></strong></div>
+            </div>
+
+            <div class="booking-ticket-actions">
+                <button type="button" class="btn download-ticket-btn"><?php echo t('booking_save_ticket'); ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="site-modal rating-modal" id="ratingModal" hidden>
     <div class="site-modal-backdrop" data-rating-close></div>
     <div class="site-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="ratingModalTitle">
@@ -347,6 +381,69 @@ include dirname(__DIR__) . '/includes/header.php';
 document.addEventListener('DOMContentLoaded', function () {
     const ratingModal = document.getElementById('ratingModal');
     const ratingBookingId = document.getElementById('ratingBookingId');
+    const ticketPreviewModal = document.getElementById('ticketPreviewModal');
+    const ticketPreviewCard = document.getElementById('ticketPreviewCard');
+
+    function setPreviewText(selector, value) {
+        const target = ticketPreviewModal ? ticketPreviewModal.querySelector(selector) : null;
+
+        if (target) {
+            target.textContent = value || '';
+        }
+    }
+
+    function openTicketPreview(button) {
+        if (!ticketPreviewModal || !ticketPreviewCard) {
+            return;
+        }
+
+        const data = button.dataset;
+        ticketPreviewCard.dataset.ticketCode = data.ticketCode || '';
+        ticketPreviewCard.dataset.ticketCustomer = data.ticketCustomer || '';
+        ticketPreviewCard.dataset.ticketDevice = data.ticketDevice || '';
+        ticketPreviewCard.dataset.ticketDate = data.ticketDate || '';
+        ticketPreviewCard.dataset.ticketTime = data.ticketTime || '';
+        ticketPreviewCard.dataset.ticketStatus = data.ticketStatus || '';
+
+        setPreviewText('[data-ticket-preview-status]', data.ticketStatus || '');
+        setPreviewText('[data-ticket-preview-customer]', data.ticketCustomer || '');
+        setPreviewText('[data-ticket-preview-device]', data.ticketDevice || '');
+        setPreviewText('[data-ticket-preview-date]', data.ticketDate || '');
+        setPreviewText('[data-ticket-preview-time]', data.ticketTime || '');
+        setPreviewText('[data-ticket-preview-payment]', data.ticketPayment || '');
+        setPreviewText('[data-ticket-preview-total]', data.ticketTotal || '');
+        setPreviewText('[data-ticket-preview-points]', data.ticketPoints || '0');
+
+        const barcode = ticketPreviewModal.querySelector('[data-ticket-preview-barcode]');
+
+        if (barcode) {
+            barcode.innerHTML = data.ticketBarcode || '';
+        }
+
+        ticketPreviewModal.hidden = false;
+        ticketPreviewModal.classList.remove('is-hidden');
+        document.body.classList.add('booking-ticket-modal-open');
+    }
+
+    function closeTicketPreview() {
+        if (!ticketPreviewModal) {
+            return;
+        }
+
+        ticketPreviewModal.classList.add('is-hidden');
+        ticketPreviewModal.hidden = true;
+        document.body.classList.remove('booking-ticket-modal-open');
+    }
+
+    document.querySelectorAll('[data-ticket-open]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            openTicketPreview(button);
+        });
+    });
+
+    document.querySelectorAll('[data-ticket-preview-close]').forEach(function(button) {
+        button.addEventListener('click', closeTicketPreview);
+    });
 
     document.querySelectorAll('[data-rating-open]').forEach(function(button) {
         button.addEventListener('click', function() {
@@ -371,14 +468,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('[data-invoice-open]').forEach(function(button) {
         button.addEventListener('click', function() {
-            const ticket = button.closest('.booking-ticket');
-            if (!ticket || !window.showSiteModal) {
+            const ticketButton = button.closest('.table-action-group') ? button.closest('.table-action-group').querySelector('[data-ticket-open]') : null;
+            if (!ticketButton || !window.showSiteModal) {
                 return;
             }
 
-            const details = Array.from(ticket.querySelectorAll('.booking-ticket-grid div')).map(function(item) {
-                return item.innerText.trim();
-            }).join('\n');
+            const details = [
+                '<?php echo addslashes(t('booking_code_label')); ?>: ' + (ticketButton.dataset.ticketCode || ''),
+                '<?php echo addslashes(t('booking_device_session')); ?>: ' + (ticketButton.dataset.ticketDevice || ''),
+                '<?php echo addslashes(t('common_date')); ?>: ' + (ticketButton.dataset.ticketDate || ''),
+                '<?php echo addslashes(t('common_time')); ?>: ' + (ticketButton.dataset.ticketTime || ''),
+                '<?php echo addslashes(t('common_payment')); ?>: ' + (ticketButton.dataset.ticketPayment || ''),
+                '<?php echo addslashes(t('common_total')); ?>: ' + (ticketButton.dataset.ticketTotal || '')
+            ].join('\n');
 
             window.showSiteModal({
                 title: '<?php echo addslashes(t('my_bookings_invoice')); ?>',
@@ -386,6 +488,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 type: 'info'
             });
         });
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && ticketPreviewModal && !ticketPreviewModal.hidden) {
+            closeTicketPreview();
+        }
     });
 });
 </script>
