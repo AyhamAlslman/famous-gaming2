@@ -5,33 +5,44 @@
                 <strong><?php echo t('brand_name'); ?></strong>
                 <p><?php echo t('footer_tagline'); ?></p>
                 <p><?php echo t('footer_visit_text'); ?></p>
+                <a href="https://maps.google.com/?q=Amman%20Jordan" target="_blank" rel="noopener noreferrer"><?php echo t('footer_map'); ?></a>
             </div>
 
             <div class="site-footer-links">
                 <h3><?php echo t('footer_quick_links'); ?></h3>
                 <a href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_home'); ?></a>
-                <a href="<?php echo htmlspecialchars(site_url('general/about.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_about'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_services'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_store'); ?></a>
+                <?php if ($footer_user_logged_in): ?>
+                    <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_book_now'); ?></a>
+                <?php else: ?>
+                    <a href="<?php echo htmlspecialchars(site_url('general/login.php?redirect=' . urlencode('user/booking.php')), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_book_now'); ?></a>
+                <?php endif; ?>
+            </div>
+
+            <div class="site-footer-links">
+                <h3><?php echo t('nav_account'); ?></h3>
                 <?php if ($footer_user_logged_in): ?>
                     <a href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_account'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_services'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_store'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_book_now'); ?></a>
                     <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_my_bookings'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_notifications'); ?></a>
                     <a href="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_feedback'); ?></a>
+                <?php else: ?>
+                    <a href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
                 <?php endif; ?>
-                <a href="<?php echo htmlspecialchars(site_url('general/contact.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_contact'); ?></a>
             </div>
 
             <div class="site-footer-links">
                 <h3><?php echo t('footer_support'); ?></h3>
+                <span class="site-footer-info"><?php echo t('footer_hours'); ?></span>
+                <span class="site-footer-info"><?php echo t('footer_support_phone'); ?></span>
                 <a href="<?php echo htmlspecialchars(site_url('general/contact.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_contact'); ?></a>
                 <?php if ($footer_user_logged_in): ?>
-                    <a href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_notifications'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_my_bookings'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('complaints_complaints'); ?></a>
                     <a href="<?php echo htmlspecialchars(site_url('general/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                 <?php else: ?>
-                    <a href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('general/about.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_about'); ?></a>
                 <?php endif; ?>
             </div>
 

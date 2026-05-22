@@ -218,6 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
+$show_booking_flow = ($_SERVER['REQUEST_METHOD'] === 'POST') || $preselected_room_id > 0;
 $page_title = t('booking_page_title');
 include dirname(__DIR__) . '/includes/header.php';
 ?>
@@ -339,8 +340,21 @@ include dirname(__DIR__) . '/includes/header.php';
             </div>
         <?php endif; ?>
 
-        <div class="form-container" id="booking-form">
+        <div class="form-container booking-flow-panel <?php echo $show_booking_flow ? 'is-active' : ''; ?>" id="booking-form" data-booking-flow>
             <form method="POST" action="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>">
+                <div class="booking-flow-head">
+                    <div>
+                        <span class="ticket-label"><?php echo t('booking_flow_label'); ?></span>
+                        <h2><?php echo t('booking_flow_title'); ?></h2>
+                        <p><?php echo t('booking_flow_text'); ?></p>
+                    </div>
+                </div>
+                <div class="booking-flow-steps" aria-label="<?php echo htmlspecialchars(t('booking_flow_label'), ENT_QUOTES, 'UTF-8'); ?>">
+                    <span class="is-active" data-booking-step-indicator="details"><?php echo t('booking_step_details'); ?></span>
+                    <span data-booking-step-indicator="addons"><?php echo t('booking_step_menu'); ?></span>
+                    <span data-booking-step-indicator="payment"><?php echo t('booking_step_payment'); ?></span>
+                </div>
+                <div class="booking-flow-step is-active" data-booking-step-panel="details">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -434,7 +448,13 @@ include dirname(__DIR__) . '/includes/header.php';
                     <textarea name="notes" class="form-control" rows="4"><?php echo htmlspecialchars($_POST['notes'] ?? ''); ?></textarea>
                 </div>
 
-                <div class="booking-addons-panel">
+                <div class="booking-step-actions">
+                    <button type="button" class="btn" data-booking-go="addons"><?php echo t('booking_choose_addons'); ?></button>
+                    <button type="button" class="btn payment-secondary-btn" data-booking-go="payment"><?php echo t('booking_skip_addons'); ?></button>
+                </div>
+                </div>
+
+                <div class="booking-addons-panel booking-flow-step" data-booking-step-panel="addons" hidden>
                     <div class="booking-addons-head">
                         <div>
                             <h3><?php echo t('booking_addons_title'); ?></h3>
@@ -490,9 +510,14 @@ include dirname(__DIR__) . '/includes/header.php';
                             <strong id="booking-total-estimate">0.00 JOD</strong>
                         </div>
                     </div>
+
+                    <div class="booking-step-actions">
+                        <button type="button" class="btn payment-secondary-btn" data-booking-go="details"><?php echo t('booking_back_to_details'); ?></button>
+                        <button type="button" class="btn" data-booking-go="payment"><?php echo t('booking_continue_payment'); ?></button>
+                    </div>
                 </div>
 
-                <div class="booking-addons-panel booking-payment-panel">
+                <div class="booking-addons-panel booking-payment-panel booking-flow-step" data-booking-step-panel="payment" hidden>
                     <div class="booking-addons-head">
                         <div>
                             <h3><?php echo t('payment_method_title'); ?></h3>
@@ -527,11 +552,14 @@ include dirname(__DIR__) . '/includes/header.php';
                             </label>
                         <?php endforeach; ?>
                     </div>
-                </div>
 
-                <button type="submit" class="btn booking-submit-btn mt-4 w-100">
-                    <?php echo t('booking_submit'); ?>
-                </button>
+                    <div class="booking-step-actions booking-submit-actions">
+                        <button type="button" class="btn payment-secondary-btn" data-booking-go="addons"><?php echo t('booking_back_to_menu'); ?></button>
+                        <button type="submit" class="btn booking-submit-btn">
+                            <?php echo t('booking_submit'); ?>
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
 
@@ -569,6 +597,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const slotAvailability = document.getElementById('slot_availability');
     const slotStatus = document.getElementById('slot_status');
     const bookingForm = document.getElementById('booking-form');
+    const bookingStepPanels = Array.from(document.querySelectorAll('[data-booking-step-panel]'));
+    const bookingStepIndicators = Array.from(document.querySelectorAll('[data-booking-step-indicator]'));
+    const bookingGoButtons = Array.from(document.querySelectorAll('[data-booking-go]'));
     const menuInputs = Array.from(document.querySelectorAll('[data-menu-item]'));
     const roomSubtotalEl = document.getElementById('booking-room-subtotal');
     const addonsSubtotalEl = document.getElementById('booking-addons-subtotal');
@@ -576,6 +607,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
     const requestedRoomId = params.get('room_id');
     let currentSlots = [];
+    let currentBookingStep = 'details';
 
     function formatJod(amount) {
         return amount.toFixed(2) + ' JOD';
@@ -604,6 +636,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (totalEstimateEl) {
             totalEstimateEl.textContent = formatJod(roomSubtotal + addonsSubtotal);
+        }
+    }
+
+    function showBookingFlow() {
+        if (bookingForm) {
+            bookingForm.classList.add('is-active');
+        }
+    }
+
+    function validateDetailsStep() {
+        const detailsPanel = document.querySelector('[data-booking-step-panel="details"]');
+
+        if (!detailsPanel) {
+            return true;
+        }
+
+        const fields = Array.from(detailsPanel.querySelectorAll('input, select, textarea'));
+        const invalidField = fields.find(function(field) {
+            return typeof field.checkValidity === 'function' && !field.checkValidity();
+        });
+
+        if (invalidField) {
+            invalidField.reportValidity();
+            return false;
+        }
+
+        return true;
+    }
+
+    function setBookingStep(step) {
+        if (!['details', 'addons', 'payment'].includes(step)) {
+            step = 'details';
+        }
+
+        bookingStepPanels.forEach(function(panel) {
+            const isActive = panel.dataset.bookingStepPanel === step;
+            panel.hidden = !isActive;
+            panel.classList.toggle('is-active', isActive);
+        });
+
+        bookingStepIndicators.forEach(function(indicator) {
+            indicator.classList.toggle('is-active', indicator.dataset.bookingStepIndicator === step);
+        });
+
+        currentBookingStep = step;
+        updateBookingEstimate();
+
+        if (bookingForm) {
+            bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
@@ -724,8 +805,22 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('change', updateBookingEstimate);
     });
 
+    bookingGoButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const targetStep = button.dataset.bookingGo || 'details';
+
+            if (currentBookingStep === 'details' && targetStep !== 'details' && !validateDetailsStep()) {
+                return;
+            }
+
+            showBookingFlow();
+            setBookingStep(targetStep);
+        });
+    });
+
     if (requestedRoomId && roomSelect.querySelector(`option[value="${requestedRoomId}"]`)) {
         roomSelect.value = requestedRoomId;
+        showBookingFlow();
 
         if (window.location.hash === '#booking-form' && bookingForm) {
             bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -739,6 +834,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (roomSelect && roomSelect.querySelector(`option[value="${roomId}"]`)) {
                 roomSelect.value = roomId;
                 roomSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                showBookingFlow();
+                setBookingStep('details');
                 if (bookingForm) {
                     bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }

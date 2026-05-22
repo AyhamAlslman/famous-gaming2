@@ -6,11 +6,27 @@ $site_user_name = $_SESSION['site_user_name'] ?? '';
 $site_user_id = isset($_SESSION['site_user_id']) ? (int)$_SESSION['site_user_id'] : 0;
 $site_user_points = isset($_SESSION['site_user_loyalty_points']) ? (int)$_SESSION['site_user_loyalty_points'] : 0;
 $site_user_logged_in = $site_user_id > 0 && $site_user_name !== '';
+if ($site_user_id > 0 && function_exists('get_current_site_user')) {
+    $site_header_user = get_current_site_user($conn);
+
+    if ($site_header_user) {
+        $site_user_name = $site_header_user['full_name'];
+        $site_user_points = (int)$site_header_user['loyalty_points'];
+        $site_user_logged_in = true;
+    } else {
+        $site_user_logged_in = false;
+        $site_user_id = 0;
+        $site_user_name = '';
+        $site_user_points = 0;
+    }
+}
 $site_user_notification_count = $site_user_logged_in ? count_unread_site_notifications($conn, $site_user_id) : 0;
-$language_target_url = site_language() === 'ar' ? $switch_to_en : $switch_to_ar;
-$language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
+$site_user_initial = $site_user_name !== '' ? (function_exists('mb_substr') ? mb_substr($site_user_name, 0, 1, 'UTF-8') : substr($site_user_name, 0, 1)) : 'F';
 $is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_password.php'], true);
-$is_direct_group_page = preg_match('#/(general|user)/#', str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '')) === 1;
+$script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+$is_direct_group_page = preg_match('#/(general|user)/#', $script_name) === 1;
+$public_header_pages = ['index.php', 'about.php', 'contact.php', 'login.php', 'register.php', 'forgot_password.php'];
+$site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_header_pages, true);
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars(site_language(), ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars(site_direction(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -26,12 +42,12 @@ $is_direct_group_page = preg_match('#/(general|user)/#', str_replace('\\', '/', 
     <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/bootstrap.css'), ENT_QUOTES, 'UTF-8'); ?>">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=6.5">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=6.8">
 
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
-<body class="<?php echo site_is_rtl() ? 'rtl-layout' : ''; ?>">
+<body class="<?php echo trim((site_is_rtl() ? 'rtl-layout ' : '') . ($site_header_is_user ? 'site-user-shell' : 'site-public-shell')); ?>">
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand logo" href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -70,39 +86,47 @@ $is_direct_group_page = preg_match('#/(general|user)/#', str_replace('\\', '/', 
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto nav-menu">
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_home'); ?></a></li>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'about.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/about.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_about'); ?></a></li>
-                    <?php if ($site_user_logged_in): ?>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'user_dashboard.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_account'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'services.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_services'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_store'); ?></a></li>
+                    <?php if ($site_header_is_user): ?>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'user_dashboard.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_home'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo in_array($current_page, ['services.php', 'service_gaming.php', 'service_hospitality.php', 'service_events.php'], true) ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_services'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' || $current_page === 'store_checkout.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_store'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'booking.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_book_now'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'my_bookings.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_my_bookings'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'complaints.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_feedback'); ?></a></li>
+                    <?php else: ?>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_home'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'contact.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/contact.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_contact'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'about.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/about.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_about'); ?></a></li>
                     <?php endif; ?>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'contact.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/contact.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_contact'); ?></a></li>
                 </ul>
                 <div class="nav-actions">
-                    <?php if (!$is_auth_page): ?>
-                        <div class="nav-language-switcher" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <a class="nav-language-link nav-language-toggle" href="<?php echo htmlspecialchars($language_target_url, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($language_target_label, ENT_QUOTES, 'UTF-8'); ?></a>
+                    <?php if (!$site_header_is_user): ?>
+                        <a class="nav-auth-link nav-auth-secondary <?php echo $current_page === 'login.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
+                        <a class="nav-auth-link nav-auth-primary <?php echo $current_page === 'register.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
+                    <?php endif; ?>
+
+                    <?php if (!$is_auth_page || $site_header_is_user): ?>
+                        <div class="nav-language-switcher nav-language-pair" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>">
+                            <a class="nav-language-link <?php echo site_language() === 'ar' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($switch_to_ar, ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('lang_ar'); ?></a>
+                            <a class="nav-language-link <?php echo site_language() === 'en' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars($switch_to_en, ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('lang_en'); ?></a>
                         </div>
                     <?php endif; ?>
-                    <?php if ($site_user_logged_in): ?>
+
+                    <?php if ($site_header_is_user): ?>
                         <a class="nav-notification-link <?php echo $current_page === 'notifications.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('nav_notifications'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <span class="nav-notification-icon" aria-hidden="true">!</span>
+                            <span class="nav-notification-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <path d="M12 22a2.7 2.7 0 0 0 2.55-1.78h-5.1A2.7 2.7 0 0 0 12 22Zm7-5.2-1.5-1.72V10a5.52 5.52 0 0 0-4.16-5.35V3.8a1.34 1.34 0 1 0-2.68 0v.85A5.52 5.52 0 0 0 6.5 10v5.08L5 16.8V18h14v-1.2Z"/>
+                                </svg>
+                            </span>
                             <?php if ($site_user_notification_count > 0): ?>
                                 <span class="nav-notification-count"><?php echo $site_user_notification_count > 99 ? '99+' : $site_user_notification_count; ?></span>
                             <?php endif; ?>
                         </a>
-                        <a class="nav-user-pill" href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <span class="nav-user-name"><?php echo htmlspecialchars($site_user_name); ?></span>
-                            <span class="nav-user-points"><?php echo t('loyalty_points'); ?>: <?php echo $site_user_points; ?></span>
+                        <a class="nav-loyalty-pill" href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#profile-loyalty'), ENT_QUOTES, 'UTF-8'); ?>">
+                            <span><?php echo t('loyalty_points_short'); ?></span>
+                            <strong><?php echo $site_user_points; ?></strong>
                         </a>
-                        <a class="nav-auth-link nav-auth-secondary" href="<?php echo htmlspecialchars(site_url('general/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
-                    <?php else: ?>
-                        <a class="nav-auth-link nav-auth-secondary <?php echo $current_page === 'login.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
-                        <a class="nav-auth-link nav-auth-primary <?php echo $current_page === 'register.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
+                        <a class="nav-auth-link nav-auth-secondary nav-logout-link" href="<?php echo htmlspecialchars(site_url('general/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                     <?php endif; ?>
                 </div>
             </div>

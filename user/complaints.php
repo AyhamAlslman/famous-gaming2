@@ -1,10 +1,11 @@
 <?php
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
-$page_title = t('complaints_page_title');
 
+$page_title = t('complaints_page_title');
 $success_msg = '';
 $error_msg = '';
+
 ensure_user_auth_schema($conn);
 $current_site_user = get_current_site_user($conn);
 $current_site_user_id = $current_site_user ? (int)$current_site_user['id'] : null;
@@ -53,35 +54,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
-<section class="hero">
+<section class="hero feedback-clean-hero">
     <div class="container">
         <h1><?php echo t('complaints_hero_title'); ?></h1>
         <p><?php echo t('complaints_hero_text'); ?></p>
     </div>
 </section>
 
-<section class="content">
+<section class="content feedback-clean-content">
     <div class="container">
         <?php if ($success_msg): ?>
-            <div class="message success">
-                <?php echo $success_msg; ?>
-            </div>
+            <div class="message success"><?php echo $success_msg; ?></div>
         <?php endif; ?>
 
         <?php if ($error_msg): ?>
-            <div class="message error">
-                <?php echo $error_msg; ?>
-            </div>
+            <div class="message error"><?php echo $error_msg; ?></div>
         <?php endif; ?>
 
-        <div class="feedback-main-container">
-            <div class="feedback-intro">
-                <p class="feedback-intro-text">
-                    <?php echo t('complaints_intro'); ?>
-                </p>
-            </div>
+        <div class="feedback-clean-layout">
+            <aside class="feedback-clean-intro">
+                <span class="ticket-label"><?php echo t('footer_support'); ?></span>
+                <h2><?php echo t('complaints_listen_title'); ?></h2>
+                <p><?php echo t('complaints_intro'); ?></p>
+                <div class="feedback-type-list">
+                    <span><?php echo t('complaints_suggestions'); ?></span>
+                    <span><?php echo t('complaints_complaints'); ?></span>
+                    <span><?php echo t('complaints_compliments'); ?></span>
+                </div>
+            </aside>
 
-            <form method="POST" action="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>" class="form-container">
+            <form method="POST" action="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>" class="form-container feedback-clean-form">
                 <div class="form-group">
                     <label class="form-label"><?php echo t('complaints_name'); ?></label>
                     <input type="text" name="customer_name" class="form-control" value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ($current_site_user['full_name'] ?? '')); ?>" required>
@@ -95,50 +97,11 @@ include dirname(__DIR__) . '/includes/header.php';
 
                 <div class="form-group">
                     <label class="form-label"><?php echo t('complaints_message'); ?></label>
-                    <textarea name="message" class="form-control" required rows="6"
-                              placeholder="<?php echo htmlspecialchars(t('complaints_message_placeholder'), ENT_QUOTES, 'UTF-8'); ?>"></textarea>
+                    <textarea name="message" class="form-control" required rows="7" placeholder="<?php echo htmlspecialchars(t('complaints_message_placeholder'), ENT_QUOTES, 'UTF-8'); ?>"></textarea>
                 </div>
 
-                <button type="submit" class="btn feedback-submit-btn w-100">
-                    <?php echo t('complaints_submit'); ?>
-                </button>
+                <button type="submit" class="btn feedback-submit-btn w-100"><?php echo t('complaints_submit'); ?></button>
             </form>
-        </div>
-
-        <div class="feedback-categories-container">
-            <h3 class="feedback-categories-title"><?php echo t('complaints_listen_title'); ?></h3>
-
-            <div class="row g-3 feedback-categories-grid">
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="feedback-category-card h-100">
-                        <div class="feedback-category-icon">💬</div>
-                        <h4 class="feedback-category-title"><?php echo t('complaints_suggestions'); ?></h4>
-                        <p class="feedback-category-text">
-                            <?php echo t('complaints_suggestions_text'); ?>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="feedback-category-card h-100">
-                        <div class="feedback-category-icon">⚠️</div>
-                        <h4 class="feedback-category-title"><?php echo t('complaints_complaints'); ?></h4>
-                        <p class="feedback-category-text">
-                            <?php echo t('complaints_complaints_text'); ?>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="feedback-category-card h-100">
-                        <div class="feedback-category-icon">⭐</div>
-                        <h4 class="feedback-category-title"><?php echo t('complaints_compliments'); ?></h4>
-                        <p class="feedback-category-text">
-                            <?php echo t('complaints_compliments_text'); ?>
-                        </p>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </section>

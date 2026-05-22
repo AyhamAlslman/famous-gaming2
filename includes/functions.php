@@ -403,6 +403,14 @@ function ensure_booking_confirmation_schema($conn) {
         mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN loyalty_points_earned INT NOT NULL DEFAULT 0 AFTER " . $after_column);
     }
 
+    if (!isset($columns['loyalty_points_redeemed'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN loyalty_points_redeemed INT NOT NULL DEFAULT 0 AFTER loyalty_points_earned");
+    }
+
+    if (!isset($columns['loyalty_discount'])) {
+        mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN loyalty_discount DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER loyalty_points_redeemed");
+    }
+
     if (!isset($columns['payment_status'])) {
         mysqli_query($conn, "ALTER TABLE bookings ADD COLUMN payment_status VARCHAR(20) DEFAULT 'Unpaid' AFTER status");
     }
@@ -457,6 +465,70 @@ function ensure_store_products_schema($conn) {
 }
 
 /**
+ * Ensure store orders and order item rows exist.
+ */
+function ensure_store_orders_schema($conn) {
+    ensure_store_products_schema($conn);
+
+    mysqli_query($conn, "CREATE TABLE IF NOT EXISTS store_orders (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        order_code VARCHAR(40) NOT NULL UNIQUE,
+        user_id INT NOT NULL,
+        customer_name VARCHAR(120) NOT NULL,
+        phone VARCHAR(20) DEFAULT NULL,
+        email VARCHAR(150) DEFAULT NULL,
+        subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        loyalty_points_redeemed INT NOT NULL DEFAULT 0,
+        loyalty_discount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        loyalty_points_earned INT NOT NULL DEFAULT 0,
+        payment_status VARCHAR(20) NOT NULL DEFAULT 'Unpaid',
+        payment_method VARCHAR(20) DEFAULT NULL,
+        paid_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+        notes TEXT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_store_orders_user_created (user_id, created_at),
+        INDEX idx_store_orders_status_payment (status, payment_status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    mysqli_query($conn, "CREATE TABLE IF NOT EXISTS store_order_items (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        order_id INT NOT NULL,
+        product_id INT NULL,
+        product_name VARCHAR(150) NOT NULL,
+        category VARCHAR(100) DEFAULT NULL,
+        quantity INT NOT NULL DEFAULT 1,
+        item_price DECIMAL(10,2) NOT NULL,
+        item_total DECIMAL(10,2) GENERATED ALWAYS AS (quantity * item_price) STORED,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_store_order_items_order (order_id),
+        INDEX idx_store_order_items_product (product_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    $order_columns = [];
+    $order_columns_result = mysqli_query($conn, "SHOW COLUMNS FROM store_orders");
+    if ($order_columns_result) {
+        while ($column = mysqli_fetch_assoc($order_columns_result)) {
+            $order_columns[$column['Field']] = true;
+        }
+    }
+
+    if (!isset($order_columns['loyalty_points_redeemed'])) {
+        mysqli_query($conn, "ALTER TABLE store_orders ADD COLUMN loyalty_points_redeemed INT NOT NULL DEFAULT 0 AFTER subtotal");
+    }
+
+    if (!isset($order_columns['loyalty_discount'])) {
+        mysqli_query($conn, "ALTER TABLE store_orders ADD COLUMN loyalty_discount DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER loyalty_points_redeemed");
+    }
+
+    if (!isset($order_columns['loyalty_points_earned'])) {
+        mysqli_query($conn, "ALTER TABLE store_orders ADD COLUMN loyalty_points_earned INT NOT NULL DEFAULT 0 AFTER total_amount");
+    }
+}
+
+/**
  * Ensure support/complaint records can be linked back to registered customers.
  */
 function ensure_complaints_schema($conn) {
@@ -506,6 +578,7 @@ function ensure_user_auth_schema($conn) {
     ensure_booking_confirmation_schema($conn);
     ensure_booking_items_table($conn);
     ensure_store_products_schema($conn);
+    ensure_store_orders_schema($conn);
     ensure_complaints_schema($conn);
     ensure_site_notifications_table($conn);
 }
@@ -533,11 +606,141 @@ function get_current_site_user($conn) {
         return null;
     }
 
+    $_SESSION['site_user_name'] = $user['full_name'];
+    $_SESSION['site_user_loyalty_points'] = (int)$user['loyalty_points'];
+
     return $user;
 }
 
 function calculate_loyalty_points($amount) {
-    return max(1, (int)floor((float)$amount));
+    $amount = (float)$amount;
+    return $amount > 0 ? (int)floor($amount) : 0;
+}
+
+function loyalty_points_to_amount($points) {
+    return round(max(0, (int)$points) / 10, 2);
+}
+
+function loyalty_amount_to_points($amount) {
+    return (int)ceil(max(0, (float)$amount) * 10);
+}
+
+function refresh_site_user_points_session($conn, $user_id) {
+    $user_id = (int)$user_id;
+
+    if ($user_id <= 0) {
+        return 0;
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT loyalty_points FROM site_users WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+
+    $points = $row ? (int)$row['loyalty_points'] : 0;
+
+    if ((int)($_SESSION['site_user_id'] ?? 0) === $user_id) {
+        $_SESSION['site_user_loyalty_points'] = $points;
+    }
+
+    return $points;
+}
+
+function add_loyalty_points($conn, $user_id, $points) {
+    $user_id = (int)$user_id;
+    $points = max(0, (int)$points);
+
+    if ($user_id <= 0 || $points <= 0) {
+        return 0;
+    }
+
+    $stmt = mysqli_prepare($conn, "UPDATE site_users SET loyalty_points = loyalty_points + ? WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "ii", $points, $user_id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    refresh_site_user_points_session($conn, $user_id);
+
+    return $points;
+}
+
+function redeem_loyalty_points($conn, $user_id, $requested_points, $max_discount) {
+    $user_id = (int)$user_id;
+    $requested_points = max(0, (int)$requested_points);
+    $max_discount = max(0, (float)$max_discount);
+
+    if ($user_id <= 0 || $requested_points <= 0 || $max_discount <= 0) {
+        return ['points' => 0, 'discount' => 0.0];
+    }
+
+    $available_points = refresh_site_user_points_session($conn, $user_id);
+    $max_points_for_discount = loyalty_amount_to_points($max_discount);
+    $points_to_redeem = min($requested_points, $available_points, $max_points_for_discount);
+    $discount = min($max_discount, loyalty_points_to_amount($points_to_redeem));
+
+    if ($points_to_redeem <= 0 || $discount <= 0) {
+        return ['points' => 0, 'discount' => 0.0];
+    }
+
+    $stmt = mysqli_prepare($conn, "UPDATE site_users SET loyalty_points = loyalty_points - ? WHERE id = ? AND loyalty_points >= ?");
+    mysqli_stmt_bind_param($stmt, "iii", $points_to_redeem, $user_id, $points_to_redeem);
+    mysqli_stmt_execute($stmt);
+    $updated = mysqli_stmt_affected_rows($stmt);
+    mysqli_stmt_close($stmt);
+
+    if ($updated <= 0) {
+        return ['points' => 0, 'discount' => 0.0];
+    }
+
+    refresh_site_user_points_session($conn, $user_id);
+
+    return ['points' => $points_to_redeem, 'discount' => $discount];
+}
+
+function generate_store_order_code() {
+    return 'FGS-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+}
+
+function get_store_order_items($conn, $order_id) {
+    ensure_store_orders_schema($conn);
+    $order_id = (int)$order_id;
+
+    if ($order_id <= 0) {
+        return [];
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT * FROM store_order_items WHERE order_id = ? ORDER BY id ASC");
+    mysqli_stmt_bind_param($stmt, "i", $order_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $items = $result ? mysqli_fetch_all($result, MYSQLI_ASSOC) : [];
+    mysqli_stmt_close($stmt);
+
+    return $items;
+}
+
+function get_user_store_orders($conn, $user_id, $limit = 80) {
+    ensure_store_orders_schema($conn);
+    $user_id = (int)$user_id;
+    $limit = max(1, min(160, (int)$limit));
+    $orders = [];
+
+    if ($user_id <= 0) {
+        return $orders;
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT * FROM store_orders WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT " . $limit);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    if ($result) {
+        $orders = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    }
+    mysqli_stmt_close($stmt);
+
+    return $orders;
 }
 
 function award_loyalty_points($conn, $user_id, $booking_id, $amount) {
@@ -550,17 +753,35 @@ function award_loyalty_points($conn, $user_id, $booking_id, $amount) {
 
     $points = calculate_loyalty_points($amount);
 
-    $stmt = mysqli_prepare($conn, "UPDATE site_users SET loyalty_points = loyalty_points + ? WHERE id = ?");
-    mysqli_stmt_bind_param($stmt, "ii", $points, $user_id);
-    mysqli_stmt_execute($stmt);
-    mysqli_stmt_close($stmt);
+    add_loyalty_points($conn, $user_id, $points);
 
     $stmt = mysqli_prepare($conn, "UPDATE bookings SET loyalty_points_earned = ? WHERE id = ?");
     mysqli_stmt_bind_param($stmt, "ii", $points, $booking_id);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
 
-    $_SESSION['site_user_loyalty_points'] = (int)($_SESSION['site_user_loyalty_points'] ?? 0) + $points;
+    return $points;
+}
+
+function award_store_order_loyalty_points($conn, $user_id, $order_id, $amount) {
+    $user_id = (int)$user_id;
+    $order_id = (int)$order_id;
+
+    if ($user_id <= 0 || $order_id <= 0) {
+        return 0;
+    }
+
+    $points = calculate_loyalty_points($amount);
+    if ($points <= 0) {
+        return 0;
+    }
+
+    add_loyalty_points($conn, $user_id, $points);
+
+    $stmt = mysqli_prepare($conn, "UPDATE store_orders SET loyalty_points_earned = ? WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "ii", $points, $order_id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
 
     return $points;
 }

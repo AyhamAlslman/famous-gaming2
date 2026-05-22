@@ -16,7 +16,7 @@ $admin_language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?><?php echo t('admin_panel_title'); ?></title>
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=2.4">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=2.5">
 
     <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
@@ -34,6 +34,7 @@ $admin_language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang
                 <?php if (function_exists('isAdmin') && isAdmin()): ?>
                 <li><a href="menu_items.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'menu_items.php') ? 'class="active"' : ''; ?>><?php echo t('admin_nav_menu_items'); ?></a></li>
                 <li><a href="store_products.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'store_products.php') ? 'class="active"' : ''; ?>><?php echo t('admin_nav_store_products'); ?></a></li>
+                <li><a href="store_orders.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'store_orders.php') ? 'class="active"' : ''; ?>><?php echo t('admin_nav_store_orders'); ?></a></li>
                 <li><a href="employees.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'employees.php') ? 'class="active"' : ''; ?>><?php echo t('admin_nav_employees'); ?></a></li>
                 <?php endif; ?>
                 <li><a href="complaints_full_crud.php" <?php echo (basename($_SERVER['PHP_SELF']) == 'complaints_full_crud.php') ? 'class="active"' : ''; ?>><?php echo t('admin_nav_complaints'); ?></a></li>

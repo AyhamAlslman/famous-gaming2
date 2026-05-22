@@ -121,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $customer_session_token = $_SESSION['customer_booking_token'] ?? '';
 $bookings = [];
+$store_orders = [];
 
 if (!empty($customer_session_token) || $current_site_user) {
     $query = "SELECT b.*, r.room_name, r.room_type
@@ -135,6 +136,10 @@ if (!empty($customer_session_token) || $current_site_user) {
     $result = mysqli_stmt_get_result($stmt);
     $bookings = mysqli_fetch_all($result, MYSQLI_ASSOC);
     mysqli_stmt_close($stmt);
+}
+
+if ($current_site_user) {
+    $store_orders = get_user_store_orders($conn, (int)$current_site_user['id'], 80);
 }
 
 include dirname(__DIR__) . '/includes/header.php';
@@ -157,7 +162,7 @@ include dirname(__DIR__) . '/includes/header.php';
             <div class="message error"><?php echo htmlspecialchars($error_msg); ?></div>
         <?php endif; ?>
 
-        <?php if (!empty($bookings)): ?>
+        <?php if (!empty($bookings) || !empty($store_orders)): ?>
             <div class="my-bookings-heading">
                 <div>
                     <span class="ticket-label"><?php echo t('my_bookings_history_title'); ?></span>
@@ -249,6 +254,60 @@ include dirname(__DIR__) . '/includes/header.php';
                     </div>
                 <?php endforeach; ?>
             </div>
+            <?php if (!empty($store_orders)): ?>
+                <div class="store-order-history-section">
+                    <div class="home-section-heading">
+                        <span class="ticket-label"><?php echo t('nav_store'); ?></span>
+                        <h2><?php echo t('store_order_history_title'); ?></h2>
+                        <p><?php echo t('store_order_history_text'); ?></p>
+                    </div>
+
+                    <div class="store-order-history-list">
+                        <?php foreach ($store_orders as $order): ?>
+                            <?php $order_items = get_store_order_items($conn, (int)$order['id']); ?>
+                            <article class="store-order-card">
+                                <div class="store-order-card-head">
+                                    <div>
+                                        <span><?php echo t('store_order_code'); ?></span>
+                                        <h3><?php echo htmlspecialchars($order['order_code']); ?></h3>
+                                    </div>
+                                    <span class="checkout-status-pill status-<?php echo strtolower(htmlspecialchars($order['payment_status'])); ?>">
+                                        <?php echo htmlspecialchars(t('status_' . strtolower($order['payment_status']), [], $order['payment_status'])); ?>
+                                    </span>
+                                </div>
+                                <div class="store-order-card-grid">
+                                    <div>
+                                        <span><?php echo t('common_date'); ?></span>
+                                        <strong><?php echo date('M d, Y h:i A', strtotime($order['created_at'])); ?></strong>
+                                    </div>
+                                    <div>
+                                        <span><?php echo t('common_payment'); ?></span>
+                                        <strong><?php echo htmlspecialchars(t('payment_' . strtolower($order['payment_method']), [], $order['payment_method'])); ?></strong>
+                                    </div>
+                                    <div>
+                                        <span><?php echo t('common_total'); ?></span>
+                                        <strong><?php echo number_format((float)$order['total_amount'], 2); ?> JOD</strong>
+                                    </div>
+                                    <div>
+                                        <span><?php echo t('loyalty_points'); ?></span>
+                                        <strong><?php echo (int)$order['loyalty_points_earned']; ?></strong>
+                                    </div>
+                                </div>
+                                <?php if (!empty($order_items)): ?>
+                                    <div class="store-order-items">
+                                        <?php foreach ($order_items as $item): ?>
+                                            <div>
+                                                <span><?php echo htmlspecialchars($item['product_name']); ?> x<?php echo (int)$item['quantity']; ?></span>
+                                                <strong><?php echo number_format((float)$item['item_total'], 2); ?> JOD</strong>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php else: ?>
             <div class="empty-bookings">
                 <h2><?php echo t('my_bookings_empty_title'); ?></h2>

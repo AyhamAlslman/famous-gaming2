@@ -106,11 +106,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $payment_status = sanitize_input($_POST['payment_status']);
             $payment_method = sanitize_input($_POST['payment_method']);
             $paid_amount = floatval($_POST['paid_amount']);
+            $loyalty_points_to_redeem = max(0, (int)($_POST['loyalty_points_to_redeem'] ?? 0));
 
-            $stmt = mysqli_prepare($conn, "UPDATE bookings SET payment_status = ?, payment_method = ?, paid_amount = ? WHERE id = ?");
-            mysqli_stmt_bind_param($stmt, "ssdi", $payment_status, $payment_method, $paid_amount, $booking_id);
+            $booking_payment_stmt = mysqli_prepare($conn, "SELECT user_id, total_price, additional_items_total, final_total, loyalty_discount FROM bookings WHERE id = ? LIMIT 1");
+            mysqli_stmt_bind_param($booking_payment_stmt, "i", $booking_id);
+            mysqli_stmt_execute($booking_payment_stmt);
+            $booking_payment_result = mysqli_stmt_get_result($booking_payment_stmt);
+            $booking_payment = mysqli_fetch_assoc($booking_payment_result);
+            mysqli_stmt_close($booking_payment_stmt);
+
+            $booking_payment_total = $booking_payment
+                ? (isset($booking_payment['final_total'])
+                    ? (float)$booking_payment['final_total']
+                    : ((float)$booking_payment['total_price'] + (float)$booking_payment['additional_items_total']))
+                : 0.0;
+            $booking_existing_discount = $booking_payment ? (float)($booking_payment['loyalty_discount'] ?? 0) : 0.0;
+            $redeemable_balance = max(0, $booking_payment_total - $booking_existing_discount);
+            $redeemed = ['points' => 0, 'discount' => 0.0];
+
+            mysqli_begin_transaction($conn);
+
+            if ($booking_payment && $loyalty_points_to_redeem > 0 && (int)$booking_payment['user_id'] > 0) {
+                $redeemed = redeem_loyalty_points($conn, (int)$booking_payment['user_id'], $loyalty_points_to_redeem, $redeemable_balance);
+            }
+            $redeemed_points = (int)$redeemed['points'];
+            $redeemed_discount = (float)$redeemed['discount'];
+
+            $stmt = mysqli_prepare(
+                $conn,
+                "UPDATE bookings
+                 SET payment_status = ?,
+                     payment_method = ?,
+                     paid_amount = ?,
+                     loyalty_points_redeemed = loyalty_points_redeemed + ?,
+                     loyalty_discount = loyalty_discount + ?
+                 WHERE id = ?"
+            );
+            mysqli_stmt_bind_param($stmt, "ssdidi", $payment_status, $payment_method, $paid_amount, $redeemed_points, $redeemed_discount, $booking_id);
 
             if (mysqli_stmt_execute($stmt)) {
+                mysqli_commit($conn);
                 $booking_user_id = 0;
                 $user_stmt = mysqli_prepare($conn, "SELECT user_id FROM bookings WHERE id = ? LIMIT 1");
                 mysqli_stmt_bind_param($user_stmt, "i", $booking_id);
@@ -147,6 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $success_message = t('admin_payment_update_success');
                 log_admin_action($conn, $_SESSION['admin_id'], 'UPDATE_PAYMENT', 'bookings', $booking_id);
             } else {
+                mysqli_rollback($conn);
                 $error_message = t('admin_payment_update_error');
             }
             mysqli_stmt_close($stmt);
@@ -174,6 +210,20 @@ if (!$booking) {
 $booking_final_total = isset($booking['final_total'])
     ? (float)$booking['final_total']
     : ((float)$booking['total_price'] + (float)($booking['additional_items_total'] ?? 0));
+$booking_loyalty_discount = (float)($booking['loyalty_discount'] ?? 0);
+$booking_payable_total = max(0, $booking_final_total - $booking_loyalty_discount);
+$booking_user_loyalty_points = 0;
+
+if (!empty($booking['user_id'])) {
+    $loyalty_stmt = mysqli_prepare($conn, "SELECT loyalty_points FROM site_users WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($loyalty_stmt, "i", $booking['user_id']);
+    mysqli_stmt_execute($loyalty_stmt);
+    $loyalty_result = mysqli_stmt_get_result($loyalty_stmt);
+    if ($loyalty_row = mysqli_fetch_assoc($loyalty_result)) {
+        $booking_user_loyalty_points = (int)$loyalty_row['loyalty_points'];
+    }
+    mysqli_stmt_close($loyalty_stmt);
+}
 
 // Get booking items
 $items_query = "SELECT bi.*, mi.item_name, mi.item_category
@@ -306,14 +356,18 @@ include 'includes/header.php';
                             <span><?php echo t('admin_additional_items'); ?>:</span>
                             <span><?php echo number_format((float)($booking['additional_items_total'] ?? 0), 2); ?> JOD</span>
                         </div>
+                        <div class="total-row">
+                            <span><?php echo t('loyalty_discount'); ?>:</span>
+                            <span><?php echo number_format($booking_loyalty_discount, 2); ?> JOD</span>
+                        </div>
                         <div class="total-row final">
                             <span><?php echo t('admin_total_label'); ?>:</span>
-                            <span><?php echo number_format($booking_final_total, 2); ?> JOD</span>
+                            <span><?php echo number_format($booking_payable_total, 2); ?> JOD</span>
                         </div>
-                        <?php if ($booking_final_total > $booking['paid_amount']): ?>
+                        <?php if ($booking_payable_total > $booking['paid_amount']): ?>
                         <div class="total-row" style="color: #f44336;">
                             <span><?php echo t('admin_balance_due'); ?>:</span>
-                            <span><?php echo number_format($booking_final_total - $booking['paid_amount'], 2); ?> JOD</span>
+                            <span><?php echo number_format($booking_payable_total - $booking['paid_amount'], 2); ?> JOD</span>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -338,12 +392,20 @@ include 'includes/header.php';
                                 <option value="Cash" <?php echo $booking['payment_method'] == 'Cash' ? 'selected' : ''; ?>><?php echo t('payment_cash'); ?></option>
                                 <option value="CliQ" <?php echo $booking['payment_method'] == 'CliQ' ? 'selected' : ''; ?>><?php echo t('payment_cliq'); ?></option>
                                 <option value="Visa" <?php echo $booking['payment_method'] == 'Visa' ? 'selected' : ''; ?>><?php echo t('payment_visa'); ?></option>
+                                <option value="Loyalty" <?php echo $booking['payment_method'] == 'Loyalty' ? 'selected' : ''; ?>><?php echo t('payment_loyalty'); ?></option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label><?php echo t('admin_paid_amount'); ?> (JOD)</label>
                             <input type="number" step="0.01" name="paid_amount" value="<?php echo $booking['paid_amount']; ?>" required>
                         </div>
+                        <?php if (!empty($booking['user_id'])): ?>
+                            <div class="form-group">
+                                <label><?php echo t('loyalty_redeem_points'); ?></label>
+                                <input type="number" min="0" max="<?php echo $booking_user_loyalty_points; ?>" name="loyalty_points_to_redeem" value="0">
+                                <small><?php echo t('loyalty_redeem_hint'); ?> <?php echo t('loyalty_available', ['points' => $booking_user_loyalty_points]); ?></small>
+                            </div>
+                        <?php endif; ?>
                         <button type="submit" class="btn btn-success" style="width: 100%;"><?php echo t('admin_update_payment'); ?></button>
                     </form>
                 </div>

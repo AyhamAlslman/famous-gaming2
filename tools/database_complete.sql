@@ -17,6 +17,8 @@ DROP TABLE IF EXISTS system_settings;
 DROP TABLE IF EXISTS time_slots;
 DROP TABLE IF EXISTS business_hours;
 DROP TABLE IF EXISTS complaints;
+DROP TABLE IF EXISTS store_order_items;
+DROP TABLE IF EXISTS store_orders;
 DROP TABLE IF EXISTS store_products;
 DROP TABLE IF EXISTS booking_items;
 DROP TABLE IF EXISTS bookings;
@@ -105,6 +107,8 @@ CREATE TABLE bookings (
     additional_items_total DECIMAL(10,2) DEFAULT 0.00,
     final_total DECIMAL(10,2) GENERATED ALWAYS AS (total_price + IFNULL(additional_items_total, 0)) STORED,
     loyalty_points_earned INT NOT NULL DEFAULT 0,
+    loyalty_points_redeemed INT NOT NULL DEFAULT 0,
+    loyalty_discount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     status VARCHAR(20) NOT NULL DEFAULT 'Pending',
     payment_status VARCHAR(20) DEFAULT 'Unpaid',
     payment_method VARCHAR(20) DEFAULT NULL,
@@ -167,6 +171,48 @@ CREATE TABLE complaints (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES site_users(id) ON DELETE SET NULL,
     INDEX idx_complaints_user_created (user_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Store Orders Table
+CREATE TABLE store_orders (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    order_code VARCHAR(40) NOT NULL UNIQUE,
+    user_id INT NOT NULL,
+    customer_name VARCHAR(120) NOT NULL,
+    phone VARCHAR(20) DEFAULT NULL,
+    email VARCHAR(150) DEFAULT NULL,
+    subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    loyalty_points_redeemed INT NOT NULL DEFAULT 0,
+    loyalty_discount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    loyalty_points_earned INT NOT NULL DEFAULT 0,
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'Unpaid',
+    payment_method VARCHAR(20) DEFAULT NULL,
+    paid_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES site_users(id) ON DELETE CASCADE,
+    INDEX idx_store_orders_user_created (user_id, created_at),
+    INDEX idx_store_orders_status_payment (status, payment_status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Store Order Items Table
+CREATE TABLE store_order_items (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT NOT NULL,
+    product_id INT NULL,
+    product_name VARCHAR(150) NOT NULL,
+    category VARCHAR(100) DEFAULT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    item_price DECIMAL(10,2) NOT NULL,
+    item_total DECIMAL(10,2) GENERATED ALWAYS AS (quantity * item_price) STORED,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES store_orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES store_products(id) ON DELETE SET NULL,
+    INDEX idx_store_order_items_order (order_id),
+    INDEX idx_store_order_items_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Admin Notifications Table

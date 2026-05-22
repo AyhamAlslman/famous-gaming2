@@ -182,6 +182,19 @@ include dirname(__DIR__) . '/includes/header.php';
                         <div class="store-basket-footer">
                             <p class="store-basket-note"><?php echo t('store_basket_note'); ?></p>
                             <div class="store-basket-actions">
+                                <?php if ($store_can_order): ?>
+                                    <form method="POST" action="<?php echo htmlspecialchars(site_url('user/store_checkout.php'), ENT_QUOTES, 'UTF-8'); ?>" id="storeCheckoutForm" class="store-checkout-form">
+                                        <input type="hidden" name="checkout_action" value="review">
+                                        <input type="hidden" name="cart_data" id="storeCheckoutCartData" value="">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+                                        <button type="submit" class="btn store-checkout-btn" id="storeCheckoutButton" disabled><?php echo t('store_checkout_continue'); ?></button>
+                                    </form>
+                                <?php else: ?>
+                                    <div class="store-basket-auth-actions">
+                                        <a href="<?php echo htmlspecialchars($store_login_url, ENT_QUOTES, 'UTF-8'); ?>" class="btn store-checkout-btn"><?php echo t('nav_login'); ?></a>
+                                        <a href="<?php echo htmlspecialchars(site_url('general/register.php?redirect=' . urlencode('user/store.php')), ENT_QUOTES, 'UTF-8'); ?>" class="btn store-basket-clear-btn"><?php echo t('nav_register'); ?></a>
+                                    </div>
+                                <?php endif; ?>
                                 <button type="button" class="btn store-basket-clear-btn" id="storeBasketClearBtn"><?php echo t('store_clear_basket'); ?></button>
                             </div>
                         </div>
@@ -250,6 +263,9 @@ include dirname(__DIR__) . '/includes/header.php';
         const basketSubtotal = document.getElementById('storeBasketSubtotal');
         const basketItems = document.getElementById('storeBasketItems');
         const basketClearBtn = document.getElementById('storeBasketClearBtn');
+        const checkoutForm = document.getElementById('storeCheckoutForm');
+        const checkoutCartInput = document.getElementById('storeCheckoutCartData');
+        const checkoutButton = document.getElementById('storeCheckoutButton');
         const toast = document.getElementById('storeBasketToast');
         const toastText = document.getElementById('storeBasketToastText');
         const cartStorageKey = 'famousGamingStoreCart';
@@ -384,6 +400,14 @@ include dirname(__DIR__) . '/includes/header.php';
             basketItemsCount.textContent = String(totalItems);
             basketSubtotal.textContent = formatCurrency(subtotalValue);
             basketClearBtn.disabled = totalItems === 0;
+
+            if (checkoutCartInput) {
+                checkoutCartInput.value = JSON.stringify(cart);
+            }
+
+            if (checkoutButton) {
+                checkoutButton.disabled = totalItems === 0;
+            }
 
             if (totalItems === 0) {
                 basketItems.innerHTML = '<div class="store-basket-empty"><h4>' + escapeHtml(storeTexts.basketEmptyTitle) + '</h4><p>' + escapeHtml(storeTexts.basketEmptyText) + '</p></div>';
@@ -642,6 +666,24 @@ include dirname(__DIR__) . '/includes/header.php';
                 saveCart();
                 renderCart();
                 showToast(storeTexts.basketCleared);
+            });
+        }
+
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', function(event) {
+                const totalItems = cart.reduce(function (sum, item) {
+                    return sum + item.quantity;
+                }, 0);
+
+                if (totalItems === 0) {
+                    event.preventDefault();
+                    showToast(storeTexts.basketEmptyTitle);
+                    return;
+                }
+
+                if (checkoutCartInput) {
+                    checkoutCartInput.value = JSON.stringify(cart);
+                }
             });
         }
 

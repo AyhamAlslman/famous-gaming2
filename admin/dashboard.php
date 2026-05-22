@@ -4,6 +4,7 @@ include '../includes/config.php';
 require_once '../includes/functions.php';
 
 ensure_user_auth_schema($conn);
+ensure_store_orders_schema($conn);
 
 $stats = [];
 $stats['total_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms"))['count'];
@@ -16,11 +17,97 @@ $stats['total_admins'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*)
 $stats['total_users'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM site_users"))['count'] ?? 0;
 $stats['menu_items'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM menu_items"))['count'] ?? 0;
 $stats['store_products'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM store_products"))['count'] ?? 0;
-$stats['paid_revenue'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) as total FROM bookings WHERE payment_status = 'Paid'"))['total'] ?? 0;
+$stats['store_orders'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM store_orders"))['count'] ?? 0;
+$stats['busy_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms WHERE status = 'Busy'"))['count'] ?? 0;
+$stats['pending_menu_orders'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT b.id) as count FROM booking_items bi INNER JOIN bookings b ON bi.booking_id = b.id WHERE b.status IN ('Pending', 'Confirmed') AND b.booking_date >= CURDATE()"))['count'] ?? 0;
+$booking_revenue = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) as total FROM bookings WHERE payment_status = 'Paid'"))['total'] ?? 0;
+$store_revenue = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) as total FROM store_orders WHERE payment_status = 'Paid'"))['total'] ?? 0;
+$stats['paid_revenue'] = (float)$booking_revenue + (float)$store_revenue;
+$today_booking_revenue = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) as total FROM bookings WHERE payment_status = 'Paid' AND booking_date = CURDATE()"))['total'] ?? 0;
+$today_store_revenue = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) as total FROM store_orders WHERE payment_status = 'Paid' AND DATE(created_at) = CURDATE()"))['total'] ?? 0;
+$stats['today_paid_revenue'] = (float)$today_booking_revenue + (float)$today_store_revenue;
 $stats['unread_notifications'] = count_unread_admin_notifications($conn);
 
 $today = date('Y-m-d');
 $today_bookings = mysqli_query($conn, "SELECT b.*, r.room_name FROM bookings b LEFT JOIN rooms r ON b.room_id = r.id WHERE DATE(b.booking_date) = '$today' ORDER BY b.start_time DESC");
+
+$room_statuses = [];
+$room_status_result = mysqli_query(
+    $conn,
+    "SELECT
+        r.id,
+        r.room_name,
+        r.room_type,
+        r.status,
+        active_booking.customer_name,
+        active_booking.start_time,
+        active_booking.hours
+     FROM rooms r
+     LEFT JOIN bookings active_booking
+        ON active_booking.room_id = r.id
+        AND active_booking.status IN ('Pending', 'Confirmed')
+        AND active_booking.booking_date = CURDATE()
+        AND CURTIME() >= active_booking.start_time
+        AND CURTIME() < ADDTIME(active_booking.start_time, SEC_TO_TIME(active_booking.hours * 3600))
+     ORDER BY FIELD(r.status, 'Busy', 'Available'), r.room_name ASC"
+);
+if ($room_status_result) {
+    $room_statuses = mysqli_fetch_all($room_status_result, MYSQLI_ASSOC);
+}
+
+$management_cards = [
+    [
+        'url' => 'bookings_full_crud.php',
+        'label' => t('admin_nav_bookings'),
+        'value' => $stats['pending_bookings'],
+        'meta' => t('admin_dashboard_pending_bookings')
+    ],
+    [
+        'url' => 'rooms_full_crud.php',
+        'label' => t('admin_nav_rooms'),
+        'value' => $stats['available_rooms'] . '/' . $stats['total_rooms'],
+        'meta' => t('admin_dashboard_available_rooms')
+    ],
+    [
+        'url' => 'store_orders.php',
+        'label' => t('admin_nav_store_orders'),
+        'value' => $stats['store_orders'],
+        'meta' => t('admin_store_orders_subtitle')
+    ],
+    [
+        'url' => 'complaints_full_crud.php',
+        'label' => t('admin_nav_complaints'),
+        'value' => $stats['total_complaints'],
+        'meta' => t('admin_complaints_management')
+    ],
+    [
+        'url' => 'customer_tickets.php',
+        'label' => t('admin_nav_customer_tickets'),
+        'value' => $stats['customer_tickets'],
+        'meta' => t('admin_dashboard_customer_tickets')
+    ]
+];
+
+if (isAdmin()) {
+    $management_cards[] = [
+        'url' => 'menu_items.php',
+        'label' => t('admin_nav_menu_items'),
+        'value' => $stats['menu_items'],
+        'meta' => t('dashboard_menu_title')
+    ];
+    $management_cards[] = [
+        'url' => 'store_products.php',
+        'label' => t('admin_nav_store_products'),
+        'value' => $stats['store_products'],
+        'meta' => t('admin_dashboard_store_products')
+    ];
+    $management_cards[] = [
+        'url' => 'employees.php',
+        'label' => t('admin_nav_employees'),
+        'value' => $stats['total_admins'],
+        'meta' => t('admin_dashboard_total_admins')
+    ];
+}
 
 $success_message = isset($_GET['success']) ? $_GET['success'] : '';
 
@@ -45,59 +132,82 @@ include 'includes/header.php';
                 <div class="message success"><?php echo htmlspecialchars($success_message); ?></div>
             <?php endif; ?>
 
-            <div class="dashboard-stats">
-                <div class="stat-card">
-                    <h3><?php echo t('admin_dashboard_total_rooms'); ?></h3>
-                    <div class="stat-number"><?php echo $stats['total_rooms']; ?></div>
-                </div>
-                <div class="stat-card">
-                    <h3><?php echo t('admin_dashboard_available_rooms'); ?></h3>
-                    <div class="stat-number"><?php echo $stats['available_rooms']; ?></div>
-                </div>
-                <div class="stat-card">
-                    <h3><?php echo t('admin_dashboard_total_bookings'); ?></h3>
-                    <div class="stat-number"><?php echo $stats['total_bookings']; ?></div>
-                </div>
-                <div class="stat-card">
+            <div class="dashboard-stats admin-overview-stats">
+                <a href="rooms_full_crud.php" class="stat-card admin-stat-link admin-overview-widget">
+                    <h3><?php echo t('status_busy'); ?> / <?php echo t('admin_nav_rooms'); ?></h3>
+                    <div class="stat-number"><?php echo $stats['busy_rooms']; ?></div>
+                </a>
+                <a href="bookings_full_crud.php" class="stat-card admin-stat-link admin-overview-widget">
                     <h3><?php echo t('admin_dashboard_pending_bookings'); ?></h3>
                     <div class="stat-number"><?php echo $stats['pending_bookings']; ?></div>
-                </div>
-                <a href="customer_tickets.php" class="stat-card admin-stat-link">
-                    <h3><?php echo t('admin_dashboard_customer_tickets'); ?></h3>
-                    <div class="stat-number"><?php echo $stats['customer_tickets']; ?></div>
                 </a>
-                <div class="stat-card">
-                    <h3><?php echo t('admin_dashboard_total_complaints'); ?></h3>
-                    <div class="stat-number"><?php echo $stats['total_complaints']; ?></div>
-                </div>
-                <div class="stat-card">
-                    <h3><?php echo t('admin_dashboard_total_users'); ?></h3>
-                    <div class="stat-number"><?php echo $stats['total_users']; ?></div>
-                </div>
-                <?php if (isAdmin()): ?>
-                    <a href="menu_items.php" class="stat-card admin-stat-link">
-                        <h3><?php echo t('admin_dashboard_menu_items'); ?></h3>
-                        <div class="stat-number"><?php echo $stats['menu_items']; ?></div>
-                    </a>
-                    <a href="store_products.php" class="stat-card admin-stat-link">
-                        <h3><?php echo t('admin_dashboard_store_products'); ?></h3>
-                        <div class="stat-number"><?php echo $stats['store_products']; ?></div>
-                    </a>
-                <?php endif; ?>
-                <a href="notifications.php" class="stat-card admin-stat-link">
+                <a href="store_orders.php" class="stat-card admin-stat-link admin-overview-widget">
+                    <h3><?php echo t('admin_dashboard_store_orders'); ?></h3>
+                    <div class="stat-number"><?php echo $stats['pending_menu_orders']; ?></div>
+                </a>
+                <a href="notifications.php" class="stat-card admin-stat-link admin-overview-widget">
                     <h3><?php echo t('admin_notifications'); ?></h3>
                     <div class="stat-number"><?php echo $stats['unread_notifications']; ?></div>
                 </a>
-                <div class="stat-card">
-                    <h3><?php echo t('admin_dashboard_paid_revenue'); ?></h3>
-                    <div class="stat-number"><?php echo number_format((float)$stats['paid_revenue'], 2); ?></div>
+                <div class="stat-card admin-overview-widget admin-revenue-widget">
+                    <h3><?php echo t('admin_dashboard_paid_revenue'); ?> - <?php echo date('Y-m-d'); ?></h3>
+                    <div class="stat-number"><?php echo number_format((float)$stats['today_paid_revenue'], 2); ?></div>
                 </div>
-                <?php if (isAdmin()): ?>
-                <div class="stat-card">
-                    <h3><?php echo t('admin_dashboard_total_admins'); ?></h3>
-                    <div class="stat-number"><?php echo $stats['total_admins']; ?></div>
-                </div>
-                <?php endif; ?>
+            </div>
+
+            <div class="admin-dashboard-overview">
+                <section class="admin-overview-panel">
+                    <div class="admin-panel-heading">
+                        <span><?php echo t('admin_nav_rooms'); ?></span>
+                        <h2><?php echo t('status_busy_now'); ?></h2>
+                    </div>
+
+                    <div class="admin-room-status-grid">
+                        <?php foreach ($room_statuses as $room_status): ?>
+                            <?php
+                            $active_room_booking = !empty($room_status['customer_name']);
+                            $room_display_status = $active_room_booking ? 'Busy' : $room_status['status'];
+                            $room_status_key = strtolower((string)$room_display_status);
+                            $room_status_class = preg_replace('/[^a-z0-9_-]+/i', '-', $room_status_key);
+                            $room_time_label = '';
+                            if ($active_room_booking) {
+                                $room_start_timestamp = strtotime($room_status['start_time']);
+                                $room_end_timestamp = $room_start_timestamp + ((int)$room_status['hours'] * 3600);
+                                $room_time_label = format_time($room_status['start_time']) . ' - ' . date('g:i A', $room_end_timestamp);
+                            }
+                            ?>
+                            <article class="admin-room-status-card status-<?php echo htmlspecialchars($room_status_class, ENT_QUOTES, 'UTF-8'); ?>">
+                                <div>
+                                    <span><?php echo htmlspecialchars($room_status['room_type']); ?></span>
+                                    <h3><?php echo htmlspecialchars($room_status['room_name']); ?></h3>
+                                </div>
+                                <strong><?php echo htmlspecialchars(t('status_' . $room_status_key, [], $room_display_status)); ?></strong>
+                                <?php if ($active_room_booking): ?>
+                                    <p><?php echo htmlspecialchars($room_status['customer_name']); ?> · <?php echo htmlspecialchars($room_time_label); ?></p>
+                                <?php else: ?>
+                                    <p><?php echo t('admin_dashboard_available_rooms'); ?></p>
+                                <?php endif; ?>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+
+                <section class="admin-overview-panel">
+                    <div class="admin-panel-heading">
+                        <span><?php echo t('admin_dashboard_heading'); ?></span>
+                        <h2><?php echo t('admin_nav_dashboard'); ?></h2>
+                    </div>
+
+                    <div class="admin-management-grid">
+                        <?php foreach ($management_cards as $card): ?>
+                            <a href="<?php echo htmlspecialchars($card['url']); ?>" class="admin-management-card">
+                                <span><?php echo $card['label']; ?></span>
+                                <strong><?php echo htmlspecialchars((string)$card['value']); ?></strong>
+                                <p><?php echo $card['meta']; ?></p>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
             </div>
 
             <h2 class="section-title"><?php echo t('admin_dashboard_todays_bookings'); ?> (<?php echo date('Y-m-d'); ?>)</h2>
