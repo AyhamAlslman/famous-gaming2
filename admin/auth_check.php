@@ -3,16 +3,16 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once '../includes/functions.php';
+require_once dirname(__DIR__) . '/includes/config.php';
 
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
+    header('Location: ' . site_url('auth/login.php?redirect=admin/dashboard.php'));
     exit;
 }
 
 if (!isset($_SESSION['admin_role'])) {
     session_destroy();
-    header('Location: login.php');
+    header('Location: ' . site_url('auth/login.php?redirect=admin/dashboard.php'));
     exit;
 }
 

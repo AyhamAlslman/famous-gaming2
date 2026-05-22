@@ -1,0 +1,336 @@
+<?php
+require_once dirname(__DIR__) . '/includes/config.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
+
+$page_title = t('my_bookings_page_title');
+$success_msg = '';
+$error_msg = '';
+
+ensure_user_auth_schema($conn);
+$current_site_user = get_current_site_user($conn);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $customer_session_token = $_SESSION['customer_booking_token'] ?? '';
+    $site_user_id = $current_site_user ? (int)$current_site_user['id'] : 0;
+    $ticket_action = sanitize_input($_POST['ticket_action'] ?? '');
+    $ticket_id = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
+
+    if ($ticket_action === 'cancel' && $ticket_id > 0 && (!empty($customer_session_token) || $site_user_id > 0)) {
+        $stmt = mysqli_prepare($conn, "UPDATE bookings SET status = 'Cancelled' WHERE id = ? AND status = 'Confirmed' AND (customer_session_token = ? OR user_id = ?)");
+        mysqli_stmt_bind_param($stmt, "isi", $ticket_id, $customer_session_token, $site_user_id);
+        mysqli_stmt_execute($stmt);
+        $updated = mysqli_stmt_affected_rows($stmt);
+        mysqli_stmt_close($stmt);
+
+        if ($updated > 0) {
+            create_admin_notification(
+                $conn,
+                'booking_cancelled',
+                'Booking cancelled',
+                'Booking #' . $ticket_id . ' was cancelled by the customer.',
+                'bookings',
+                $ticket_id,
+                'booking_details.php?id=' . $ticket_id
+            );
+
+            if ($site_user_id > 0) {
+                create_site_notification(
+                    $conn,
+                    $site_user_id,
+                    'booking_cancelled',
+                    t('my_bookings_cancel_success'),
+                    t('my_bookings_cancel_success'),
+                    'user/my_bookings.php'
+                );
+            }
+        }
+
+        $success_msg = $updated > 0 ? t('my_bookings_cancel_success') : t('my_bookings_cancel_error');
+    } elseif ($ticket_action === 'cancel') {
+        $error_msg = t('my_bookings_session_missing');
+    } elseif ($ticket_action === 'rate' && $ticket_id > 0) {
+        $rating = max(1, min(5, (int)($_POST['rating'] ?? 5)));
+        $rating_message = sanitize_input($_POST['rating_message'] ?? '');
+        $customer_name = $current_site_user['full_name'] ?? ($_SESSION['customer_name'] ?? 'Customer');
+        $phone = $current_site_user['phone'] ?? ($_SESSION['customer_phone'] ?? '');
+        $feedback_message = 'Rating ' . $rating . '/5 for booking #' . $ticket_id;
+
+        if ($rating_message !== '') {
+            $feedback_message .= ': ' . $rating_message;
+        }
+
+        $rating_user_id = $current_site_user ? (int)$current_site_user['id'] : null;
+        $stmt = mysqli_prepare($conn, "INSERT INTO complaints (user_id, customer_name, phone, message) VALUES (?, ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, "isss", $rating_user_id, $customer_name, $phone, $feedback_message);
+
+        if (mysqli_stmt_execute($stmt)) {
+            $complaint_id = mysqli_insert_id($conn);
+            create_admin_notification(
+                $conn,
+                'feedback_created',
+                'New booking rating submitted',
+                $customer_name . ' rated booking #' . $ticket_id . ' with ' . $rating . '/5.',
+                'complaints',
+                $complaint_id,
+                'complaints_full_crud.php'
+            );
+            $success_msg = t('my_bookings_rating_saved');
+        } else {
+            $error_msg = t('complaints_error');
+        }
+
+        mysqli_stmt_close($stmt);
+    }
+
+    $booking_lookup = strtoupper(sanitize_input($_POST['booking_lookup'] ?? ''));
+    $phone = sanitize_input($_POST['phone'] ?? '');
+    $booking_id = ctype_digit($booking_lookup) ? (int)$booking_lookup : 0;
+
+    if ($ticket_action === 'cancel' || $ticket_action === 'rate') {
+        // Ticket action already handled above.
+    } elseif (empty($booking_lookup) || empty($phone)) {
+        $error_msg = t('my_bookings_lookup_required');
+    } else {
+        $stmt = mysqli_prepare($conn, "SELECT id, customer_name, phone, customer_session_token FROM bookings WHERE (id = ? OR booking_code = ?) AND phone = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, "iss", $booking_id, $booking_lookup, $phone);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $booking = mysqli_fetch_assoc($result);
+        mysqli_stmt_close($stmt);
+
+        if ($booking) {
+            $customer_session_token = $booking['customer_session_token'];
+
+            if (empty($customer_session_token)) {
+                $customer_session_token = get_customer_session_token();
+                $update_stmt = mysqli_prepare($conn, "UPDATE bookings SET customer_session_token = ? WHERE id = ?");
+                mysqli_stmt_bind_param($update_stmt, "si", $customer_session_token, $booking['id']);
+                mysqli_stmt_execute($update_stmt);
+                mysqli_stmt_close($update_stmt);
+            }
+
+            $_SESSION['customer_booking_token'] = $customer_session_token;
+            $_SESSION['customer_name'] = $booking['customer_name'];
+            $_SESSION['customer_phone'] = $booking['phone'];
+            $success_msg = t('my_bookings_found');
+        } else {
+            $error_msg = t('my_bookings_not_found');
+        }
+    }
+}
+
+$customer_session_token = $_SESSION['customer_booking_token'] ?? '';
+$bookings = [];
+
+if (!empty($customer_session_token) || $current_site_user) {
+    $query = "SELECT b.*, r.room_name, r.room_type
+              FROM bookings b
+              LEFT JOIN rooms r ON b.room_id = r.id
+              WHERE b.customer_session_token = ? OR b.user_id = ?
+              ORDER BY b.booking_date DESC, b.start_time DESC, b.id DESC";
+    $stmt = mysqli_prepare($conn, $query);
+    $site_user_id = $current_site_user ? (int)$current_site_user['id'] : 0;
+    mysqli_stmt_bind_param($stmt, "si", $customer_session_token, $site_user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $bookings = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt);
+}
+
+include dirname(__DIR__) . '/includes/header.php';
+?>
+
+<section class="hero">
+    <div class="container">
+        <h1><?php echo t('my_bookings_hero_title'); ?></h1>
+        <p><?php echo t('my_bookings_hero_text'); ?></p>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container">
+        <?php if ($success_msg): ?>
+            <div class="message success"><?php echo htmlspecialchars($success_msg); ?></div>
+        <?php endif; ?>
+
+        <?php if ($error_msg): ?>
+            <div class="message error"><?php echo htmlspecialchars($error_msg); ?></div>
+        <?php endif; ?>
+
+        <?php if (!empty($bookings)): ?>
+            <div class="my-bookings-heading">
+                <div>
+                    <span class="ticket-label"><?php echo t('my_bookings_history_title'); ?></span>
+                    <?php if ($current_site_user): ?>
+                        <h2><?php echo htmlspecialchars($current_site_user['full_name']); ?></h2>
+                    <?php endif; ?>
+                </div>
+                <?php if ($current_site_user): ?>
+                    <div class="loyalty-summary-pill">
+                        <span><?php echo t('loyalty_points'); ?></span>
+                        <strong><?php echo (int)$current_site_user['loyalty_points']; ?></strong>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="my-bookings-list">
+                <?php foreach ($bookings as $booking): ?>
+                    <div class="booking-ticket ticket-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>"
+                         data-ticket-code="<?php echo htmlspecialchars($booking['booking_code'] ?: ('FG-' . str_pad($booking['id'], 6, '0', STR_PAD_LEFT))); ?>"
+                         data-ticket-customer="<?php echo htmlspecialchars($booking['customer_name']); ?>"
+                         data-ticket-device="<?php echo htmlspecialchars($booking['room_name'] . ' - ' . $booking['room_type']); ?>"
+                         data-ticket-date="<?php echo htmlspecialchars(format_date($booking['booking_date'])); ?>"
+                         data-ticket-time="<?php echo htmlspecialchars(format_time($booking['start_time']) . ' - ' . translated_hours_label($booking['hours'])); ?>"
+                         data-ticket-status="<?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?>">
+                        <div class="booking-ticket-header">
+                            <div>
+                                <span class="ticket-label"><?php echo t('booking_ticket_label'); ?></span>
+                                <h2><?php echo t('booking_ticket_ready'); ?></h2>
+                                <p><?php echo t('booking_ticket_arrival'); ?></p>
+                            </div>
+                            <span class="ticket-status status-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>"><?php echo htmlspecialchars(t('status_' . strtolower($booking['status']), [], $booking['status'])); ?></span>
+                        </div>
+
+                        <div class="booking-ticket-code">
+                            <span><?php echo t('booking_barcode'); ?></span>
+                            <div class="ticket-barcode" aria-label="<?php echo htmlspecialchars(t('booking_barcode'), ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo render_booking_barcode($booking['booking_code'] ?: $booking['id']); ?>
+                            </div>
+                        </div>
+
+                        <div class="booking-ticket-grid">
+                            <div>
+                                <span><?php echo t('common_customer'); ?></span>
+                                <strong><?php echo htmlspecialchars($booking['customer_name']); ?></strong>
+                            </div>
+                            <div>
+                                <span><?php echo t('booking_device_session'); ?></span>
+                                <strong><?php echo htmlspecialchars($booking['room_name']); ?> - <?php echo htmlspecialchars($booking['room_type']); ?></strong>
+                            </div>
+                            <div>
+                                <span><?php echo t('common_date'); ?></span>
+                                <strong><?php echo format_date($booking['booking_date']); ?></strong>
+                            </div>
+                            <div>
+                                <span><?php echo t('common_time'); ?></span>
+                                <strong><?php echo format_time($booking['start_time']); ?> - <?php echo translated_hours_label($booking['hours']); ?></strong>
+                            </div>
+                            <div>
+                                <span><?php echo t('common_payment'); ?></span>
+                                <strong><?php echo htmlspecialchars(t('status_' . strtolower($booking['payment_status'] ?? 'Unpaid'), [], $booking['payment_status'] ?? 'Unpaid')); ?></strong>
+                            </div>
+                            <div>
+                                <span><?php echo t('common_total'); ?></span>
+                                <strong><?php echo number_format((float)($booking['final_total'] ?? $booking['total_price']), 2); ?> JOD</strong>
+                            </div>
+                            <div>
+                                <span><?php echo t('loyalty_points'); ?></span>
+                                <strong><?php echo (int)($booking['loyalty_points_earned'] ?? 0); ?></strong>
+                            </div>
+                        </div>
+
+                        <div class="booking-ticket-actions">
+                            <button type="button" class="btn download-ticket-btn"><?php echo t('booking_save_ticket'); ?></button>
+                            <button type="button" class="btn payment-secondary-btn" data-invoice-open><?php echo t('my_bookings_invoice'); ?></button>
+                            <?php if ($booking['status'] !== 'Cancelled'): ?>
+                                <button type="button" class="btn payment-secondary-btn" data-rating-open data-booking-id="<?php echo (int)$booking['id']; ?>"><?php echo t('my_bookings_rate'); ?></button>
+                            <?php endif; ?>
+                            <?php if ($booking['status'] !== 'Cancelled' && ($booking['payment_status'] ?? 'Unpaid') !== 'Paid'): ?>
+                                <a href="<?php echo htmlspecialchars(site_url('user/payment.php?booking_id=' . (int)$booking['id']), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-checkout-btn"><?php echo t('my_bookings_simulate_payment'); ?></a>
+                            <?php endif; ?>
+                            <?php if ($booking['status'] === 'Confirmed'): ?>
+                                <form method="POST" action="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="ticket-action-form" data-confirm-message="<?php echo htmlspecialchars(t('my_bookings_cancel_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>">
+                                    <input type="hidden" name="booking_id" value="<?php echo (int)$booking['id']; ?>">
+                                    <input type="hidden" name="ticket_action" value="cancel">
+                                    <button type="submit" class="btn ticket-cancel-btn"><?php echo t('my_bookings_cancel'); ?></button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="empty-bookings">
+                <h2><?php echo t('my_bookings_empty_title'); ?></h2>
+                <p><?php echo t('my_bookings_empty_text'); ?></p>
+                <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<div class="site-modal rating-modal" id="ratingModal" hidden>
+    <div class="site-modal-backdrop" data-rating-close></div>
+    <div class="site-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="ratingModalTitle">
+        <button type="button" class="site-modal-close" data-rating-close aria-label="<?php echo htmlspecialchars(t('common_close'), ENT_QUOTES, 'UTF-8'); ?>">X</button>
+        <h3 id="ratingModalTitle"><?php echo t('my_bookings_rating_title'); ?></h3>
+        <form method="POST" action="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="rating-form">
+            <input type="hidden" name="ticket_action" value="rate">
+            <input type="hidden" name="booking_id" id="ratingBookingId" value="">
+            <div class="rating-options" role="radiogroup" aria-label="<?php echo htmlspecialchars(t('my_bookings_rating_title'), ENT_QUOTES, 'UTF-8'); ?>">
+                <?php for ($rating = 5; $rating >= 1; $rating--): ?>
+                    <label>
+                        <input type="radio" name="rating" value="<?php echo $rating; ?>" <?php echo $rating === 5 ? 'checked' : ''; ?>>
+                        <span><?php echo $rating; ?></span>
+                    </label>
+                <?php endfor; ?>
+            </div>
+            <div class="form-group">
+                <label class="form-label"><?php echo t('complaints_message'); ?></label>
+                <textarea name="rating_message" class="form-control" rows="4"></textarea>
+            </div>
+            <button type="submit" class="btn w-100"><?php echo t('common_submit'); ?></button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ratingModal = document.getElementById('ratingModal');
+    const ratingBookingId = document.getElementById('ratingBookingId');
+
+    document.querySelectorAll('[data-rating-open]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            if (!ratingModal || !ratingBookingId) {
+                return;
+            }
+
+            ratingBookingId.value = button.dataset.bookingId || '';
+            ratingModal.hidden = false;
+            document.body.classList.add('site-modal-open');
+        });
+    });
+
+    document.querySelectorAll('[data-rating-close]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            if (ratingModal) {
+                ratingModal.hidden = true;
+                document.body.classList.remove('site-modal-open');
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-invoice-open]').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const ticket = button.closest('.booking-ticket');
+            if (!ticket || !window.showSiteModal) {
+                return;
+            }
+
+            const details = Array.from(ticket.querySelectorAll('.booking-ticket-grid div')).map(function(item) {
+                return item.innerText.trim();
+            }).join('\n');
+
+            window.showSiteModal({
+                title: '<?php echo addslashes(t('my_bookings_invoice')); ?>',
+                message: details,
+                type: 'info'
+            });
+        });
+    });
+});
+</script>
+
+<?php
+include dirname(__DIR__) . '/includes/footer.php';
+?>

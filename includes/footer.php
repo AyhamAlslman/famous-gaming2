@@ -9,29 +9,29 @@
 
             <div class="site-footer-links">
                 <h3><?php echo t('footer_quick_links'); ?></h3>
-                <a href="index.php"><?php echo t('nav_home'); ?></a>
-                <a href="about.php"><?php echo t('nav_about'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_home'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('general/about.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_about'); ?></a>
                 <?php if ($footer_user_logged_in): ?>
-                    <a href="user_dashboard.php"><?php echo t('nav_account'); ?></a>
-                    <a href="services.php"><?php echo t('nav_services'); ?></a>
-                    <a href="store.php"><?php echo t('nav_store'); ?></a>
-                    <a href="booking.php"><?php echo t('nav_book_now'); ?></a>
-                    <a href="my_bookings.php"><?php echo t('nav_my_bookings'); ?></a>
-                    <a href="complaints.php"><?php echo t('nav_feedback'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_account'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_services'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_store'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_book_now'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_my_bookings'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_feedback'); ?></a>
                 <?php endif; ?>
-                <a href="contact.php"><?php echo t('nav_contact'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('general/contact.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_contact'); ?></a>
             </div>
 
             <div class="site-footer-links">
                 <h3><?php echo t('footer_support'); ?></h3>
-                <a href="contact.php"><?php echo t('nav_contact'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('general/contact.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_contact'); ?></a>
                 <?php if ($footer_user_logged_in): ?>
-                    <a href="notifications.php"><?php echo t('nav_notifications'); ?></a>
-                    <a href="my_bookings.php"><?php echo t('nav_my_bookings'); ?></a>
-                    <a href="logout.php" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_notifications'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_my_bookings'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('auth/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                 <?php else: ?>
-                    <a href="login.php"><?php echo t('nav_login'); ?></a>
-                    <a href="register.php"><?php echo t('nav_register'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('auth/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('auth/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
                 <?php endif; ?>
             </div>
 
@@ -57,7 +57,7 @@
     </footer>
 
     <!-- Bootstrap JS (Local) -->
-    <script src="js/bootstrap.min.js"></script>
+    <script src="<?php echo htmlspecialchars(site_url('js/bootstrap.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 
     <!-- Custom JS -->
     <script>
@@ -74,6 +74,6 @@
             'estimatedTotal' => t('booking_total_estimate')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
     </script>
-    <script src="js/script.js?v=2.5"></script>
+    <script src="<?php echo htmlspecialchars(site_url('js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=2.6"></script>
 </body>
 </html>

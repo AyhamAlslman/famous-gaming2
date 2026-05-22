@@ -40,7 +40,7 @@ include 'includes/header.php';
 
 <div class="content">
     <div class="container">
-        <div class="page-header">
+        <div class="page-header admin-notifications-hero">
             <div>
                 <h1><?php echo t('admin_notifications'); ?></h1>
                 <p class="admin-page-subtitle"><?php echo t('admin_notifications_subtitle'); ?></p>
@@ -55,13 +55,28 @@ include 'includes/header.php';
             <?php endif; ?>
         </div>
 
+        <div class="admin-notification-summary-grid">
+            <div class="admin-notification-summary-card">
+                <span><?php echo t('admin_notifications'); ?></span>
+                <strong><?php echo count($notifications); ?></strong>
+            </div>
+            <div class="admin-notification-summary-card">
+                <span><?php echo t('admin_unread', ['count' => $unread_count]); ?></span>
+                <strong><?php echo $unread_count; ?></strong>
+            </div>
+        </div>
+
         <div class="admin-notifications-page-list">
             <?php if (empty($notifications)): ?>
-                <div class="no-data"><?php echo t('admin_no_notifications'); ?></div>
+                <div class="admin-notification-empty-state">
+                    <strong><?php echo t('admin_no_notifications'); ?></strong>
+                    <span><?php echo t('admin_notifications_subtitle'); ?></span>
+                </div>
             <?php else: ?>
                 <?php foreach ($notifications as $notification): ?>
                     <article class="admin-notification-page-card <?php echo (int)$notification['is_read'] === 0 ? 'is-unread' : 'is-read'; ?>">
                         <div class="admin-notification-page-body">
+                            <span class="admin-notification-type"><?php echo htmlspecialchars(str_replace('_', ' ', $notification['notification_type'])); ?></span>
                             <div class="admin-notification-page-head">
                                 <h2><?php echo htmlspecialchars($notification['title']); ?></h2>
                                 <?php if ((int)$notification['is_read'] === 0): ?>

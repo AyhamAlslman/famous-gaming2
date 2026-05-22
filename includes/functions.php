@@ -646,6 +646,45 @@ function safe_local_redirect($target, $fallback = 'index.php') {
     return $target;
 }
 
+function site_asset_is_external($path) {
+    return is_string($path) && preg_match('/^https?:\/\//i', trim($path));
+}
+
+function site_asset_exists($path) {
+    $path = trim((string)$path);
+
+    if ($path === '') {
+        return false;
+    }
+
+    if (site_asset_is_external($path)) {
+        return true;
+    }
+
+    if (str_contains($path, '..')) {
+        return false;
+    }
+
+    $root = defined('SITE_ROOT_PATH') ? SITE_ROOT_PATH : dirname(__DIR__);
+
+    return file_exists($root . '/' . ltrim($path, '/'));
+}
+
+function site_asset_url($path, $fallback = '') {
+    $path = trim((string)$path);
+    $target = site_asset_exists($path) ? $path : trim((string)$fallback);
+
+    if ($target === '') {
+        return '';
+    }
+
+    if (site_asset_is_external($target)) {
+        return $target;
+    }
+
+    return function_exists('site_url') ? site_url($target) : $target;
+}
+
 /**
  * Keep a stable customer token in the PHP session for My Bookings.
  */

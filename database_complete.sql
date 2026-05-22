@@ -288,7 +288,7 @@ INSERT INTO store_products (product_name, category, price, description, image_pa
 ('Silicone Controller Cover - Crimson', 'Controller Covers', 7.50, 'Protective anti-slip cover with a premium red finish for everyday gaming use.', 'images/store/silicone-cover-red.svg', 20, 'Active'),
 ('Silicone Controller Cover - Midnight', 'Controller Covers', 7.50, 'Soft-touch black controller skin with improved grip and scratch protection.', 'images/store/silicone-cover-black.svg', 15, 'Active'),
 ('Pulse 3D Wireless Headset', 'PlayStation Accessories', 69.00, 'Immersive headset tuned for PlayStation audio with a clean modern profile.', 'images/store/pulse-headset.svg', 5, 'Active'),
-('Dual Controller Charging Dock', 'PlayStation Accessories', 24.00, 'Compact dock that charges two PlayStation controllers at the same time.', 'images/store/charging-dock.svg', 8, 'Active');
+('Dual Controller Charging Dock', 'PlayStation Accessories', 24.00, 'Compact dock that charges two PlayStation controllers at the same time.', 'images/store.jpg', 8, 'Active');
 
 -- Sample Bookings
 INSERT INTO bookings (customer_name, phone, room_id, booking_date, start_time, hours, total_price, status, payment_status, payment_method, notes) VALUES

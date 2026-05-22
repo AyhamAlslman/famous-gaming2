@@ -7,7 +7,7 @@
  * - If not logged in: Redirect to login page
  */
 
-session_start();
+require_once dirname(__DIR__) . '/includes/config.php';
 
 // Check if admin is logged in
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
@@ -15,8 +15,8 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
     header('Location: dashboard.php');
     exit();
 } else {
-    // Redirect to login page
-    header('Location: login.php');
+    // Redirect to unified login page
+    header('Location: ' . site_url('auth/login.php?redirect=admin/dashboard.php'));
     exit();
 }
 ?>

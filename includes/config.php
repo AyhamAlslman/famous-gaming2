@@ -5,6 +5,37 @@ if (session_status() === PHP_SESSION_NONE) {
 
 date_default_timezone_set('Asia/Amman');
 
+if (!defined('SITE_ROOT_PATH')) {
+    define('SITE_ROOT_PATH', dirname(__DIR__));
+}
+
+if (!defined('SITE_BASE_PATH')) {
+    $document_root = isset($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : '';
+    $project_root = realpath(SITE_ROOT_PATH);
+    $base_path = '';
+
+    if ($document_root && $project_root) {
+        $document_root = str_replace('\\', '/', $document_root);
+        $project_root = str_replace('\\', '/', $project_root);
+
+        if (strpos($project_root, $document_root) === 0) {
+            $base_path = substr($project_root, strlen($document_root));
+        }
+    }
+
+    $base_path = '/' . trim(str_replace('\\', '/', $base_path), '/');
+    define('SITE_BASE_PATH', $base_path === '/' ? '' : $base_path);
+}
+
+if (!function_exists('site_url')) {
+    function site_url($path = '') {
+        $base = defined('SITE_BASE_PATH') ? SITE_BASE_PATH : '';
+        $path = ltrim((string)$path, '/');
+
+        return rtrim($base, '/') . ($path !== '' ? '/' . $path : '/');
+    }
+}
+
 require_once __DIR__ . '/lang.php';
 
 $db_host = 'localhost';

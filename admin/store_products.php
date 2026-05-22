@@ -275,12 +275,12 @@ include 'includes/header.php';
                             </tr>
                         <?php else: ?>
                             <?php foreach ($products as $product): ?>
-                                <?php $admin_product_has_image = !empty($product['image_path']) && file_exists(__DIR__ . '/../' . $product['image_path']); ?>
+                                <?php $admin_product_image = site_asset_url($product['image_path'] ?? '', ''); ?>
                                 <tr>
                                     <td><?php echo (int)$product['id']; ?></td>
                                     <td class="admin-store-image-cell">
-                                        <?php if ($admin_product_has_image): ?>
-                                            <img src="../<?php echo htmlspecialchars($product['image_path']); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>" class="admin-store-thumb">
+                                        <?php if ($admin_product_image !== ''): ?>
+                                            <img src="<?php echo htmlspecialchars($admin_product_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($product['product_name']); ?>" class="admin-store-thumb">
                                         <?php else: ?>
                                             <div class="admin-store-thumb admin-store-thumb-placeholder">FG</div>
                                         <?php endif; ?>
@@ -457,11 +457,26 @@ include 'includes/header.php';
 </form>
 
 <script>
+    const adminSiteBaseUrl = <?php echo json_encode(site_url(), JSON_UNESCAPED_SLASHES); ?>;
+
+    function resolveAdminAssetUrl(imagePath) {
+        if (!imagePath) {
+            return '';
+        }
+
+        if (/^https?:\/\//i.test(imagePath)) {
+            return imagePath;
+        }
+
+        return adminSiteBaseUrl.replace(/\/$/, '/') + String(imagePath).replace(/^\/+/, '');
+    }
+
     function renderEditProductImage(imagePath) {
         const imageContainer = document.getElementById('edit_current_image');
+        const imageUrl = resolveAdminAssetUrl(imagePath);
 
-        if (imagePath) {
-            imageContainer.innerHTML = '<img src="../' + imagePath + '" alt="Current product image"><span>Current product image</span>';
+        if (imageUrl) {
+            imageContainer.innerHTML = '<img src="' + imageUrl.replace(/"/g, '&quot;') + '" alt="Current product image"><span>Current product image</span>';
         } else {
             imageContainer.innerHTML = '<div class="admin-store-thumb admin-store-thumb-placeholder">FG</div><span>No image uploaded</span>';
         }

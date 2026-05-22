@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         'payment_updated',
                         t('payment_success'),
                         t('payment_already_paid_text', ['method' => t('payment_' . strtolower($payment_method), [], $payment_method)]),
-                        'my_bookings.php'
+                        'user/my_bookings.php'
                     );
                 }
                 $success_message = t('admin_payment_update_success');

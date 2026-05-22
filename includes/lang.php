@@ -28,9 +28,21 @@ function site_direction() {
 function site_switch_language_url($language) {
     $query = $_GET;
     $query['lang'] = $language;
-    $path = basename($_SERVER['PHP_SELF'] ?? 'index.php');
+    $script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/general/index.php');
+    $base = defined('SITE_BASE_PATH') ? rtrim(SITE_BASE_PATH, '/') : '';
+    $path = ltrim($script, '/');
 
-    return $path . (!empty($query) ? '?' . http_build_query($query) : '');
+    if ($base !== '' && str_starts_with($script, $base . '/')) {
+        $path = ltrim(substr($script, strlen($base)), '/');
+    }
+
+    if ($path === '') {
+        $path = 'general/index.php';
+    }
+
+    $url = function_exists('site_url') ? site_url($path) : $path;
+
+    return $url . (!empty($query) ? '?' . http_build_query($query) : '');
 }
 
 function t($key, $replacements = [], $fallback = null) {
@@ -112,9 +124,14 @@ function t($key, $replacements = [], $fallback = null) {
             'auth_forgot_title' => 'Forgot Password',
             'auth_full_name' => 'Full Name',
             'auth_email' => 'Email',
+            'auth_login_identifier' => 'Email or admin username',
             'auth_password' => 'Password',
             'auth_confirm_password' => 'Confirm Password',
             'auth_forgot_password' => 'Forgot password?',
+            'auth_show_password' => 'Show',
+            'auth_hide_password' => 'Hide',
+            'auth_password_tip' => 'Use at least 6 characters. Keep your password somewhere safe.',
+            'auth_access_help' => 'Your account keeps bookings, payments, support requests, and loyalty points in one place.',
             'auth_back_to_site' => 'Back to site',
             'auth_have_account' => 'Already have an account? Login',
             'auth_need_account' => 'Need an account? Sign up',
@@ -668,9 +685,14 @@ function t($key, $replacements = [], $fallback = null) {
             'auth_forgot_title' => 'نسيت كلمة السر',
             'auth_full_name' => 'الاسم الكامل',
             'auth_email' => 'البريد الإلكتروني',
+            'auth_login_identifier' => 'البريد الإلكتروني أو اسم مستخدم الأدمن',
             'auth_password' => 'كلمة السر',
             'auth_confirm_password' => 'تأكيد كلمة السر',
             'auth_forgot_password' => 'هل نسيت كلمة السر؟',
+            'auth_show_password' => 'إظهار',
+            'auth_hide_password' => 'إخفاء',
+            'auth_password_tip' => 'استخدم 6 أحرف على الأقل، واحفظ كلمة السر بمكان آمن.',
+            'auth_access_help' => 'حسابك يجمع الحجوزات والدفع والدعم ونقاط الولاء بمكان واحد.',
             'auth_back_to_site' => 'العودة إلى الموقع',
             'auth_have_account' => 'لديك حساب؟ سجل دخولك',
             'auth_need_account' => 'ليس لديك حساب؟ أنشئ حساباً',

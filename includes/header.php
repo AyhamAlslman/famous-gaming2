@@ -10,6 +10,7 @@ $site_user_notification_count = $site_user_logged_in ? count_unread_site_notific
 $language_target_url = site_language() === 'ar' ? $switch_to_en : $switch_to_ar;
 $language_target_label = site_language() === 'ar' ? t('lang_en') : t('lang_ar');
 $is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_password.php'], true);
+$is_direct_group_page = preg_match('#/(auth|general|user)/#', str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '')) === 1;
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars(site_language(), ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars(site_direction(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -17,20 +18,23 @@ $is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_pa
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title : 'FAMOUS GAMING'; ?></title>
+    <?php if ($is_direct_group_page): ?>
+        <base href="<?php echo htmlspecialchars(site_url(), ENT_QUOTES, 'UTF-8'); ?>">
+    <?php endif; ?>
 
     <!-- Bootstrap CSS (Local) -->
-    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('css/bootstrap.css'), ENT_QUOTES, 'UTF-8'); ?>">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css?v=6.1">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=6.4">
 
-    <link rel="icon" type="image/svg+xml" href="images/logo-mark.svg">
-    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
 <body class="<?php echo site_is_rtl() ? 'rtl-layout' : ''; ?>">
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <a class="navbar-brand logo" href="index.php">
+            <a class="navbar-brand logo" href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>">
                 <span class="logo-mark" aria-hidden="true">
                     <svg class="logo-controller" viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <defs>
@@ -66,17 +70,17 @@ $is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_pa
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto nav-menu">
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>" href="index.php"><?php echo t('nav_home'); ?></a></li>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'about.php' ? 'active' : ''; ?>" href="about.php"><?php echo t('nav_about'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_home'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'about.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/about.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_about'); ?></a></li>
                     <?php if ($site_user_logged_in): ?>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'user_dashboard.php' ? 'active' : ''; ?>" href="user_dashboard.php"><?php echo t('nav_account'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'services.php' ? 'active' : ''; ?>" href="services.php"><?php echo t('nav_services'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' ? 'active' : ''; ?>" href="store.php"><?php echo t('nav_store'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'booking.php' ? 'active' : ''; ?>" href="booking.php"><?php echo t('nav_book_now'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'my_bookings.php' ? 'active' : ''; ?>" href="my_bookings.php"><?php echo t('nav_my_bookings'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'complaints.php' ? 'active' : ''; ?>" href="complaints.php"><?php echo t('nav_feedback'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'user_dashboard.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_account'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'services.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_services'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_store'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'booking.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_book_now'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'my_bookings.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_my_bookings'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'complaints.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_feedback'); ?></a></li>
                     <?php endif; ?>
-                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'contact.php' ? 'active' : ''; ?>" href="contact.php"><?php echo t('nav_contact'); ?></a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo $current_page === 'contact.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/contact.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_contact'); ?></a></li>
                 </ul>
                 <div class="nav-actions">
                     <?php if (!$is_auth_page): ?>
@@ -85,20 +89,20 @@ $is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_pa
                         </div>
                     <?php endif; ?>
                     <?php if ($site_user_logged_in): ?>
-                        <a class="nav-notification-link <?php echo $current_page === 'notifications.php' ? 'active' : ''; ?>" href="notifications.php" aria-label="<?php echo htmlspecialchars(t('nav_notifications'), ENT_QUOTES, 'UTF-8'); ?>">
+                        <a class="nav-notification-link <?php echo $current_page === 'notifications.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('nav_notifications'), ENT_QUOTES, 'UTF-8'); ?>">
                             <span class="nav-notification-icon" aria-hidden="true">!</span>
                             <?php if ($site_user_notification_count > 0): ?>
                                 <span class="nav-notification-count"><?php echo $site_user_notification_count > 99 ? '99+' : $site_user_notification_count; ?></span>
                             <?php endif; ?>
                         </a>
-                        <a class="nav-user-pill" href="user_dashboard.php">
+                        <a class="nav-user-pill" href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php'), ENT_QUOTES, 'UTF-8'); ?>">
                             <span class="nav-user-name"><?php echo htmlspecialchars($site_user_name); ?></span>
                             <span class="nav-user-points"><?php echo t('loyalty_points'); ?>: <?php echo $site_user_points; ?></span>
                         </a>
-                        <a class="nav-auth-link nav-auth-secondary" href="logout.php" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
+                        <a class="nav-auth-link nav-auth-secondary" href="<?php echo htmlspecialchars(site_url('auth/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                     <?php else: ?>
-                        <a class="nav-auth-link nav-auth-secondary <?php echo $current_page === 'login.php' ? 'active' : ''; ?>" href="login.php"><?php echo t('nav_login'); ?></a>
-                        <a class="nav-auth-link nav-auth-primary <?php echo $current_page === 'register.php' ? 'active' : ''; ?>" href="register.php"><?php echo t('nav_register'); ?></a>
+                        <a class="nav-auth-link nav-auth-secondary <?php echo $current_page === 'login.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('auth/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
+                        <a class="nav-auth-link nav-auth-primary <?php echo $current_page === 'register.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('auth/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
                     <?php endif; ?>
                 </div>
             </div>

@@ -13,6 +13,20 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     let siteConfirmCallback = null;
 
+    document.querySelectorAll('[data-password-toggle]').forEach(function(button) {
+        const input = document.querySelector(button.getAttribute('data-password-toggle'));
+
+        if (!input) {
+            return;
+        }
+
+        button.addEventListener('click', function() {
+            const showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            button.textContent = showing ? button.dataset.showLabel : button.dataset.hideLabel;
+        });
+    });
+
     function ensureSiteModal() {
         let modal = document.getElementById('siteMessageModal');
 
