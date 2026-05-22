@@ -1,15 +1,37 @@
 <?php
 require_once 'auth_check.php';
-include '../includes/config.php';
-
-ensure_user_auth_schema($conn);
 
 $success_message = '';
 $error_message = '';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    admin_require_csrf();
+function get_booking_user_id($conn, $booking_id) {
+    $booking_id = (int)$booking_id;
+    if ($booking_id <= 0) {
+        return 0;
+    }
 
+    $user_stmt = mysqli_prepare($conn, "SELECT user_id FROM bookings WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($user_stmt, "i", $booking_id);
+    mysqli_stmt_execute($user_stmt);
+    $user_result = mysqli_stmt_get_result($user_stmt);
+    $user_row = $user_result ? mysqli_fetch_assoc($user_result) : null;
+    mysqli_stmt_close($user_stmt);
+
+    return (int)($user_row['user_id'] ?? 0);
+}
+
+function notify_site_user($conn, $user_id, $type, $title, $message) {
+    $user_id = (int)$user_id;
+    if ($user_id > 0) {
+        create_site_notification($conn, $user_id, $type, $title, $message, 'user/my_bookings.php');
+    }
+}
+
+function notify_booking_user_if_any($conn, $booking_id, $type, $title, $message) {
+    notify_site_user($conn, get_booking_user_id($conn, $booking_id), $type, $title, $message);
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
             $room_id = intval($_POST['room_id']);
@@ -77,17 +99,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             if (mysqli_stmt_execute($stmt)) {
                 $success_message = 'Booking updated successfully';
+                notify_booking_user_if_any(
+                    $conn,
+                    $id,
+                    'booking_updated',
+                    'Booking updated',
+                    'Your booking details were updated by the admin team.'
+                );
             } else {
                 $error_message = 'Error updating booking';
             }
             mysqli_stmt_close($stmt);
         } elseif ($_POST['action'] == 'delete') {
             $id = intval($_POST['id']);
+            $deleted_user_id = get_booking_user_id($conn, $id);
 
             $stmt = mysqli_prepare($conn, "DELETE FROM bookings WHERE id = ?");
             mysqli_stmt_bind_param($stmt, "i", $id);
 
             if (mysqli_stmt_execute($stmt)) {
+                notify_site_user(
+                    $conn,
+                    $deleted_user_id,
+                    'booking_deleted',
+                    'Booking removed',
+                    'One of your bookings was removed by the admin team.'
+                );
                 $success_message = 'Booking deleted successfully';
             } else {
                 $error_message = 'Error deleting booking';
@@ -280,11 +317,6 @@ include 'includes/header.php';
             });
         }
 
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('formModal')) {
-                closeFormModal();
-            }
-        }
     </script>
 
 <?php

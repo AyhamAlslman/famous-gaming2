@@ -6,14 +6,10 @@ if (!isAdmin()) {
     exit;
 }
 
-include '../includes/config.php';
-
 $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    admin_require_csrf();
-
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
             $username = trim($_POST['username']);
@@ -242,11 +238,6 @@ include 'includes/header.php';
             });
         }
 
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('formModal')) {
-                closeFormModal();
-            }
-        }
     </script>
 
 <?php

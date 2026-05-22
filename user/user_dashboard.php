@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['profile_action'] ?? '') ==
 }
 
 $rooms = [];
-$rooms_result = mysqli_query($conn, "SELECT id, room_name, room_type, price_per_hour, status FROM rooms ORDER BY FIELD(status, 'Available', 'Busy'), room_name ASC");
+$rooms_result = mysqli_query($conn, "SELECT id, room_name, room_type, price_per_hour, status, image_path FROM rooms ORDER BY FIELD(status, 'Available', 'Busy'), room_name ASC");
 if ($rooms_result) {
     $rooms = mysqli_fetch_all($rooms_result, MYSQLI_ASSOC);
 }
@@ -353,8 +353,10 @@ include dirname(__DIR__) . '/includes/header.php';
                                     $room_status_key = strtolower((string)$room['status']);
                                     $room_status_class = preg_replace('/[^a-z0-9_-]+/i', '-', $room_status_key);
                                     $is_available = $room['status'] === 'Available';
+                                    $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background.png');
                                     ?>
                                     <article class="user-room-status-card status-<?php echo htmlspecialchars($room_status_class, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <img class="user-room-status-image" src="<?php echo htmlspecialchars($room_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($room['room_name'], ENT_QUOTES, 'UTF-8'); ?>">
                                         <div>
                                             <span><?php echo htmlspecialchars($room['room_type']); ?></span>
                                             <h3><?php echo htmlspecialchars($room['room_name']); ?></h3>

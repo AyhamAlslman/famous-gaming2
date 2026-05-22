@@ -1,10 +1,5 @@
 <?php
 require_once 'auth_check.php';
-include '../includes/config.php';
-require_once '../includes/functions.php';
-
-ensure_user_auth_schema($conn);
-ensure_store_orders_schema($conn);
 
 $stats = [];
 $stats['total_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms"))['count'];

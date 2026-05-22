@@ -75,7 +75,7 @@ $admin_nav_items[] = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?><?php echo t('admin_panel_title'); ?></title>
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.0">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.1">
     <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
 <body class="admin-body <?php echo site_is_rtl() ? 'admin-rtl' : 'admin-ltr'; ?>">
@@ -104,7 +104,7 @@ $admin_nav_items[] = [
                         <strong><?php echo htmlspecialchars(t('admin_role_' . strtolower($admin_display_role), [], ucfirst($admin_display_role)), ENT_QUOTES, 'UTF-8'); ?></strong>
                     <?php endif; ?>
                 </div>
-                <a class="admin-logout-button" href="<?php echo htmlspecialchars(site_url('admin/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-admin-confirm-message="<?php echo htmlspecialchars(t('admin_logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-admin-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('admin_nav_logout'); ?></a>
+                <a class="admin-logout-button" href="<?php echo htmlspecialchars(site_url('general/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-admin-confirm-message="<?php echo htmlspecialchars(t('admin_logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-admin-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('admin_nav_logout'); ?></a>
             </div>
         </aside>
 

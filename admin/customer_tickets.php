@@ -1,9 +1,5 @@
 <?php
 require_once 'auth_check.php';
-include '../includes/config.php';
-require_once '../includes/functions.php';
-
-ensure_booking_confirmation_schema($conn);
 
 $page_title = t('admin_customer_tickets');
 $active_page = 'customer_tickets';

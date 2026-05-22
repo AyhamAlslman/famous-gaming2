@@ -587,6 +587,8 @@ function ensure_user_auth_schema($conn) {
     ensure_store_orders_schema($conn);
     ensure_complaints_schema($conn);
     ensure_site_notifications_table($conn);
+    ensure_database_relationships($conn);
+    ensure_reporting_views($conn);
 }
 
 /**
@@ -606,6 +608,286 @@ function ensure_loyalty_settings_schema($conn) {
     mysqli_query($conn, "INSERT IGNORE INTO system_settings (setting_key, setting_value, setting_type, description) VALUES
         ('loyalty_points_per_jod', '1', 'decimal', 'Loyalty points earned for each paid JOD'),
         ('loyalty_points_per_jod_discount', '10', 'decimal', 'Loyalty points needed for 1 JOD discount')");
+}
+
+function database_table_exists($conn, $table_name) {
+    $table_name = mysqli_real_escape_string($conn, $table_name);
+    $result = mysqli_query($conn, "SHOW TABLES LIKE '" . $table_name . "'");
+
+    return $result && mysqli_num_rows($result) > 0;
+}
+
+function database_constraint_exists($conn, $constraint_name) {
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT 1
+         FROM information_schema.TABLE_CONSTRAINTS
+         WHERE CONSTRAINT_SCHEMA = DATABASE()
+           AND CONSTRAINT_NAME = ?
+           AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+         LIMIT 1"
+    );
+
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "s", $constraint_name);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $exists = $result && mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+
+    return (bool)$exists;
+}
+
+function database_foreign_key_link_exists($conn, $table_name, $column_name, $referenced_table_name) {
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT 1
+         FROM information_schema.KEY_COLUMN_USAGE
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?
+           AND COLUMN_NAME = ?
+           AND REFERENCED_TABLE_NAME = ?
+         LIMIT 1"
+    );
+
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "sss", $table_name, $column_name, $referenced_table_name);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $exists = $result && mysqli_fetch_assoc($result);
+    mysqli_stmt_close($stmt);
+
+    return (bool)$exists;
+}
+
+function database_count_rows($conn, $query) {
+    $result = mysqli_query($conn, $query);
+    if (!$result || !($row = mysqli_fetch_row($result))) {
+        return 1;
+    }
+
+    return (int)$row[0];
+}
+
+function ensure_foreign_key_if_clean($conn, $constraint_name, $table_name, $column_name, $referenced_table_name, $required_tables, $orphan_query, $alter_query) {
+    if (
+        database_constraint_exists($conn, $constraint_name) ||
+        database_foreign_key_link_exists($conn, $table_name, $column_name, $referenced_table_name)
+    ) {
+        return;
+    }
+
+    foreach ($required_tables as $table_name) {
+        if (!database_table_exists($conn, $table_name)) {
+            return;
+        }
+    }
+
+    if (database_count_rows($conn, $orphan_query) === 0) {
+        mysqli_query($conn, $alter_query);
+    }
+}
+
+function ensure_database_relationships($conn) {
+    static $checked = false;
+    if ($checked) {
+        return;
+    }
+    $checked = true;
+
+    ensure_foreign_key_if_clean(
+        $conn,
+        'fk_bookings_user',
+        'bookings',
+        'user_id',
+        'site_users',
+        ['bookings', 'site_users'],
+        "SELECT COUNT(*) FROM bookings b LEFT JOIN site_users su ON su.id = b.user_id WHERE b.user_id IS NOT NULL AND su.id IS NULL",
+        "ALTER TABLE bookings ADD CONSTRAINT fk_bookings_user FOREIGN KEY (user_id) REFERENCES site_users(id) ON DELETE SET NULL"
+    );
+
+    ensure_foreign_key_if_clean(
+        $conn,
+        'fk_booking_items_booking',
+        'booking_items',
+        'booking_id',
+        'bookings',
+        ['booking_items', 'bookings'],
+        "SELECT COUNT(*) FROM booking_items bi LEFT JOIN bookings b ON b.id = bi.booking_id WHERE b.id IS NULL",
+        "ALTER TABLE booking_items ADD CONSTRAINT fk_booking_items_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE"
+    );
+
+    ensure_foreign_key_if_clean(
+        $conn,
+        'fk_booking_items_menu_item',
+        'booking_items',
+        'menu_item_id',
+        'menu_items',
+        ['booking_items', 'menu_items'],
+        "SELECT COUNT(*) FROM booking_items bi LEFT JOIN menu_items mi ON mi.id = bi.menu_item_id WHERE mi.id IS NULL",
+        "ALTER TABLE booking_items ADD CONSTRAINT fk_booking_items_menu_item FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE"
+    );
+
+    ensure_foreign_key_if_clean(
+        $conn,
+        'fk_complaints_user',
+        'complaints',
+        'user_id',
+        'site_users',
+        ['complaints', 'site_users'],
+        "SELECT COUNT(*) FROM complaints c LEFT JOIN site_users su ON su.id = c.user_id WHERE c.user_id IS NOT NULL AND su.id IS NULL",
+        "ALTER TABLE complaints ADD CONSTRAINT fk_complaints_user FOREIGN KEY (user_id) REFERENCES site_users(id) ON DELETE SET NULL"
+    );
+
+    ensure_foreign_key_if_clean(
+        $conn,
+        'fk_site_notifications_user',
+        'site_notifications',
+        'user_id',
+        'site_users',
+        ['site_notifications', 'site_users'],
+        "SELECT COUNT(*) FROM site_notifications sn LEFT JOIN site_users su ON su.id = sn.user_id WHERE su.id IS NULL",
+        "ALTER TABLE site_notifications ADD CONSTRAINT fk_site_notifications_user FOREIGN KEY (user_id) REFERENCES site_users(id) ON DELETE CASCADE"
+    );
+
+    ensure_foreign_key_if_clean(
+        $conn,
+        'fk_store_orders_user',
+        'store_orders',
+        'user_id',
+        'site_users',
+        ['store_orders', 'site_users'],
+        "SELECT COUNT(*) FROM store_orders so LEFT JOIN site_users su ON su.id = so.user_id WHERE su.id IS NULL",
+        "ALTER TABLE store_orders ADD CONSTRAINT fk_store_orders_user FOREIGN KEY (user_id) REFERENCES site_users(id) ON DELETE CASCADE"
+    );
+
+    ensure_foreign_key_if_clean(
+        $conn,
+        'fk_store_order_items_order',
+        'store_order_items',
+        'order_id',
+        'store_orders',
+        ['store_order_items', 'store_orders'],
+        "SELECT COUNT(*) FROM store_order_items soi LEFT JOIN store_orders so ON so.id = soi.order_id WHERE so.id IS NULL",
+        "ALTER TABLE store_order_items ADD CONSTRAINT fk_store_order_items_order FOREIGN KEY (order_id) REFERENCES store_orders(id) ON DELETE CASCADE"
+    );
+
+    ensure_foreign_key_if_clean(
+        $conn,
+        'fk_store_order_items_product',
+        'store_order_items',
+        'product_id',
+        'store_products',
+        ['store_order_items', 'store_products'],
+        "SELECT COUNT(*) FROM store_order_items soi LEFT JOIN store_products sp ON sp.id = soi.product_id WHERE soi.product_id IS NOT NULL AND sp.id IS NULL",
+        "ALTER TABLE store_order_items ADD CONSTRAINT fk_store_order_items_product FOREIGN KEY (product_id) REFERENCES store_products(id) ON DELETE SET NULL"
+    );
+}
+
+function database_view_exists($conn, $view_name) {
+    $view_name = mysqli_real_escape_string($conn, $view_name);
+    $result = mysqli_query($conn, "SHOW FULL TABLES LIKE '" . $view_name . "'");
+
+    if (!$result || !($row = mysqli_fetch_row($result))) {
+        return false;
+    }
+
+    return isset($row[1]) && strtolower($row[1]) === 'view';
+}
+
+function ensure_reporting_views($conn) {
+    static $checked = false;
+    if ($checked) {
+        return;
+    }
+    $checked = true;
+
+    if (!database_view_exists($conn, 'customer_orders_unified')) {
+        mysqli_query($conn, "CREATE VIEW customer_orders_unified AS
+            SELECT
+                'booking' AS record_type,
+                b.id AS record_id,
+                COALESCE(b.booking_code, CONCAT('FG-', LPAD(b.id, 6, '0'))) AS record_code,
+                b.user_id,
+                b.customer_name,
+                b.phone,
+                NULL AS email,
+                r.room_name AS item_label,
+                b.status,
+                b.payment_status,
+                b.payment_method,
+                b.final_total AS total_amount,
+                b.paid_amount,
+                b.loyalty_points_earned,
+                b.loyalty_points_redeemed,
+                b.loyalty_discount,
+                b.created_at,
+                b.updated_at,
+                'user/my_bookings.php' AS action_url
+            FROM bookings b
+            LEFT JOIN rooms r ON r.id = b.room_id
+            UNION ALL
+            SELECT
+                'store_order' AS record_type,
+                so.id AS record_id,
+                so.order_code AS record_code,
+                so.user_id,
+                so.customer_name,
+                so.phone,
+                so.email,
+                'Store order' AS item_label,
+                so.status,
+                so.payment_status,
+                so.payment_method,
+                so.total_amount,
+                so.paid_amount,
+                so.loyalty_points_earned,
+                so.loyalty_points_redeemed,
+                so.loyalty_discount,
+                so.created_at,
+                so.updated_at,
+                'user/my_bookings.php' AS action_url
+            FROM store_orders so");
+    }
+
+    if (!database_view_exists($conn, 'notifications_unified')) {
+        mysqli_query($conn, "CREATE VIEW notifications_unified AS
+            SELECT
+                'admin' AS audience,
+                NULL AS user_id,
+                id AS notification_id,
+                notification_type,
+                title,
+                message,
+                related_table,
+                related_id,
+                action_url,
+                is_read,
+                read_at,
+                created_at
+            FROM admin_notifications
+            UNION ALL
+            SELECT
+                'user' AS audience,
+                user_id,
+                id AS notification_id,
+                notification_type,
+                title,
+                message,
+                NULL AS related_table,
+                NULL AS related_id,
+                action_url,
+                is_read,
+                read_at,
+                created_at
+            FROM site_notifications");
+    }
 }
 
 function get_loyalty_settings($conn = null) {

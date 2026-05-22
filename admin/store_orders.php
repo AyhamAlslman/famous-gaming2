@@ -1,9 +1,5 @@
 <?php
 require_once 'auth_check.php';
-require_once '../includes/config.php';
-require_once '../includes/functions.php';
-
-ensure_store_orders_schema($conn);
 
 if (!isAdmin()) {
     header('Location: dashboard.php');
@@ -18,8 +14,6 @@ $allowed_payment_statuses = ['Unpaid', 'Partial', 'Paid'];
 $allowed_payment_methods = ['Cash', 'Visa', 'CliQ', 'Loyalty'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    admin_require_csrf();
-
     $action = sanitize_input($_POST['action'] ?? '');
 
     if ($action === 'update_order') {

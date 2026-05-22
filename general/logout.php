@@ -19,6 +19,6 @@ if (ini_get('session.use_cookies')) {
 session_unset();
 session_destroy();
 
-header('Location: ' . site_url('general/index.php'));
+header('Location: ' . site_url('general/login.php'));
 exit;
 ?>

@@ -1,9 +1,5 @@
 <?php
 require_once 'auth_check.php';
-require_once '../includes/config.php';
-require_once '../includes/functions.php';
-
-ensure_user_auth_schema($conn);
 
 $success_message = '';
 $error_message = '';
@@ -16,8 +12,6 @@ if ($booking_id === 0) {
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    admin_require_csrf();
-
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add_item') {
             $menu_item_id = intval($_POST['menu_item_id']);
@@ -517,38 +511,6 @@ include 'includes/header.php';
     </div>
 
     <script>
-        document.querySelectorAll('[data-admin-open-modal]').forEach(function(button) {
-            button.addEventListener('click', function() {
-                const modal = document.getElementById(button.dataset.adminOpenModal);
-                if (modal) {
-                    modal.style.display = 'block';
-                }
-            });
-        });
-
-        document.querySelectorAll('[data-admin-close-modal]').forEach(function(button) {
-            button.addEventListener('click', function() {
-                button.closest('.modal').style.display = 'none';
-            });
-        });
-
-        window.addEventListener('click', function(event) {
-            if (event.target.classList.contains('admin-action-modal')) {
-                event.target.style.display = 'none';
-            }
-        });
-
-        // Auto-fade messages after 5 seconds
-        setTimeout(function() {
-            const messages = document.querySelectorAll('.message');
-            messages.forEach(function(message) {
-                message.style.transition = 'opacity 0.5s';
-                message.style.opacity = '0';
-                setTimeout(function() {
-                    message.style.display = 'none';
-                }, 500);
-            });
-        }, 5000);
     </script>
 
 <?php

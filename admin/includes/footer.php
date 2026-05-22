@@ -130,6 +130,30 @@
             });
         });
 
+        document.addEventListener('click', function(event) {
+            const openButton = event.target.closest('[data-admin-open-modal]');
+            if (openButton) {
+                const targetModal = document.getElementById(openButton.dataset.adminOpenModal);
+                if (targetModal) {
+                    targetModal.style.display = 'block';
+                }
+                return;
+            }
+
+            const closeButton = event.target.closest('[data-admin-close-modal], .modal .close');
+            if (closeButton) {
+                const targetModal = closeButton.closest('.modal');
+                if (targetModal) {
+                    targetModal.style.display = 'none';
+                }
+                return;
+            }
+
+            if (event.target.classList && event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        });
+
         const navToggles = Array.from(document.querySelectorAll('[data-admin-nav-toggle]'));
         const navBackdrop = document.querySelector('.admin-sidebar-backdrop');
         const navButton = document.querySelector('.admin-sidebar-toggle');

@@ -1,9 +1,5 @@
 <?php
 require_once 'auth_check.php';
-require_once '../includes/config.php';
-require_once '../includes/functions.php';
-
-ensure_store_products_schema($conn);
 
 if (!isAdmin()) {
     header('Location: dashboard.php');
@@ -23,8 +19,6 @@ $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
-    admin_require_csrf();
-
     $action = $_POST['action'];
 
     if ($action === 'add' || $action === 'edit') {
@@ -458,14 +452,6 @@ include 'includes/header.php';
             document.getElementById('deleteForm').submit();
         });
     }
-
-    window.onclick = function(event) {
-        const formModal = document.getElementById('formModal');
-
-        if (event.target === formModal) {
-            closeFormModal();
-        }
-    };
 
     document.getElementById('form_remove_image').addEventListener('change', function() {
         const currentImagePath = document.getElementById('form_current_image').dataset.imagePath || '';

@@ -1,15 +1,10 @@
 <?php
 require_once 'auth_check.php';
-include '../includes/config.php';
-
-ensure_user_auth_schema($conn);
 
 $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    admin_require_csrf();
-
     if (isset($_POST['action']) && $_POST['action'] == 'delete') {
         $id = intval($_POST['id']);
 
@@ -145,11 +140,6 @@ include 'includes/header.php';
             });
         }
 
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('viewModal')) {
-                closeViewModal();
-            }
-        }
     </script>
 
 <?php

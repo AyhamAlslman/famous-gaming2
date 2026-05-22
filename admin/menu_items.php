@@ -1,7 +1,5 @@
 <?php
 require_once 'auth_check.php';
-require_once '../includes/config.php';
-require_once '../includes/functions.php';
 
 // Only admins can manage menu items
 if (!isAdmin()) {
@@ -14,8 +12,6 @@ $error_message = '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    admin_require_csrf();
-
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
             $item_name = sanitize_input($_POST['item_name']);
@@ -268,11 +264,6 @@ include 'includes/header.php';
             });
         }
 
-        window.onclick = function(event) {
-            if (event.target.className === 'modal') {
-                event.target.style.display = 'none';
-            }
-        }
     </script>
 
 <?php

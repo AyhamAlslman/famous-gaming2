@@ -51,7 +51,7 @@ include dirname(__DIR__) . '/includes/header.php';
         </div>
 
         <div class="home-service-grid home-service-grid-three">
-            <a href="<?php echo htmlspecialchars(site_url('store.php'), ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
+            <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
                 <img src="<?php echo htmlspecialchars($home_store_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('home_store_card_title'), ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="index-service-card-copy">
                     <span><?php echo t('store_eyebrow'); ?></span>

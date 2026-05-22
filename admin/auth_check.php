@@ -16,6 +16,8 @@ if (!isset($_SESSION['admin_role'])) {
     exit;
 }
 
+ensure_user_auth_schema($conn);
+
 function isAdmin() {
     return isset($_SESSION['admin_role']) && $_SESSION['admin_role'] == 'admin';
 }
@@ -42,4 +44,6 @@ function admin_require_csrf() {
         }
     }
 }
+
+admin_require_csrf();
 ?>

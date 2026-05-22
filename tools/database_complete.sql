@@ -10,6 +10,8 @@ USE playroom_db;
 -- =====================================================
 -- DROP EXISTING TABLES (if any)
 -- =====================================================
+DROP VIEW IF EXISTS notifications_unified;
+DROP VIEW IF EXISTS customer_orders_unified;
 DROP TABLE IF EXISTS audit_log;
 DROP TABLE IF EXISTS admin_notifications;
 DROP TABLE IF EXISTS site_notifications;
@@ -117,6 +119,7 @@ CREATE TABLE bookings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES site_users(id) ON DELETE SET NULL,
     INDEX idx_customer_session_token (customer_session_token),
     INDEX idx_booking_user_id (user_id),
     INDEX idx_booking_datetime (room_id, booking_date, start_time, end_time)
@@ -388,6 +391,89 @@ INSERT INTO system_settings (setting_key, setting_value, setting_type, descripti
 ('min_booking_hours', '1', 'integer', 'Minimum hours allowed per booking'),
 ('loyalty_points_per_jod', '1', 'decimal', 'Loyalty points earned for each paid JOD'),
 ('loyalty_points_per_jod_discount', '10', 'decimal', 'Loyalty points needed for 1 JOD discount');
+
+-- =====================================================
+-- READ-ONLY REPORTING VIEWS
+-- These merge related data for dashboards without deleting
+-- or moving rows from their original tables.
+-- =====================================================
+
+CREATE VIEW customer_orders_unified AS
+SELECT
+    'booking' AS record_type,
+    b.id AS record_id,
+    COALESCE(b.booking_code, CONCAT('FG-', LPAD(b.id, 6, '0'))) AS record_code,
+    b.user_id,
+    b.customer_name,
+    b.phone,
+    NULL AS email,
+    r.room_name AS item_label,
+    b.status,
+    b.payment_status,
+    b.payment_method,
+    b.final_total AS total_amount,
+    b.paid_amount,
+    b.loyalty_points_earned,
+    b.loyalty_points_redeemed,
+    b.loyalty_discount,
+    b.created_at,
+    b.updated_at,
+    'user/my_bookings.php' AS action_url
+FROM bookings b
+LEFT JOIN rooms r ON r.id = b.room_id
+UNION ALL
+SELECT
+    'store_order' AS record_type,
+    so.id AS record_id,
+    so.order_code AS record_code,
+    so.user_id,
+    so.customer_name,
+    so.phone,
+    so.email,
+    'Store order' AS item_label,
+    so.status,
+    so.payment_status,
+    so.payment_method,
+    so.total_amount,
+    so.paid_amount,
+    so.loyalty_points_earned,
+    so.loyalty_points_redeemed,
+    so.loyalty_discount,
+    so.created_at,
+    so.updated_at,
+    'user/my_bookings.php' AS action_url
+FROM store_orders so;
+
+CREATE VIEW notifications_unified AS
+SELECT
+    'admin' AS audience,
+    NULL AS user_id,
+    id AS notification_id,
+    notification_type,
+    title,
+    message,
+    related_table,
+    related_id,
+    action_url,
+    is_read,
+    read_at,
+    created_at
+FROM admin_notifications
+UNION ALL
+SELECT
+    'user' AS audience,
+    user_id,
+    id AS notification_id,
+    notification_type,
+    title,
+    message,
+    NULL AS related_table,
+    NULL AS related_id,
+    action_url,
+    is_read,
+    read_at,
+    created_at
+FROM site_notifications;
 
 -- =====================================================
 -- SETUP COMPLETE

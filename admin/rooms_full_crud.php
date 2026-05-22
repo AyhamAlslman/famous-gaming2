@@ -1,14 +1,10 @@
 <?php
 require_once 'auth_check.php';
-require_once '../includes/config.php';
-require_once '../includes/functions.php';
 
 $success_message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    admin_require_csrf();
-
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
             $room_name = sanitize_input($_POST['room_name']);
@@ -178,6 +174,7 @@ include 'includes/header.php';
                     <thead>
                         <tr>
                             <th><?php echo t('admin_field_id'); ?></th>
+                            <th><?php echo t('admin_field_image'); ?></th>
                             <th><?php echo t('admin_field_room'); ?></th>
                             <th><?php echo t('admin_field_type'); ?></th>
                             <th><?php echo t('admin_field_price'); ?></th>
@@ -187,8 +184,12 @@ include 'includes/header.php';
                     </thead>
                     <tbody>
                         <?php while ($room = mysqli_fetch_assoc($rooms)): ?>
+                        <?php $room_thumb = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background.png'); ?>
                         <tr>
                             <td><?php echo $room['id']; ?></td>
+                            <td>
+                                <img class="admin-room-thumb" src="<?php echo htmlspecialchars($room_thumb, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($room['room_name'], ENT_QUOTES, 'UTF-8'); ?>">
+                            </td>
                             <td><?php echo htmlspecialchars($room['room_name']); ?></td>
                             <td><?php echo htmlspecialchars($room['room_type']); ?></td>
                             <td><?php echo number_format($room['price_per_hour'], 2); ?> JOD</td>
@@ -363,15 +364,6 @@ include 'includes/header.php';
                 document.getElementById('deleteForm').submit();
             });
         }
-
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('addModal')) {
-                closeAddModal();
-            }
-            if (event.target == document.getElementById('editModal')) {
-                closeEditModal();
-            }
-        };
 
         document.getElementById('edit_remove_image').addEventListener('change', function() {
             const currentImagePath = document.getElementById('edit_current_image').dataset.imagePath || '';

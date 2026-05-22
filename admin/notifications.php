@@ -1,9 +1,7 @@
 <?php
 require_once 'auth_check.php';
-require_once '../includes/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    admin_require_csrf();
     ensure_admin_notifications_table($conn);
 
     $action = $_POST['action'] ?? '';

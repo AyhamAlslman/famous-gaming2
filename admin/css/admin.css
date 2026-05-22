@@ -1294,6 +1294,17 @@ select:-webkit-autofill:focus {
     letter-spacing: 0.14em;
 }
 
+.admin-room-thumb {
+    display: block;
+    width: 74px;
+    height: 54px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 8px;
+    border: 1px solid var(--admin-border);
+    background: #10182b;
+}
+
 .admin-store-product-name {
     color: var(--admin-text);
     font-weight: 700;

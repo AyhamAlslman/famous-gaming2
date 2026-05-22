@@ -115,7 +115,7 @@ if ($error_count > 0) {
 }
 
 echo "<hr>";
-echo "<p><a href='admin/login.php'>→ Go to Admin Login</a></p>";
+echo "<p><a href='general/login.php?redirect=admin/dashboard.php'>→ Go to Admin Login</a></p>";
 echo "<p><strong>Note:</strong> You can safely delete this file after successful migration.</p>";
 
 mysqli_close($conn);
