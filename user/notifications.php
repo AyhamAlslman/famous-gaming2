@@ -32,6 +32,7 @@ function site_user_notification_url($action_url) {
     $route = preg_replace('/[?#].*$/', '', $path);
     $user_routes = [
         'booking.php',
+        'room_booking.php',
         'my_bookings.php',
         'store.php',
         'payment.php',
@@ -105,7 +106,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 <div class="notifications-empty">
                     <h3><?php echo t('notifications_empty_title'); ?></h3>
                     <p><?php echo t('notifications_empty_text'); ?></p>
-                    <a href="<?php echo htmlspecialchars(site_url('user/booking.php#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#dashboard-rooms'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
                 </div>
             <?php else: ?>
                 <div class="notifications-list">

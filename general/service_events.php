@@ -31,7 +31,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 <h2><?php echo t('services_events_title'); ?></h2>
                 <p><?php echo t('services_events_desc'); ?></p>
                 <div class="booking-ticket-actions">
-                    <a href="<?php echo htmlspecialchars(site_url('user/booking.php#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/room_booking.php#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
                 </div>
             </div>
 

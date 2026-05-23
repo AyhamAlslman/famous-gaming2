@@ -4,7 +4,7 @@ require_once dirname(__DIR__) . '/includes/functions.php';
 
 $page_title = t('home_page_title');
 $business_status = get_current_business_status($conn);
-$booking_target = 'user/booking.php#booking-form';
+$booking_target = 'user/room_booking.php#booking-form';
 $booking_url = site_url($booking_target);
 $booking_login_link = site_url('general/login.php?redirect=' . urlencode($booking_target));
 $is_logged_in = !empty($_SESSION['site_user_id']);
@@ -12,6 +12,11 @@ $home_hero_image = site_url('images/home-hero-2026.png');
 $home_booking_image = site_url('images/home-game-collage.jpg');
 $home_food_image = site_url('images/service-food.png');
 $home_store_image = site_url('images/store.jpg');
+$home_rooms = [];
+$home_rooms_result = mysqli_query($conn, "SELECT id, room_name, room_type, price_per_hour, status, services, description, image_path FROM rooms ORDER BY FIELD(status, 'Available', 'Busy'), room_name ASC");
+if ($home_rooms_result) {
+    $home_rooms = mysqli_fetch_all($home_rooms_result, MYSQLI_ASSOC);
+}
 
 include dirname(__DIR__) . '/includes/header.php';
 ?>
@@ -82,6 +87,49 @@ include dirname(__DIR__) . '/includes/header.php';
         </div>
     </div>
 </section>
+
+<?php if (!empty($home_rooms)): ?>
+    <section class="index-rooms-section" id="rooms">
+        <div class="container">
+            <div class="home-section-heading">
+                <span class="ticket-label"><?php echo t('home_rooms_title'); ?></span>
+                <h2><?php echo t('home_rooms_teaser_title'); ?></h2>
+                <p><?php echo t('home_rooms_teaser_text'); ?></p>
+            </div>
+
+            <div class="rooms-grid index-rooms-grid">
+                <?php foreach ($home_rooms as $room): ?>
+                    <?php
+                    $room_status_key = strtolower((string)$room['status']);
+                    $is_available = $room['status'] === 'Available';
+                    $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background.png');
+                    $room_booking_target = 'user/room_booking.php?room_id=' . (int)$room['id'] . '#booking-form';
+                    $room_booking_url = $is_logged_in
+                        ? site_url($room_booking_target)
+                        : site_url('general/login.php?redirect=' . urlencode($room_booking_target));
+                    ?>
+                    <article class="room-card room-card-status-<?php echo $is_available ? 'available' : 'busy'; ?>">
+                        <div class="room-image">
+                            <img src="<?php echo htmlspecialchars($room_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($room['room_name'], ENT_QUOTES, 'UTF-8'); ?>">
+                        </div>
+                        <h3><?php echo htmlspecialchars($room['room_name'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                        <p class="room-type"><?php echo htmlspecialchars($room['room_type'], ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="index-room-description"><?php echo htmlspecialchars($room['description'] ?: ($room['services'] ?: t('home_room_devices_default')), ENT_QUOTES, 'UTF-8'); ?></p>
+                        <div class="room-card-actions">
+                            <span class="ticket-status status-<?php echo htmlspecialchars($room_status_key, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(t('status_' . $room_status_key, [], $room['status']), ENT_QUOTES, 'UTF-8'); ?></span>
+                            <strong class="room-price"><?php echo number_format((float)$room['price_per_hour'], 2); ?> <?php echo t('home_room_price_suffix'); ?></strong>
+                            <?php if ($is_available): ?>
+                                <a href="<?php echo htmlspecialchars($room_booking_url, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-small room-book-btn"><?php echo t('home_book_room'); ?></a>
+                            <?php else: ?>
+                                <span class="btn btn-small room-book-btn room-book-btn-disabled"><?php echo htmlspecialchars(t('status_' . $room_status_key, [], $room['status']), ENT_QUOTES, 'UTF-8'); ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+<?php endif; ?>
 </main>
 
 <?php

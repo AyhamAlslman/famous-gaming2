@@ -167,7 +167,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 <p><?php echo t('payment_not_available_text'); ?></p>
                 <div class="booking-ticket-actions">
                     <a href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('payment_go_to_bookings'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('user/booking.php#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-secondary-btn"><?php echo t('payment_new_booking'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#dashboard-rooms'), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-secondary-btn"><?php echo t('payment_new_booking'); ?></a>
                 </div>
             </div>
         <?php else: ?>

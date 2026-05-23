@@ -145,14 +145,14 @@ if ($current_site_user) {
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
-<section class="hero">
-    <div class="container">
+<section class="hero my-bookings-hero">
+    <div class="container my-bookings-hero-copy">
         <h1><?php echo t('my_bookings_hero_title'); ?></h1>
         <p><?php echo t('my_bookings_hero_text'); ?></p>
     </div>
 </section>
 
-<section class="content">
+<section class="content my-bookings-content">
     <div class="container">
         <?php if ($success_msg): ?>
             <div class="message success"><?php echo htmlspecialchars($success_msg); ?></div>
@@ -179,7 +179,14 @@ include dirname(__DIR__) . '/includes/header.php';
             </div>
 
             <?php if (!empty($bookings)): ?>
-                <div class="responsive-table-wrapper">
+                <div class="my-bookings-history-panel">
+                    <div class="my-bookings-table-title">
+                        <div>
+                            <span class="ticket-label"><?php echo t('booking_ticket_label'); ?></span>
+                            <h3><?php echo t('my_bookings_history_title'); ?></h3>
+                        </div>
+                    </div>
+                <div class="responsive-table-wrapper my-bookings-table-wrapper">
                     <table class="minimal-data-table bookings-data-table">
                         <thead>
                             <tr>
@@ -205,15 +212,15 @@ include dirname(__DIR__) . '/includes/header.php';
                                 $ticket_time = format_time($booking['start_time']) . ' - ' . translated_hours_label($booking['hours']);
                                 ?>
                                 <tr>
-                                    <td><strong><?php echo htmlspecialchars($ticket_code); ?></strong></td>
-                                    <td><?php echo htmlspecialchars($booking['customer_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($ticket_device); ?></td>
-                                    <td><?php echo format_date($booking['booking_date']); ?></td>
-                                    <td><?php echo htmlspecialchars($ticket_time); ?></td>
-                                    <td><?php echo htmlspecialchars($ticket_payment); ?></td>
-                                    <td><?php echo htmlspecialchars($ticket_total); ?></td>
-                                    <td><span class="ticket-status status-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>"><?php echo htmlspecialchars($ticket_status); ?></span></td>
-                                    <td>
+                                    <td data-label="<?php echo htmlspecialchars(t('booking_code_label'), ENT_QUOTES, 'UTF-8'); ?>" class="booking-code-cell"><strong><?php echo htmlspecialchars($ticket_code); ?></strong></td>
+                                    <td data-label="<?php echo htmlspecialchars(t('common_customer'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($booking['customer_name']); ?></td>
+                                    <td data-label="<?php echo htmlspecialchars(t('booking_device_session'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($ticket_device); ?></td>
+                                    <td data-label="<?php echo htmlspecialchars(t('common_date'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo format_date($booking['booking_date']); ?></td>
+                                    <td data-label="<?php echo htmlspecialchars(t('common_time'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($ticket_time); ?></td>
+                                    <td data-label="<?php echo htmlspecialchars(t('common_payment'), ENT_QUOTES, 'UTF-8'); ?>"><span class="booking-payment-pill"><?php echo htmlspecialchars($ticket_payment); ?></span></td>
+                                    <td data-label="<?php echo htmlspecialchars(t('common_total'), ENT_QUOTES, 'UTF-8'); ?>" class="booking-total-cell"><?php echo htmlspecialchars($ticket_total); ?></td>
+                                    <td data-label="<?php echo htmlspecialchars(t('common_status'), ENT_QUOTES, 'UTF-8'); ?>"><span class="ticket-status status-<?php echo strtolower(htmlspecialchars($booking['status'])); ?>"><?php echo htmlspecialchars($ticket_status); ?></span></td>
+                                    <td data-label="<?php echo htmlspecialchars(t('common_actions'), ENT_QUOTES, 'UTF-8'); ?>" class="booking-actions-cell">
                                         <div class="table-action-group">
                                             <button
                                                 type="button"
@@ -250,6 +257,7 @@ include dirname(__DIR__) . '/includes/header.php';
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                </div>
                 </div>
             <?php endif; ?>
             <?php if (!empty($store_orders)): ?>
@@ -310,7 +318,7 @@ include dirname(__DIR__) . '/includes/header.php';
             <div class="empty-bookings">
                 <h2><?php echo t('my_bookings_empty_title'); ?></h2>
                 <p><?php echo t('my_bookings_empty_text'); ?></p>
-                <a href="<?php echo htmlspecialchars(site_url('user/booking.php#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#dashboard-rooms'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
             </div>
         <?php endif; ?>
     </div>

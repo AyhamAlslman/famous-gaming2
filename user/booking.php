@@ -6,6 +6,9 @@ $success_msg = '';
 $error_msg = '';
 $confirmed_booking = null;
 $preselected_room_id = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
+$booking_page_path = $booking_page_path ?? 'user/booking.php';
+$booking_always_show_flow = $booking_always_show_flow ?? false;
+$booking_show_room_showcase = $booking_show_room_showcase ?? true;
 ensure_user_auth_schema($conn);
 $current_site_user = get_current_site_user($conn);
 $loyalty_points_earned = 0;
@@ -14,7 +17,7 @@ $loyalty_earn_display = rtrim(rtrim(number_format((float)$loyalty_settings['earn
 $loyalty_redeem_display = rtrim(rtrim(number_format((float)$loyalty_settings['redeem_points_per_jod'], 2), '0'), '.');
 
 if (!$current_site_user) {
-    $booking_redirect_target = 'user/booking.php#booking-form';
+    $booking_redirect_target = $booking_page_path . ($preselected_room_id > 0 ? '?room_id=' . $preselected_room_id : '') . '#booking-form';
     $_SESSION['post_login_redirect'] = $booking_redirect_target;
     header('Location: ' . site_url('general/login.php?redirect=' . urlencode($booking_redirect_target)));
     exit;
@@ -222,7 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$show_booking_flow = ($_SERVER['REQUEST_METHOD'] === 'POST') || $preselected_room_id > 0;
+$show_booking_flow = $booking_always_show_flow || ($_SERVER['REQUEST_METHOD'] === 'POST') || $preselected_room_id > 0;
 $page_title = t('booking_page_title');
 include dirname(__DIR__) . '/includes/header.php';
 ?>
@@ -314,7 +317,7 @@ include dirname(__DIR__) . '/includes/header.php';
             </div>
         <?php endif; ?>
 
-        <?php if (!empty($booking_rooms)): ?>
+        <?php if ($booking_show_room_showcase && !empty($booking_rooms)): ?>
             <div class="booking-room-showcase">
                 <div class="home-section-heading">
                     <span class="ticket-label"><?php echo t('home_rooms_title'); ?></span>
@@ -345,7 +348,7 @@ include dirname(__DIR__) . '/includes/header.php';
         <?php endif; ?>
 
         <div class="form-container booking-flow-panel <?php echo $show_booking_flow ? 'is-active' : ''; ?>" id="booking-form" data-booking-flow>
-            <form method="POST" action="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>">
+            <form method="POST" action="<?php echo htmlspecialchars(site_url($booking_page_path), ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="booking-flow-head">
                     <div>
                         <span class="ticket-label"><?php echo t('booking_flow_label'); ?></span>
