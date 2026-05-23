@@ -310,7 +310,7 @@ include dirname(__DIR__) . '/includes/header.php';
             <div class="empty-bookings">
                 <h2><?php echo t('my_bookings_empty_title'); ?></h2>
                 <p><?php echo t('my_bookings_empty_text'); ?></p>
-                <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('user/booking.php#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
             </div>
         <?php endif; ?>
     </div>

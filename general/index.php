@@ -4,7 +4,9 @@ require_once dirname(__DIR__) . '/includes/functions.php';
 
 $page_title = t('home_page_title');
 $business_status = get_current_business_status($conn);
-$booking_login_link = site_url('general/login.php?redirect=' . urlencode('user/booking.php'));
+$booking_target = 'user/booking.php#booking-form';
+$booking_url = site_url($booking_target);
+$booking_login_link = site_url('general/login.php?redirect=' . urlencode($booking_target));
 $is_logged_in = !empty($_SESSION['site_user_id']);
 $home_hero_image = site_url('images/home-hero-2026.png');
 $home_booking_image = site_url('images/home-game-collage.jpg');
@@ -26,7 +28,7 @@ include dirname(__DIR__) . '/includes/header.php';
             <p><?php echo t('home_hero_line_1'); ?></p>
             <p class="index-hero-support"><?php echo t('home_hero_line_2'); ?></p>
             <div class="index-hero-actions">
-                <a href="<?php echo htmlspecialchars($is_logged_in ? site_url('user/booking.php') : $booking_login_link, ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('home_cta'); ?></a>
+                <a href="<?php echo htmlspecialchars($is_logged_in ? $booking_url : $booking_login_link, ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('home_cta'); ?></a>
                 <a href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn index-hero-secondary-btn"><?php echo t('nav_services'); ?></a>
             </div>
             <div class="index-hero-badges" aria-hidden="true">
@@ -60,7 +62,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 </div>
             </a>
 
-            <a href="<?php echo htmlspecialchars($is_logged_in ? site_url('user/booking.php') : $booking_login_link, ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
+            <a href="<?php echo htmlspecialchars($is_logged_in ? $booking_url : $booking_login_link, ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
                 <img src="<?php echo htmlspecialchars($home_booking_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('home_book_card_title'), ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="index-service-card-copy">
                     <span><?php echo t('home_rooms_title'); ?></span>

@@ -9,11 +9,16 @@ if (!isAdmin()) {
 $success_message = '';
 $error_message = '';
 
+$phone_column_check = mysqli_query($conn, "SHOW COLUMNS FROM admins LIKE 'phone'");
+if ($phone_column_check && mysqli_num_rows($phone_column_check) === 0) {
+    mysqli_query($conn, "ALTER TABLE admins ADD COLUMN phone VARCHAR(20) DEFAULT NULL AFTER role");
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
-            $username = trim($_POST['username']);
-            $password = trim($_POST['password']);
+            $phone = trim($_POST['phone']);
+            $username = $phone;
             $full_name = trim($_POST['full_name']);
             $role = $_POST['role'];
             $status = $_POST['status'];
@@ -26,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (mysqli_num_rows($check_result) > 0) {
                 $error_message = 'Username already exists';
             } else {
-                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = mysqli_prepare($conn, "INSERT INTO admins (username, password, full_name, role, status) VALUES (?, ?, ?, ?, ?)");
-                mysqli_stmt_bind_param($stmt, "sssss", $username, $hashed_password, $full_name, $role, $status);
+                $hashed_password = password_hash(bin2hex(random_bytes(24)), PASSWORD_DEFAULT);
+                $stmt = mysqli_prepare($conn, "INSERT INTO admins (username, password, full_name, role, phone, status) VALUES (?, ?, ?, ?, ?, ?)");
+                mysqli_stmt_bind_param($stmt, "ssssss", $username, $hashed_password, $full_name, $role, $phone, $status);
 
                 if (mysqli_stmt_execute($stmt)) {
                     $success_message = 'Employee added successfully';
@@ -40,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_stmt_close($check_stmt);
         } elseif ($_POST['action'] == 'edit') {
             $id = intval($_POST['id']);
-            $username = trim($_POST['username']);
-            $password = trim($_POST['password']);
+            $phone = trim($_POST['phone']);
+            $username = $phone;
             $full_name = trim($_POST['full_name']);
             $role = $_POST['role'];
             $status = $_POST['status'];
@@ -54,20 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (mysqli_num_rows($check_result) > 0) {
                 $error_message = 'Username already exists';
             } else {
-                if (!empty($password)) {
-                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                    $stmt = mysqli_prepare(
-                        $conn,
-                        "UPDATE admins SET username = ?, password = ?, full_name = ?, role = ?, status = ? WHERE id = ?"
-                    );
-                    mysqli_stmt_bind_param($stmt, "sssssi", $username, $hashed_password, $full_name, $role, $status, $id);
-                } else {
-                    $stmt = mysqli_prepare(
-                        $conn,
-                        "UPDATE admins SET username = ?, full_name = ?, role = ?, status = ? WHERE id = ?"
-                    );
-                    mysqli_stmt_bind_param($stmt, "ssssi", $username, $full_name, $role, $status, $id);
-                }
+                $stmt = mysqli_prepare(
+                    $conn,
+                    "UPDATE admins SET username = ?, full_name = ?, role = ?, phone = ?, status = ? WHERE id = ?"
+                );
+                mysqli_stmt_bind_param($stmt, "sssssi", $username, $full_name, $role, $phone, $status, $id);
 
                 if (mysqli_stmt_execute($stmt)) {
                     $success_message = 'Employee updated successfully';
@@ -124,7 +120,7 @@ include 'includes/header.php';
                     <thead>
                         <tr>
                             <th><?php echo t('admin_field_id'); ?></th>
-                            <th><?php echo t('admin_field_username'); ?></th>
+                            <th><?php echo t('admin_field_phone'); ?></th>
                             <th><?php echo t('auth_full_name'); ?></th>
                             <th><?php echo t('admin_field_role'); ?></th>
                             <th><?php echo t('admin_field_status'); ?></th>
@@ -135,7 +131,7 @@ include 'includes/header.php';
                         <?php while ($employee = mysqli_fetch_assoc($employees)): ?>
                         <tr>
                             <td><?php echo $employee['id']; ?></td>
-                            <td><?php echo htmlspecialchars($employee['username']); ?></td>
+                            <td><?php echo htmlspecialchars($employee['phone'] ?? $employee['username']); ?></td>
                             <td><?php echo htmlspecialchars($employee['full_name']); ?></td>
                             <td><span class="role-badge"><?php echo t('admin_role_' . strtolower($employee['role']), [], ucfirst($employee['role'])); ?></span></td>
                             <td>
@@ -167,13 +163,8 @@ include 'includes/header.php';
                 <?php echo admin_csrf_input(); ?>
 
                 <div class="form-group">
-                    <label><?php echo t('admin_field_username'); ?></label>
-                    <input type="text" name="username" id="form_username" required>
-                </div>
-
-                <div class="form-group">
-                    <label id="form_password_label"><?php echo t('auth_password'); ?></label>
-                    <input type="password" name="password" id="form_password" required>
+                    <label><?php echo t('admin_field_phone'); ?></label>
+                    <input type="text" name="phone" id="form_phone" required>
                 </div>
 
                 <div class="form-group">
@@ -215,13 +206,10 @@ include 'includes/header.php';
             const isEdit = !!employee;
             document.getElementById('form_action').value = isEdit ? 'edit' : 'add';
             document.getElementById('form_id').value = isEdit ? employee.id : '';
-            document.getElementById('form_username').value = isEdit ? employee.username : '';
+            document.getElementById('form_phone').value = isEdit ? (employee.phone || employee.username || '') : '';
             document.getElementById('form_full_name').value = isEdit ? employee.full_name : '';
             document.getElementById('form_role').value = isEdit ? employee.role : 'employee';
             document.getElementById('form_status').value = isEdit ? employee.status : 'Active';
-            document.getElementById('form_password').value = '';
-            document.getElementById('form_password').required = !isEdit;
-            document.getElementById('form_password_label').textContent = isEdit ? '<?php echo addslashes(t('admin_password_optional')); ?>' : '<?php echo addslashes(t('auth_password')); ?>';
             document.getElementById('formModalTitle').textContent = isEdit ? '<?php echo addslashes(t('admin_action_edit') . ' ' . t('admin_role_employee')); ?>' : '<?php echo addslashes(t('admin_action_add') . ' ' . t('admin_role_employee')); ?>';
             document.getElementById('form_submit').textContent = isEdit ? '<?php echo addslashes(t('admin_action_update')); ?>' : '<?php echo addslashes(t('admin_action_add')); ?>';
             document.getElementById('formModal').style.display = 'block';

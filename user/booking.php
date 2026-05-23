@@ -14,8 +14,9 @@ $loyalty_earn_display = rtrim(rtrim(number_format((float)$loyalty_settings['earn
 $loyalty_redeem_display = rtrim(rtrim(number_format((float)$loyalty_settings['redeem_points_per_jod'], 2), '0'), '.');
 
 if (!$current_site_user) {
-    $_SESSION['post_login_redirect'] = 'user/booking.php';
-    header('Location: ' . site_url('general/login.php?redirect=user/booking.php'));
+    $booking_redirect_target = 'user/booking.php#booking-form';
+    $_SESSION['post_login_redirect'] = $booking_redirect_target;
+    header('Location: ' . site_url('general/login.php?redirect=' . urlencode($booking_redirect_target)));
     exit;
 }
 
@@ -226,7 +227,7 @@ $page_title = t('booking_page_title');
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
-<section class="hero">
+<section class="hero booking-hero">
     <div class="container">
         <h1><?php echo t('booking_hero_title'); ?></h1>
         <p><?php echo t('booking_hero_text'); ?></p>
@@ -351,6 +352,11 @@ include dirname(__DIR__) . '/includes/header.php';
                         <h2><?php echo t('booking_flow_title'); ?></h2>
                         <p><?php echo t('booking_flow_text'); ?></p>
                     </div>
+                    <ul class="booking-flow-instructions" aria-label="<?php echo htmlspecialchars(t('booking_info_title'), ENT_QUOTES, 'UTF-8'); ?>">
+                        <li><?php echo t('booking_info_1'); ?></li>
+                        <li><?php echo t('booking_info_2'); ?></li>
+                        <li><?php echo t('booking_info_3'); ?></li>
+                    </ul>
                 </div>
                 <div class="booking-flow-steps" aria-label="<?php echo htmlspecialchars(t('booking_flow_label'), ENT_QUOTES, 'UTF-8'); ?>">
                     <span class="is-active" data-booking-step-indicator="details"><?php echo t('booking_step_details'); ?></span>
@@ -826,6 +832,11 @@ document.addEventListener('DOMContentLoaded', function() {
             setBookingStep(targetStep);
         });
     });
+
+    if (window.location.hash === '#booking-form' && bookingForm) {
+        showBookingFlow();
+        setBookingStep('details');
+    }
 
     if (requestedRoomId && roomSelect.querySelector(`option[value="${requestedRoomId}"]`)) {
         roomSelect.value = requestedRoomId;
