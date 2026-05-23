@@ -1433,6 +1433,133 @@ html[dir="ltr"] .user-profile-page {
     }
 }
 
+/* Database tools page */
+.database-tools-hero {
+    min-height: clamp(260px, 38svh, 380px) !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: clamp(5.5rem, 10vw, 7rem) 0 clamp(1.8rem, 4vw, 3rem) !important;
+    background:
+        linear-gradient(90deg, rgba(4, 12, 24, 0.9), rgba(7, 27, 44, 0.68)),
+        url('../../images/home-neon-sign.jpg') center / cover no-repeat !important;
+    text-align: start !important;
+}
+
+.database-tools-hero h1 {
+    max-width: 760px !important;
+    margin: 0 0 0.7rem !important;
+    background: none !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-size: clamp(2rem, 5vw, 3.8rem) !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+.database-tools-hero p {
+    max-width: 54ch !important;
+    margin: 0 !important;
+    color: rgba(236, 247, 255, 0.84) !important;
+    font-size: clamp(0.96rem, 1.5vw, 1.12rem) !important;
+    line-height: 1.65 !important;
+}
+
+.database-tools-content {
+    background: linear-gradient(180deg, #071320 0%, #0a1929 100%) !important;
+}
+
+.database-status-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    width: min(100%, 1080px);
+    margin-inline: auto;
+    padding: 1rem;
+    border: 1px solid rgba(125, 227, 255, 0.16);
+    border-radius: 10px;
+    background:
+        linear-gradient(145deg, rgba(13, 33, 52, 0.96), rgba(7, 17, 30, 0.99)),
+        rgba(255, 255, 255, 0.035);
+}
+
+.database-status-panel h2 {
+    margin: 0.25rem 0;
+    color: #ffffff;
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+}
+
+.database-status-panel p {
+    margin: 0;
+    color: rgba(225, 240, 252, 0.74);
+}
+
+.database-status-panel > strong {
+    display: grid;
+    place-items: center;
+    min-width: 92px;
+    min-height: 72px;
+    border: 1px solid rgba(101, 226, 170, 0.24);
+    border-radius: 8px;
+    background: rgba(101, 226, 170, 0.09);
+    color: #ffffff;
+    font-size: 1.45rem;
+}
+
+.database-table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 0.75rem;
+    width: min(100%, 1080px);
+    margin: 1rem auto 0;
+}
+
+.database-table-card {
+    min-height: 120px;
+    padding: 0.9rem;
+    border: 1px solid rgba(125, 227, 255, 0.14);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.database-table-card span {
+    color: #7eeaff;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.database-table-card h3 {
+    margin: 0.35rem 0 0.6rem;
+    color: #ffffff;
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+}
+
+.database-table-card p {
+    margin: 0;
+    color: rgba(225, 240, 252, 0.74);
+}
+
+.database-table-card.is-ready {
+    border-color: rgba(101, 226, 170, 0.18);
+}
+
+.database-table-card.is-missing {
+    border-color: rgba(255, 126, 126, 0.28);
+}
+
+@media (max-width: 767px) {
+    .database-status-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .database-status-panel > strong {
+        width: 100%;
+        min-height: 54px;
+    }
+}
+
 /* User booking and store polish */
 .site-user-shell .navbar.fixed-top {
     min-height: 66px !important;
