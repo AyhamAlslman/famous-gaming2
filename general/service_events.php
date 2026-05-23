@@ -10,12 +10,13 @@ $items = [
     t('services_events_item_4'),
     t('services_events_item_5')
 ];
+$service_image = site_url('images/service-events.png');
 
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <main class="service-detail-page">
-    <section class="hero arena-page-hero service-detail-hero" style="--page-hero-image: url('<?php echo htmlspecialchars(site_url('images/home-game-collage.jpg'), ENT_QUOTES, 'UTF-8'); ?>');">
+    <section class="hero arena-page-hero service-detail-hero" style="--page-hero-image: url('<?php echo htmlspecialchars($service_image, ENT_QUOTES, 'UTF-8'); ?>');">
         <div class="container">
             <span class="ticket-label"><?php echo t('services_events_type'); ?></span>
             <h1><?php echo t('services_events_title'); ?></h1>
@@ -31,7 +32,6 @@ include dirname(__DIR__) . '/includes/header.php';
                 <p><?php echo t('services_events_desc'); ?></p>
                 <div class="booking-ticket-actions">
                     <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-secondary-btn"><?php echo t('footer_support'); ?></a>
                 </div>
             </div>
 

@@ -20,7 +20,8 @@ $services = [
     ],
     [
         'url' => site_url('general/service_events.php'),
-        'image' => site_url('images/home-game-collage.jpg'),
+        'image' => site_url('images/service-events.png'),
+        'class' => 'service-hub-card-featured',
         'type' => t('services_events_type'),
         'title' => t('services_events_title'),
         'description' => t('services_events_desc')
@@ -48,7 +49,7 @@ include dirname(__DIR__) . '/includes/header.php';
 
             <div class="service-hub-grid">
                 <?php foreach ($services as $service): ?>
-                    <a class="service-hub-card" href="<?php echo htmlspecialchars($service['url'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <a class="service-hub-card <?php echo htmlspecialchars($service['class'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" href="<?php echo htmlspecialchars($service['url'], ENT_QUOTES, 'UTF-8'); ?>">
                         <img src="<?php echo htmlspecialchars($service['image'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($service['title'], ENT_QUOTES, 'UTF-8'); ?>">
                         <div>
                             <span><?php echo $service['type']; ?></span>

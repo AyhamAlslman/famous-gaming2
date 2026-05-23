@@ -8,9 +8,12 @@
 
             <div class="site-footer-links">
                 <h3><?php echo t('footer_quick_links'); ?></h3>
-                <a href="<?php echo htmlspecialchars(site_url('general/about.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_about'); ?></a>
-                <a href="<?php echo htmlspecialchars(site_url('general/contact.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_contact'); ?></a>
-                <a href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
+                <div class="site-footer-link-grid">
+                    <a href="<?php echo htmlspecialchars(site_url('general/about.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_about'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('general/contact.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_contact'); ?></a>
+                    <a class="site-footer-support-link" href="<?php echo htmlspecialchars(site_url('user/complaints.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('footer_support'); ?></a>
+                    <a href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
+                </div>
             </div>
 
             <div class="site-footer-follow">

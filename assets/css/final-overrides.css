@@ -90,9 +90,23 @@ html[dir="rtl"] .index-hero-badges {
 }
 
 .site-footer .site-footer-brand p,
-.site-footer .site-footer-links a,
+.site-footer .site-footer-link-grid a,
 .site-footer .site-footer-info {
     max-width: 34ch !important;
+}
+
+.site-footer .site-footer-link-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(92px, 1fr)) !important;
+    gap: 0.8rem 1.35rem !important;
+    width: min(100%, 290px) !important;
+}
+
+.site-footer .site-footer-link-grid a {
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 0.12rem 0 !important;
+    text-align: inherit !important;
 }
 
 html[dir="ltr"] .site-footer .site-footer-brand,
@@ -121,6 +135,343 @@ html[dir="rtl"] .site-footer .site-footer-socials {
     justify-content: flex-start !important;
 }
 
+.service-hub-hero {
+    align-items: center !important;
+    min-height: clamp(440px, 60svh, 660px) !important;
+    background:
+        linear-gradient(90deg, rgba(3, 10, 22, 0.84) 0%, rgba(3, 10, 22, 0.58) 34%, rgba(3, 10, 22, 0.16) 68%, rgba(3, 10, 22, 0.34) 100%),
+        var(--page-hero-image, url('../../images/home-neon-sign.jpg')) center / cover no-repeat,
+        #06101d !important;
+}
+
+html[dir="rtl"] .service-hub-hero {
+    background:
+        linear-gradient(270deg, rgba(3, 10, 22, 0.84) 0%, rgba(3, 10, 22, 0.58) 34%, rgba(3, 10, 22, 0.16) 68%, rgba(3, 10, 22, 0.34) 100%),
+        var(--page-hero-image, url('../../images/home-neon-sign.jpg')) center / cover no-repeat,
+        #06101d !important;
+}
+
+.service-hub-hero::after,
+html[dir="rtl"] .service-hub-hero::after {
+    background: linear-gradient(180deg, rgba(3, 10, 22, 0) 0%, rgba(3, 10, 22, 0.26) 74%, rgba(3, 10, 22, 0.72) 100%) !important;
+}
+
+.service-hub-hero .container {
+    width: min(88vw, 620px) !important;
+    max-width: 620px !important;
+    padding: 0 !important;
+}
+
+html[dir="ltr"] .service-hub-hero .container {
+    margin-left: clamp(1.25rem, 7vw, 6.5rem) !important;
+    margin-right: auto !important;
+    text-align: left !important;
+}
+
+html[dir="rtl"] .service-hub-hero .container {
+    margin-left: auto !important;
+    margin-right: clamp(1.25rem, 7vw, 6.5rem) !important;
+    text-align: right !important;
+}
+
+.service-hub-hero .ticket-label {
+    display: inline-flex !important;
+    margin-bottom: 0.75rem !important;
+    background: rgba(3, 10, 22, 0.18) !important;
+    color: #9fffe1 !important;
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9) !important;
+}
+
+.service-hub-hero h1 {
+    max-width: 100% !important;
+    margin: 0 0 0.75rem !important;
+    color: #ffffff !important;
+    font-size: clamp(2.35rem, 5vw, 4.8rem) !important;
+    line-height: 1.04 !important;
+    text-shadow: 0 5px 0 rgba(0, 0, 0, 0.26), 0 12px 34px rgba(0, 0, 0, 0.98) !important;
+}
+
+.service-hub-hero p {
+    max-width: 52ch !important;
+    margin: 0 !important;
+    color: #eaf8ff !important;
+    font-size: clamp(1rem, 1.3vw, 1.16rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.72 !important;
+    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.24), 0 10px 28px rgba(0, 0, 0, 0.98) !important;
+}
+
+.service-detail-hero {
+    align-items: center !important;
+    min-height: clamp(430px, 56svh, 620px) !important;
+}
+
+.service-detail-hero::after {
+    background:
+        linear-gradient(90deg, rgba(3, 10, 22, 0.86) 0%, rgba(3, 10, 22, 0.66) 35%, rgba(3, 10, 22, 0.24) 68%, rgba(3, 10, 22, 0.08) 100%) !important;
+}
+
+html[dir="rtl"] .service-detail-hero::after {
+    background:
+        linear-gradient(270deg, rgba(3, 10, 22, 0.86) 0%, rgba(3, 10, 22, 0.66) 35%, rgba(3, 10, 22, 0.24) 68%, rgba(3, 10, 22, 0.08) 100%) !important;
+}
+
+.service-detail-hero .container {
+    width: min(88vw, 620px) !important;
+    max-width: 620px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+html[dir="ltr"] .service-detail-hero .container {
+    margin-left: clamp(1.25rem, 7vw, 6.5rem) !important;
+    margin-right: auto !important;
+    text-align: left !important;
+}
+
+html[dir="rtl"] .service-detail-hero .container {
+    margin-left: auto !important;
+    margin-right: clamp(1.25rem, 7vw, 6.5rem) !important;
+    text-align: right !important;
+}
+
+.service-detail-hero .ticket-label {
+    display: inline-flex !important;
+    margin-bottom: 0.75rem !important;
+    border-color: rgba(125, 227, 255, 0.28) !important;
+    background: rgba(3, 10, 22, 0.18) !important;
+    color: #9fffe1 !important;
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9) !important;
+}
+
+.service-detail-hero h1 {
+    max-width: 100% !important;
+    margin: 0 0 0.75rem !important;
+    color: #ffffff !important;
+    font-size: clamp(2.3rem, 5vw, 4.6rem) !important;
+    line-height: 1.04 !important;
+    text-shadow: 0 5px 0 rgba(0, 0, 0, 0.28), 0 12px 34px rgba(0, 0, 0, 0.98) !important;
+}
+
+.service-detail-hero p {
+    max-width: 52ch !important;
+    margin: 0 !important;
+    color: #eaf8ff !important;
+    font-size: clamp(1rem, 1.3vw, 1.16rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.72 !important;
+    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.24), 0 10px 28px rgba(0, 0, 0, 0.98) !important;
+}
+
+.contact-page-hero,
+.about-page-hero {
+    align-items: center !important;
+    min-height: clamp(430px, 58svh, 640px) !important;
+}
+
+.contact-page-hero::after,
+.about-page-hero::after,
+html[dir="rtl"] .contact-page-hero::after,
+html[dir="rtl"] .about-page-hero::after {
+    background:
+        linear-gradient(90deg, rgba(3, 10, 22, 0.96) 0%, rgba(3, 10, 22, 0.82) 30%, rgba(3, 10, 22, 0.42) 58%, rgba(3, 10, 22, 0.18) 100%) !important;
+}
+
+.contact-page-hero .page-hero-visual,
+.about-page-hero .page-hero-visual {
+    opacity: 0.94 !important;
+    object-position: center !important;
+}
+
+.contact-page-hero .container {
+    width: min(86vw, 520px) !important;
+    max-width: 520px !important;
+    margin-left: clamp(1rem, 5vw, 4.5rem) !important;
+    margin-right: auto !important;
+    padding: 0 !important;
+}
+
+.about-page-hero .container {
+    width: min(86vw, 520px) !important;
+    max-width: 520px !important;
+    margin-left: auto !important;
+    margin-right: clamp(1.25rem, 7vw, 6.5rem) !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+html[dir="ltr"] .contact-page-hero .container,
+html[dir="ltr"] .about-page-hero .container {
+    text-align: left !important;
+    margin-left: clamp(1.25rem, 7vw, 6.5rem) !important;
+    margin-right: auto !important;
+}
+
+html[dir="rtl"] .contact-page-hero .container,
+html[dir="rtl"] .about-page-hero .container {
+    text-align: right !important;
+}
+
+html[dir="rtl"] .about-page-hero .container {
+    margin-left: auto !important;
+    margin-right: clamp(1.25rem, 7vw, 6.5rem) !important;
+}
+
+.contact-page-hero .ticket-label,
+.about-page-hero .ticket-label {
+    display: inline-flex !important;
+    margin-bottom: 0.75rem !important;
+    border-color: rgba(125, 227, 255, 0.34) !important;
+    background: rgba(7, 18, 34, 0.48) !important;
+    color: #9fffe1 !important;
+}
+
+.contact-page-hero h1,
+.about-page-hero h1 {
+    max-width: 100% !important;
+    margin: 0 0 0.8rem !important;
+    color: #ffffff !important;
+    line-height: 1.05 !important;
+    text-shadow: 0 8px 32px rgba(0, 0, 0, 0.92) !important;
+}
+
+.contact-page-hero h1 {
+    font-size: clamp(2.15rem, 4.2vw, 4.1rem) !important;
+    text-shadow: 0 5px 0 rgba(0, 0, 0, 0.28), 0 12px 34px rgba(0, 0, 0, 0.98) !important;
+}
+
+.about-page-hero h1 {
+    font-size: clamp(2.15rem, 4.2vw, 4.1rem) !important;
+    text-shadow: 0 5px 0 rgba(0, 0, 0, 0.28), 0 12px 34px rgba(0, 0, 0, 0.98) !important;
+}
+
+.about-page-hero p {
+    font-weight: 850 !important;
+    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.24), 0 10px 28px rgba(0, 0, 0, 0.98) !important;
+}
+
+.contact-page-hero p,
+.about-page-hero p {
+    max-width: 48ch !important;
+    margin: 0 !important;
+    color: #eaf8ff !important;
+    line-height: 1.72 !important;
+    text-shadow: 0 6px 24px rgba(0, 0, 0, 0.95) !important;
+}
+
+html[dir="rtl"] .contact-page-hero p,
+html[dir="rtl"] .about-page-hero p {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+.contact-page-hero p {
+    font-size: clamp(1rem, 1.3vw, 1.16rem) !important;
+    font-weight: 850 !important;
+    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.24), 0 10px 28px rgba(0, 0, 0, 0.98) !important;
+}
+
+.about-page-content {
+    background:
+        radial-gradient(circle at 12% 0%, rgba(125, 227, 255, 0.13), transparent 34%),
+        radial-gradient(circle at 85% 24%, rgba(89, 223, 166, 0.09), transparent 30%),
+        linear-gradient(180deg, #06101d 0%, #0a1828 100%) !important;
+}
+
+.about-page-content .about-intro-card,
+.about-page-content .about-copy-block,
+.about-page-content .about-value-card {
+    border-color: rgba(125, 227, 255, 0.18) !important;
+    background:
+        linear-gradient(145deg, rgba(16, 39, 62, 0.95), rgba(7, 19, 34, 0.98)),
+        linear-gradient(90deg, rgba(125, 227, 255, 0.08), rgba(89, 223, 166, 0.055)) !important;
+}
+
+.about-page-content .arena-section-heading {
+    max-width: 780px !important;
+    margin-inline: auto !important;
+    margin-bottom: clamp(1.25rem, 3vw, 2.25rem) !important;
+}
+
+.about-page-content .arena-section-heading h2 {
+    margin-bottom: 0 !important;
+}
+
+.about-page-content .about-main-container {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: clamp(1rem, 2.4vw, 1.45rem) !important;
+    max-width: 1180px !important;
+    margin-inline: auto !important;
+}
+
+.about-page-content .about-intro-card,
+.about-page-content .about-copy-block {
+    padding: clamp(1.25rem, 2.6vw, 1.8rem) !important;
+}
+
+.about-page-content .about-intro-card {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.about-page-content .about-copy-block:nth-of-type(3),
+.about-page-content .about-values-section {
+    grid-column: 1 / -1 !important;
+}
+
+.about-page-content .about-copy-block:nth-of-type(2) {
+    padding: clamp(1.35rem, 2.8vw, 2rem) !important;
+}
+
+.about-page-content .about-intro,
+.about-page-content .about-text {
+    max-width: none !important;
+    font-size: clamp(1rem, 1.1vw, 1.08rem) !important;
+    line-height: 1.85 !important;
+}
+
+.about-page-content .about-section-title {
+    margin-bottom: 0.9rem !important;
+    color: #ffffff !important;
+}
+
+.about-page-content .about-features-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.85rem !important;
+}
+
+.about-page-content .about-feature-item {
+    min-height: 96px !important;
+    padding: 1rem 1.05rem !important;
+    border-color: rgba(125, 227, 255, 0.14) !important;
+    background: rgba(255, 255, 255, 0.052) !important;
+    line-height: 1.65 !important;
+}
+
+.about-page-content .about-feature-item strong {
+    display: block !important;
+    margin-bottom: 0.25rem !important;
+    color: #8df0ff !important;
+}
+
+.about-page-content .about-values-grid {
+    --bs-gutter-x: 0.85rem !important;
+    --bs-gutter-y: 0.85rem !important;
+}
+
+.about-page-content .about-value-card {
+    padding: 1.2rem !important;
+}
+
 @media (max-width: 860px) {
     .site-footer .site-footer-clean-grid {
         grid-template-columns: 1fr !important;
@@ -145,6 +496,75 @@ html[dir="rtl"] .site-footer .site-footer-socials {
     html[dir="ltr"] .site-footer .site-footer-socials,
     html[dir="rtl"] .site-footer .site-footer-socials {
         justify-content: center !important;
+    }
+
+    .site-footer .site-footer-link-grid {
+        width: min(100%, 310px) !important;
+        margin-inline: auto !important;
+    }
+
+    .service-hub-hero,
+    html[dir="rtl"] .service-hub-hero {
+        background:
+            linear-gradient(90deg, rgba(3, 10, 22, 0.82), rgba(3, 10, 22, 0.42)),
+            var(--page-hero-image, url('../../images/home-neon-sign.jpg')) center / cover no-repeat,
+            #06101d !important;
+    }
+
+    .service-hub-hero .container,
+    html[dir="ltr"] .service-hub-hero .container,
+    html[dir="rtl"] .service-hub-hero .container {
+        width: min(90vw, 620px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    html[dir="ltr"] .service-hub-hero .container {
+        text-align: left !important;
+    }
+
+    html[dir="rtl"] .service-hub-hero .container {
+        text-align: right !important;
+    }
+
+    .service-detail-hero .container,
+    html[dir="ltr"] .service-detail-hero .container,
+    html[dir="rtl"] .service-detail-hero .container {
+        width: min(90vw, 620px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    html[dir="ltr"] .service-detail-hero .container {
+        text-align: left !important;
+    }
+
+    html[dir="rtl"] .service-detail-hero .container {
+        text-align: right !important;
+    }
+
+    .contact-page-hero .container {
+        width: min(90vw, 520px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    .about-page-hero .container {
+        width: min(90vw, 520px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        text-align: center !important;
+    }
+
+    html[dir="rtl"] .about-page-hero .container {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        text-align: right !important;
+    }
+
+    .about-page-content .about-main-container,
+    .about-page-content .about-features-list {
+        grid-template-columns: 1fr !important;
     }
 }
 
