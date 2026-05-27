@@ -51,7 +51,11 @@ include dirname(__DIR__) . '/includes/header.php';
             <div class="store-hero-copy store-hero-copy-centered">
                 <span class="store-eyebrow"><?php echo t('store_eyebrow'); ?></span>
                 <h1><?php echo t('store_hero_title'); ?></h1>
-                <p><?php echo t('store_hero_text'); ?></p>
+                <div class="store-hero-info">
+                    <h2><?php echo t('store_section_title'); ?></h2>
+                    <p><?php echo t('store_toolbar_text'); ?></p>
+                    <p><?php echo t('store_scope_text'); ?></p>
+                </div>
             </div>
         </div>
     </div>
@@ -59,15 +63,12 @@ include dirname(__DIR__) . '/includes/header.php';
 
 <section class="content store-content">
     <div class="container">
-        <div class="store-toolbar">
-            <div>
-                <h2 class="section-title store-section-title"><?php echo t('store_section_title'); ?></h2>
-                <p class="store-toolbar-text"><?php echo t('store_toolbar_text'); ?></p>
-                <p class="store-scope-note"><?php echo t('store_scope_text'); ?></p>
-                <?php if (!$store_can_order): ?>
+        <div class="store-toolbar store-filter-toolbar <?php echo $store_can_order ? 'store-filter-toolbar-only' : ''; ?>">
+            <?php if (!$store_can_order): ?>
+                <div class="store-filter-summary">
                     <div class="message info store-auth-message"><?php echo t('store_login_required_notice'); ?></div>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php endif; ?>
             <div class="store-filter-chips" id="storeFilterChips">
                 <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>" class="store-filter-chip <?php echo $selected_category === '' ? 'active' : ''; ?>" data-store-filter="all"><?php echo t('store_all_products'); ?></a>
                 <?php foreach ($allowed_categories as $category): ?>

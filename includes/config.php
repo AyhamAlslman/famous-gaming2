@@ -4,6 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 date_default_timezone_set('Asia/Amman');
+mysqli_report(MYSQLI_REPORT_OFF);
 
 if (!defined('SITE_ROOT_PATH')) {
     define('SITE_ROOT_PATH', dirname(__DIR__));
@@ -63,6 +64,16 @@ foreach ($db_hosts as $db_target) {
     $last_db_error = mysqli_connect_error();
 }
 
+if (!$conn && mysqli_connect_errno()) {
+    $server_conn = mysqli_connect($db_host, $db_user, $db_pass);
+
+    if ($server_conn) {
+        mysqli_query($server_conn, "CREATE DATABASE IF NOT EXISTS `$db_name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        mysqli_close($server_conn);
+        $conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+    }
+}
+
 if (!$conn) {
     die("Database connection failed: " . $last_db_error);
 }
@@ -70,4 +81,6 @@ if (!$conn) {
 mysqli_set_charset($conn, "utf8mb4");
 
 require_once __DIR__ . '/functions.php';
+
+ensure_user_auth_schema($conn);
 ?>

@@ -66,7 +66,7 @@ include dirname(__DIR__) . '/includes/header.php';
                     <h2><?php echo t('services_cta'); ?></h2>
                     <p><?php echo t('home_book_card_text'); ?></p>
                 </div>
-                <a href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('user/room_booking.php#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
             </div>
         </div>
     </section>

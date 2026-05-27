@@ -8,6 +8,7 @@ $page_title = t('home_menu_title') . ' - FAMOUS GAMING';
 $menu_items = [];
 $selected_category = isset($_GET['category']) ? sanitize_input($_GET['category']) : '';
 $allowed_categories = ['Drinks', 'Snacks'];
+$menu_category_counts = array_fill_keys($allowed_categories, 0);
 
 if (!in_array($selected_category, $allowed_categories, true)) {
     $selected_category = '';
@@ -35,6 +36,12 @@ if ($selected_category !== '') {
     $menu_items = $result ? mysqli_fetch_all($result, MYSQLI_ASSOC) : [];
 }
 
+foreach ($menu_items as $menu_count_item) {
+    if (isset($menu_category_counts[$menu_count_item['item_category']])) {
+        $menu_category_counts[$menu_count_item['item_category']]++;
+    }
+}
+
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
@@ -52,10 +59,18 @@ include dirname(__DIR__) . '/includes/header.php';
 
 <section class="content menu-content">
     <div class="container">
-        <div class="store-toolbar">
+        <div class="store-toolbar menu-toolbar">
             <div>
                 <h2 class="section-title store-section-title"><?php echo t('home_menu_preview_title'); ?></h2>
                 <p class="store-toolbar-text"><?php echo t('home_menu_preview_text'); ?></p>
+                <div class="menu-category-summary">
+                    <?php foreach ($allowed_categories as $category): ?>
+                        <span>
+                            <strong><?php echo (int)($menu_category_counts[$category] ?? 0); ?></strong>
+                            <?php echo htmlspecialchars(translated_menu_category_label($category)); ?>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
             </div>
             <div class="store-filter-chips">
                 <a href="<?php echo htmlspecialchars(site_url('user/menu.php'), ENT_QUOTES, 'UTF-8'); ?>" class="store-filter-chip <?php echo $selected_category === '' ? 'active' : ''; ?>"><?php echo t('store_all_products'); ?></a>
@@ -75,9 +90,12 @@ include dirname(__DIR__) . '/includes/header.php';
         <?php else: ?>
             <div class="menu-preview-grid">
                 <?php foreach ($menu_items as $item): ?>
-                    <article class="menu-preview-card">
-                        <div class="menu-preview-icon"><?php echo strtoupper(substr($item['item_category'], 0, 1)); ?></div>
-                        <div>
+                    <article class="menu-preview-card" data-menu-category="<?php echo htmlspecialchars($item['item_category'], ENT_QUOTES, 'UTF-8'); ?>">
+                        <div class="menu-preview-visual">
+                            <img src="<?php echo htmlspecialchars(site_url('images/service-food.png'), ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                            <span class="menu-preview-icon"><?php echo strtoupper(substr($item['item_category'], 0, 1)); ?></span>
+                        </div>
+                        <div class="menu-preview-copy">
                             <span><?php echo htmlspecialchars(translated_menu_category_label($item['item_category'])); ?></span>
                             <h3><?php echo htmlspecialchars($item['item_name']); ?></h3>
                             <?php if (!empty($item['item_description'])): ?>
@@ -89,7 +107,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 <?php endforeach; ?>
             </div>
             <div class="menu-booking-cta">
-                <a href="<?php echo htmlspecialchars(site_url('user/booking.php#booking-form'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#dashboard-rooms'), ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('nav_book_now'); ?></a>
             </div>
         <?php endif; ?>
     </div>

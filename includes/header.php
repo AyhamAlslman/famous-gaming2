@@ -45,7 +45,7 @@ $site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=7.9">
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=2.2">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.0">
 
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -91,10 +91,8 @@ $site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_
                 <ul class="navbar-nav ms-auto nav-menu">
                     <?php if ($site_header_is_user): ?>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'user_dashboard.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_home'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo in_array($current_page, ['services.php', 'service_gaming.php', 'service_hospitality.php', 'service_events.php'], true) ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_services'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' || $current_page === 'store_checkout.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_store'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'menu.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/menu.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('booking_step_menu'); ?></a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo $current_page === 'booking.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/booking.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_book_now'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'my_bookings.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_my_bookings'); ?></a></li>
                     <?php else: ?>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_home'); ?></a></li>
@@ -109,11 +107,9 @@ $site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_
                         <a class="nav-auth-link nav-auth-primary <?php echo $current_page === 'register.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
                         <a class="nav-language-link nav-language-toggle" href="<?php echo htmlspecialchars($language_toggle_url, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($language_toggle_label, ENT_QUOTES, 'UTF-8'); ?></a>
                     <?php else: ?>
-                        <a class="nav-user-pill" href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#profile-details'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <span class="nav-user-avatar"><?php echo htmlspecialchars($site_user_initial, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <a class="nav-user-pill <?php echo $current_page === 'profile.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/profile.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('profile_menu_edit'), ENT_QUOTES, 'UTF-8'); ?>">
                             <span class="nav-user-copy">
                                 <strong class="nav-user-name"><?php echo htmlspecialchars($site_user_name, ENT_QUOTES, 'UTF-8'); ?></strong>
-                                <span class="nav-user-profile"><?php echo t('profile_title'); ?></span>
                             </span>
                         </a>
                         <a class="nav-notification-link <?php echo $current_page === 'notifications.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/notifications.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('nav_notifications'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -126,12 +122,8 @@ $site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_
                                 <span class="nav-notification-count"><?php echo $site_user_notification_count > 99 ? '99+' : $site_user_notification_count; ?></span>
                             <?php endif; ?>
                         </a>
-                        <a class="nav-loyalty-pill" href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#profile-loyalty'), ENT_QUOTES, 'UTF-8'); ?>">
-                            <span><?php echo t('loyalty_points_short'); ?></span>
-                            <strong><?php echo $site_user_points; ?></strong>
-                        </a>
                         <a class="nav-language-link nav-language-toggle" href="<?php echo htmlspecialchars($language_toggle_url, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($language_toggle_label, ENT_QUOTES, 'UTF-8'); ?></a>
-                        <a class="nav-auth-link nav-auth-secondary nav-logout-link" href="<?php echo htmlspecialchars(site_url('general/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
+                        <a class="nav-auth-link nav-auth-secondary nav-logout-link" href="<?php echo htmlspecialchars(site_url('user/logout.php'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-message="<?php echo htmlspecialchars(t('logout_confirm'), ENT_QUOTES, 'UTF-8'); ?>" data-confirm-title="<?php echo htmlspecialchars(t('modal_confirm_title'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_logout'); ?></a>
                     <?php endif; ?>
                 </div>
             </div>

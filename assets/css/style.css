@@ -10019,6 +10019,24 @@ body {
     max-height: 100%;
 }
 
+/* Remove index page card shadow overlays as requested by user */
+.index-page-shell .home-service-card-large::after,
+.index-page-shell .home-service-card::after {
+    background: transparent !important;
+}
+
+.index-page-shell .home-service-card-large .index-service-card-copy {
+    background: transparent !important;
+    border-top: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+.index-page-shell .home-service-card-large div {
+    border: none !important;
+    background: transparent !important;
+}
+
 .index-hero-copy {
     position: relative;
     z-index: 2;
