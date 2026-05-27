@@ -38,15 +38,33 @@ if (!function_exists('site_url')) {
 
 require_once __DIR__ . '/lang.php';
 
-$db_host = 'localhost';
+$db_hosts = [
+    ['host' => '127.0.0.1', 'port' => 3306],
+    ['host' => 'localhost', 'port' => 3306],
+    ['host' => '127.0.0.1', 'port' => 3307],
+    ['host' => 'localhost', 'port' => 3307],
+];
 $db_user = 'root';
 $db_pass = '';
 $db_name = 'playroom_db';
 
-$conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+mysqli_report(MYSQLI_REPORT_OFF);
+
+$conn = false;
+$last_db_error = 'Unknown database connection error.';
+
+foreach ($db_hosts as $db_target) {
+    $conn = @mysqli_connect($db_target['host'], $db_user, $db_pass, $db_name, $db_target['port']);
+
+    if ($conn) {
+        break;
+    }
+
+    $last_db_error = mysqli_connect_error();
+}
 
 if (!$conn) {
-    die("Database connection failed: " . mysqli_connect_error());
+    die("Database connection failed: " . $last_db_error);
 }
 
 mysqli_set_charset($conn, "utf8mb4");
