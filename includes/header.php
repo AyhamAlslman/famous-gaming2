@@ -29,6 +29,7 @@ $script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $is_direct_group_page = preg_match('#/(general|user)/#', $script_name) === 1;
 $public_header_pages = ['index.php', 'about.php', 'contact.php', 'login.php', 'register.php', 'forgot_password.php'];
 $site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_header_pages, true);
+$page_body_class = 'page-' . preg_replace('/[^a-z0-9_-]+/i', '-', pathinfo($current_page, PATHINFO_FILENAME));
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo htmlspecialchars(site_language(), ENT_QUOTES, 'UTF-8'); ?>" dir="<?php echo htmlspecialchars(site_direction(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -50,7 +51,7 @@ $site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
-<body class="<?php echo trim((site_is_rtl() ? 'rtl-layout ' : '') . ($site_header_is_user ? 'site-user-shell' : 'site-public-shell')); ?>">
+<body class="<?php echo trim((site_is_rtl() ? 'rtl-layout ' : '') . ($site_header_is_user ? 'site-user-shell ' : 'site-public-shell ') . $page_body_class); ?>">
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand logo" href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>">

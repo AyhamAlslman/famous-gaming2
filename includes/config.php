@@ -65,12 +65,14 @@ foreach ($db_hosts as $db_target) {
 }
 
 if (!$conn && mysqli_connect_errno()) {
-    $server_conn = mysqli_connect($db_host, $db_user, $db_pass);
+    $fallback_db_host = $db_hosts[0]['host'];
+    $fallback_db_port = $db_hosts[0]['port'];
+    $server_conn = @mysqli_connect($fallback_db_host, $db_user, $db_pass, '', $fallback_db_port);
 
     if ($server_conn) {
         mysqli_query($server_conn, "CREATE DATABASE IF NOT EXISTS `$db_name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         mysqli_close($server_conn);
-        $conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+        $conn = @mysqli_connect($fallback_db_host, $db_user, $db_pass, $db_name, $fallback_db_port);
     }
 }
 

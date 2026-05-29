@@ -2684,12 +2684,158 @@ td:last-child .btn,
     transform: translateY(-2px);
 }
 
+.admin-analytics-panel,
+.admin-dashboard-analytics {
+    margin-bottom: 1.5rem;
+}
+
+.admin-dashboard-analytics {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+    gap: 1rem;
+}
+
+.admin-analytics-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.admin-chart-toggle {
+    display: inline-flex;
+    gap: 0.35rem;
+    padding: 0.22rem;
+    border: 1px solid rgba(78, 223, 255, 0.18);
+    border-radius: var(--admin-radius);
+    background: rgba(255, 255, 255, 0.055);
+}
+
+.admin-chart-toggle button {
+    min-height: 34px;
+    padding: 0.42rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--admin-radius);
+    background: transparent;
+    color: var(--admin-text-soft);
+    font-weight: 900;
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.admin-chart-toggle button:hover,
+.admin-chart-toggle button.active {
+    border-color: var(--admin-border-strong);
+    background: linear-gradient(135deg, rgba(78, 223, 255, 0.18), rgba(94, 255, 207, 0.12));
+    color: #ffffff;
+}
+
+.admin-chart-frame {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+}
+
+.admin-line-chart-frame {
+    height: 340px;
+}
+
+.admin-pie-chart-frame {
+    height: 360px;
+}
+
+.admin-chart-frame canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.admin-top-products-list {
+    display: grid;
+    gap: 0.72rem;
+}
+
+.admin-top-product-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(250px, 0.95fr);
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem;
+    border: 1px solid rgba(169, 216, 245, 0.16);
+    border-radius: var(--admin-radius);
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.035)),
+        rgba(8, 17, 31, 0.76);
+}
+
+.admin-top-product-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(94, 255, 207, 0.34);
+    border-radius: var(--admin-radius);
+    background: rgba(78, 223, 255, 0.1);
+    color: var(--admin-accent-soft);
+    font-weight: 950;
+    box-shadow: 0 0 20px rgba(78, 223, 255, 0.12);
+}
+
+.admin-top-product-main {
+    min-width: 0;
+}
+
+.admin-top-product-main span,
+.admin-top-product-metrics span {
+    color: var(--admin-text-muted);
+    font-size: 0.78rem;
+    font-weight: 850;
+}
+
+.admin-top-product-main h3 {
+    overflow: hidden;
+    margin: 0.16rem 0 0.24rem;
+    color: #ffffff;
+    font-size: 1.02rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-top-product-main p {
+    margin: 0;
+    color: var(--admin-text-soft);
+    line-height: 1.42;
+}
+
+.admin-top-product-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.admin-top-product-metrics div {
+    min-height: 62px;
+    padding: 0.58rem;
+    border: 1px solid rgba(78, 223, 255, 0.13);
+    border-radius: var(--admin-radius);
+    background: rgba(255, 255, 255, 0.055);
+}
+
+.admin-top-product-metrics strong {
+    display: block;
+    margin-top: 0.2rem;
+    color: #ffffff;
+    font-size: 0.96rem;
+    line-height: 1.15;
+}
+
 @media (max-width: 1180px) {
     .admin-overview-stats {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    .admin-dashboard-overview {
+    .admin-dashboard-overview,
+    .admin-dashboard-analytics {
         grid-template-columns: 1fr;
     }
 }
@@ -2698,6 +2844,38 @@ td:last-child .btn,
     .admin-overview-stats,
     .admin-room-status-grid,
     .admin-management-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-analytics-heading,
+    .admin-top-product-card {
+        align-items: stretch;
+        grid-template-columns: 1fr;
+    }
+
+    .admin-analytics-heading {
+        flex-direction: column;
+    }
+
+    .admin-chart-toggle,
+    .admin-chart-toggle button {
+        width: 100%;
+    }
+
+    .admin-chart-toggle button {
+        justify-content: center;
+    }
+
+    .admin-line-chart-frame,
+    .admin-pie-chart-frame {
+        height: 310px;
+    }
+
+    .admin-top-product-main h3 {
+        white-space: normal;
+    }
+
+    .admin-top-product-metrics {
         grid-template-columns: 1fr;
     }
 }

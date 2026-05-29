@@ -57,6 +57,174 @@ if ($room_status_result) {
     $room_statuses = mysqli_fetch_all($room_status_result, MYSQLI_ASSOC);
 }
 
+$daily_revenue_keys = [];
+$daily_revenue_labels = [];
+$daily_revenue_map = [];
+for ($i = 13; $i >= 0; $i--) {
+    $timestamp = strtotime('-' . $i . ' days');
+    $key = date('Y-m-d', $timestamp);
+    $daily_revenue_keys[] = $key;
+    $daily_revenue_labels[] = date('M d', $timestamp);
+    $daily_revenue_map[$key] = 0.0;
+}
+
+$daily_revenue_result = mysqli_query(
+    $conn,
+    "SELECT revenue_date, SUM(total_paid) AS total_paid
+     FROM (
+        SELECT booking_date AS revenue_date, SUM(paid_amount) AS total_paid
+        FROM bookings
+        WHERE payment_status = 'Paid'
+          AND paid_amount > 0
+          AND booking_date >= DATE_SUB(CURDATE(), INTERVAL 13 DAY)
+        GROUP BY booking_date
+        UNION ALL
+        SELECT DATE(created_at) AS revenue_date, SUM(paid_amount) AS total_paid
+        FROM store_orders
+        WHERE payment_status = 'Paid'
+          AND paid_amount > 0
+          AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 13 DAY)
+        GROUP BY DATE(created_at)
+     ) AS paid_revenue
+     GROUP BY revenue_date
+     ORDER BY revenue_date ASC"
+);
+if ($daily_revenue_result) {
+    while ($row = mysqli_fetch_assoc($daily_revenue_result)) {
+        $key = (string)$row['revenue_date'];
+        if (array_key_exists($key, $daily_revenue_map)) {
+            $daily_revenue_map[$key] = (float)$row['total_paid'];
+        }
+    }
+}
+
+$monthly_revenue_keys = [];
+$monthly_revenue_labels = [];
+$monthly_revenue_map = [];
+for ($i = 5; $i >= 0; $i--) {
+    $timestamp = strtotime('first day of -' . $i . ' months');
+    $key = date('Y-m-01', $timestamp);
+    $monthly_revenue_keys[] = $key;
+    $monthly_revenue_labels[] = date('M Y', $timestamp);
+    $monthly_revenue_map[$key] = 0.0;
+}
+
+$monthly_revenue_result = mysqli_query(
+    $conn,
+    "SELECT revenue_month, SUM(total_paid) AS total_paid
+     FROM (
+        SELECT DATE_FORMAT(booking_date, '%Y-%m-01') AS revenue_month, SUM(paid_amount) AS total_paid
+        FROM bookings
+        WHERE payment_status = 'Paid'
+          AND paid_amount > 0
+          AND booking_date >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 5 MONTH), '%Y-%m-01')
+        GROUP BY DATE_FORMAT(booking_date, '%Y-%m-01')
+        UNION ALL
+        SELECT DATE_FORMAT(created_at, '%Y-%m-01') AS revenue_month, SUM(paid_amount) AS total_paid
+        FROM store_orders
+        WHERE payment_status = 'Paid'
+          AND paid_amount > 0
+          AND created_at >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 5 MONTH), '%Y-%m-01')
+        GROUP BY DATE_FORMAT(created_at, '%Y-%m-01')
+     ) AS paid_revenue
+     GROUP BY revenue_month
+     ORDER BY revenue_month ASC"
+);
+if ($monthly_revenue_result) {
+    while ($row = mysqli_fetch_assoc($monthly_revenue_result)) {
+        $key = (string)$row['revenue_month'];
+        if (array_key_exists($key, $monthly_revenue_map)) {
+            $monthly_revenue_map[$key] = (float)$row['total_paid'];
+        }
+    }
+}
+
+$room_occupancy_labels = [];
+$room_occupancy_values = [];
+$room_occupancy_result = mysqli_query(
+    $conn,
+    "SELECT
+        r.id,
+        r.room_name,
+        COUNT(b.id) AS booking_count
+     FROM rooms r
+     LEFT JOIN bookings b
+        ON b.room_id = r.id
+        AND b.status IN ('Pending', 'Confirmed', 'Completed')
+     GROUP BY r.id, r.room_name
+     ORDER BY booking_count DESC, r.room_name ASC
+     LIMIT 6"
+);
+if ($room_occupancy_result) {
+    while ($row = mysqli_fetch_assoc($room_occupancy_result)) {
+        $room_occupancy_labels[] = $row['room_name'];
+        $room_occupancy_values[] = (int)$row['booking_count'];
+    }
+}
+
+$top_selling_products = [];
+$top_products_result = mysqli_query(
+    $conn,
+    "SELECT
+        COALESCE(soi.product_id, 0) AS product_key,
+        soi.product_name,
+        COALESCE(soi.category, sp.category, '') AS category,
+        SUM(soi.quantity) AS units_sold,
+        SUM(soi.quantity * soi.item_price) AS sales_total,
+        COUNT(DISTINCT soi.order_id) AS orders_count,
+        COALESCE(sp.stock_quantity, 0) AS stock_quantity
+     FROM store_order_items soi
+     INNER JOIN store_orders so ON so.id = soi.order_id
+     LEFT JOIN store_products sp ON sp.id = soi.product_id
+     WHERE so.payment_status = 'Paid'
+       AND so.status IN ('Confirmed', 'Completed')
+     GROUP BY COALESCE(soi.product_id, 0), soi.product_name, COALESCE(soi.category, sp.category, ''), sp.stock_quantity
+     ORDER BY units_sold DESC, sales_total DESC, soi.product_name ASC
+     LIMIT 5"
+);
+if ($top_products_result) {
+    while ($row = mysqli_fetch_assoc($top_products_result)) {
+        $units_sold = (int)$row['units_sold'];
+        $stock_quantity = (int)$row['stock_quantity'];
+        if ($stock_quantity <= 0) {
+            $recommendation_key = 'admin_dashboard_recommend_restock_now';
+        } elseif ($stock_quantity <= max(3, $units_sold)) {
+            $recommendation_key = 'admin_dashboard_recommend_restock';
+        } elseif ($units_sold >= 10) {
+            $recommendation_key = 'admin_dashboard_recommend_promote';
+        } else {
+            $recommendation_key = 'admin_dashboard_recommend_bundle';
+        }
+
+        $row['recommendation'] = t($recommendation_key);
+        $top_selling_products[] = $row;
+    }
+}
+
+$dashboard_chart_payload = [
+    'dailyRevenue' => [
+        'labels' => $daily_revenue_labels,
+        'values' => array_values($daily_revenue_map),
+    ],
+    'monthlyRevenue' => [
+        'labels' => $monthly_revenue_labels,
+        'values' => array_values($monthly_revenue_map),
+    ],
+    'roomOccupancy' => [
+        'labels' => $room_occupancy_labels,
+        'values' => $room_occupancy_values,
+    ],
+    'texts' => [
+        'daily' => t('admin_dashboard_daily'),
+        'monthly' => t('admin_dashboard_monthly'),
+        'paidRevenue' => t('admin_dashboard_paid_revenue'),
+        'bookings' => t('admin_dashboard_bookings_count'),
+        'chartUnavailable' => t('admin_dashboard_chart_unavailable'),
+    ],
+    'currency' => 'JOD',
+    'isRtl' => site_is_rtl(),
+];
+
 $management_cards = [
     [
         'url' => 'bookings_full_crud.php',
@@ -208,6 +376,72 @@ include 'includes/header.php';
                 </section>
             </div>
 
+            <section class="admin-overview-panel admin-analytics-panel">
+                <div class="admin-panel-heading admin-analytics-heading">
+                    <div>
+                        <span><?php echo t('admin_dashboard_analytics_report'); ?></span>
+                        <h2><?php echo t('admin_dashboard_revenue_trends'); ?></h2>
+                    </div>
+                    <div class="admin-chart-toggle" role="group" aria-label="<?php echo htmlspecialchars(t('admin_dashboard_revenue_trends'), ENT_QUOTES, 'UTF-8'); ?>">
+                        <button type="button" class="active" data-revenue-mode="daily"><?php echo t('admin_dashboard_daily'); ?></button>
+                        <button type="button" data-revenue-mode="monthly"><?php echo t('admin_dashboard_monthly'); ?></button>
+                    </div>
+                </div>
+                <div class="admin-chart-frame admin-line-chart-frame">
+                    <canvas id="adminRevenueChart" aria-label="<?php echo htmlspecialchars(t('admin_dashboard_revenue_trends'), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
+                </div>
+            </section>
+
+            <div class="admin-dashboard-analytics">
+                <section class="admin-overview-panel admin-chart-panel">
+                    <div class="admin-panel-heading">
+                        <span><?php echo t('admin_dashboard_analytics_report'); ?></span>
+                        <h2><?php echo t('admin_dashboard_room_demand'); ?></h2>
+                    </div>
+                    <div class="admin-chart-frame admin-pie-chart-frame">
+                        <canvas id="adminRoomChart" aria-label="<?php echo htmlspecialchars(t('admin_dashboard_room_demand'), ENT_QUOTES, 'UTF-8'); ?>"></canvas>
+                    </div>
+                </section>
+
+                <section class="admin-overview-panel admin-top-products-panel">
+                    <div class="admin-panel-heading">
+                        <span><?php echo t('admin_dashboard_smart_recommendations'); ?></span>
+                        <h2><?php echo t('admin_dashboard_top_selling_products'); ?></h2>
+                    </div>
+
+                    <?php if (empty($top_selling_products)): ?>
+                        <div class="no-data"><?php echo t('admin_dashboard_no_product_sales'); ?></div>
+                    <?php else: ?>
+                        <div class="admin-top-products-list">
+                            <?php foreach ($top_selling_products as $index => $product): ?>
+                                <article class="admin-top-product-card">
+                                    <div class="admin-top-product-rank">#<?php echo $index + 1; ?></div>
+                                    <div class="admin-top-product-main">
+                                        <span><?php echo htmlspecialchars($product['category'] ?: t('admin_product'), ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <h3><?php echo htmlspecialchars($product['product_name'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                        <p><?php echo htmlspecialchars($product['recommendation'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                    </div>
+                                    <div class="admin-top-product-metrics">
+                                        <div>
+                                            <span><?php echo t('admin_dashboard_units_sold'); ?></span>
+                                            <strong><?php echo (int)$product['units_sold']; ?></strong>
+                                        </div>
+                                        <div>
+                                            <span><?php echo t('admin_dashboard_product_revenue'); ?></span>
+                                            <strong><?php echo number_format((float)$product['sales_total'], 2); ?> JOD</strong>
+                                        </div>
+                                        <div>
+                                            <span><?php echo t('admin_field_stock'); ?></span>
+                                            <strong><?php echo (int)$product['stock_quantity']; ?></strong>
+                                        </div>
+                                    </div>
+                                </article>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </section>
+            </div>
+
             <section class="admin-overview-panel admin-loyalty-report">
                 <div class="admin-panel-heading">
                     <span><?php echo t('admin_dashboard_secondary_report'); ?></span>
@@ -269,6 +503,181 @@ include 'includes/header.php';
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+    (function () {
+        const dashboardCharts = <?php echo json_encode($dashboard_chart_payload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+        const textColor = '#d6e8f5';
+        const mutedColor = 'rgba(214, 232, 245, 0.58)';
+        const gridColor = 'rgba(169, 216, 245, 0.14)';
+        const neonPalette = ['#4edfff', '#5effcf', '#ffd166', '#ff5f7b', '#9aa9ff', '#ff9f6e'];
+
+        function formatCurrency(value) {
+            return Number(value || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }) + ' ' + dashboardCharts.currency;
+        }
+
+        function showChartUnavailable() {
+            if (typeof window.showAdminMessage === 'function') {
+                window.showAdminMessage(dashboardCharts.texts.chartUnavailable);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof Chart === 'undefined') {
+                showChartUnavailable();
+                return;
+            }
+
+            Chart.defaults.color = textColor;
+            Chart.defaults.font.family = "'Segoe UI', Tahoma, Arial, sans-serif";
+
+            const revenueCanvas = document.getElementById('adminRevenueChart');
+            const roomCanvas = document.getElementById('adminRoomChart');
+            let revenueChart = null;
+
+            function makeRevenueConfig(mode) {
+                const activeData = mode === 'monthly' ? dashboardCharts.monthlyRevenue : dashboardCharts.dailyRevenue;
+
+                return {
+                    type: 'line',
+                    data: {
+                        labels: activeData.labels,
+                        datasets: [{
+                            label: dashboardCharts.texts.paidRevenue,
+                            data: activeData.values,
+                            borderColor: '#4edfff',
+                            backgroundColor: 'rgba(78, 223, 255, 0.16)',
+                            fill: true,
+                            tension: 0.36,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#5effcf',
+                            pointBorderColor: '#03111b',
+                            pointBorderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    boxWidth: 12,
+                                    color: textColor
+                                },
+                                rtl: dashboardCharts.isRtl
+                            },
+                            tooltip: {
+                                rtl: dashboardCharts.isRtl,
+                                callbacks: {
+                                    label: function (context) {
+                                        return dashboardCharts.texts.paidRevenue + ': ' + formatCurrency(context.parsed.y);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'transparent'
+                                },
+                                ticks: {
+                                    color: mutedColor
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: gridColor
+                                },
+                                ticks: {
+                                    color: mutedColor,
+                                    callback: function (value) {
+                                        return Number(value).toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+            }
+
+            function renderRevenueChart(mode) {
+                if (!revenueCanvas) {
+                    return;
+                }
+
+                if (revenueChart) {
+                    revenueChart.destroy();
+                }
+
+                revenueChart = new Chart(revenueCanvas, makeRevenueConfig(mode));
+            }
+
+            renderRevenueChart('daily');
+
+            document.querySelectorAll('[data-revenue-mode]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const mode = button.dataset.revenueMode === 'monthly' ? 'monthly' : 'daily';
+                    document.querySelectorAll('[data-revenue-mode]').forEach(function (item) {
+                        item.classList.toggle('active', item === button);
+                    });
+                    renderRevenueChart(mode);
+                });
+            });
+
+            if (roomCanvas) {
+                new Chart(roomCanvas, {
+                    type: 'pie',
+                    data: {
+                        labels: dashboardCharts.roomOccupancy.labels,
+                        datasets: [{
+                            label: dashboardCharts.texts.bookings,
+                            data: dashboardCharts.roomOccupancy.values,
+                            backgroundColor: neonPalette.map(function (color) {
+                                return color + 'cc';
+                            }),
+                            borderColor: 'rgba(5, 9, 18, 0.94)',
+                            borderWidth: 2,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: textColor,
+                                    padding: 14,
+                                    boxWidth: 12
+                                },
+                                rtl: dashboardCharts.isRtl
+                            },
+                            tooltip: {
+                                rtl: dashboardCharts.isRtl,
+                                callbacks: {
+                                    label: function (context) {
+                                        return context.label + ': ' + context.parsed + ' ' + dashboardCharts.texts.bookings;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    })();
+    </script>
 
 <?php
 mysqli_close($conn);

@@ -33,7 +33,9 @@ include dirname(__DIR__) . '/includes/header.php';
             <p><?php echo t('home_hero_line_1'); ?></p>
             <p class="index-hero-support"><?php echo t('home_hero_line_2'); ?></p>
             <div class="index-hero-actions">
-                <a href="<?php echo htmlspecialchars($is_logged_in ? $booking_url : $booking_login_link, ENT_QUOTES, 'UTF-8'); ?>" class="btn"><?php echo t('home_cta'); ?></a>
+                <button type="button" class="btn index-room-reveal-btn" data-home-rooms-toggle aria-expanded="false" aria-controls="rooms">
+                    <?php echo t('home_cta'); ?>
+                </button>
                 <a href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>" class="btn index-hero-secondary-btn"><?php echo t('nav_services'); ?></a>
             </div>
             <div class="index-hero-badges" aria-hidden="true">
@@ -67,14 +69,14 @@ include dirname(__DIR__) . '/includes/header.php';
                 </div>
             </a>
 
-            <a href="<?php echo htmlspecialchars($is_logged_in ? $booking_url : $booking_login_link, ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
+            <button type="button" class="home-service-card home-service-card-large index-service-room-trigger" data-home-rooms-toggle aria-expanded="false" aria-controls="rooms">
                 <img src="<?php echo htmlspecialchars($home_booking_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('home_book_card_title'), ENT_QUOTES, 'UTF-8'); ?>">
                 <div class="index-service-card-copy">
                     <span><?php echo t('home_rooms_title'); ?></span>
                     <h3><?php echo t('home_book_card_title'); ?></h3>
                     <p><?php echo t('home_book_card_text'); ?></p>
                 </div>
-            </a>
+            </button>
 
             <a href="<?php echo htmlspecialchars(site_url('general/service_hospitality.php'), ENT_QUOTES, 'UTF-8'); ?>" class="home-service-card home-service-card-large">
                 <img src="<?php echo htmlspecialchars($home_food_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(t('home_snacks_card_title'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -89,12 +91,15 @@ include dirname(__DIR__) . '/includes/header.php';
 </section>
 
 <?php if (!empty($home_rooms)): ?>
-    <section class="index-rooms-section" id="rooms">
+    <section class="index-rooms-section is-collapsed" id="rooms" data-home-rooms-section hidden>
         <div class="container">
             <div class="home-section-heading">
                 <span class="ticket-label"><?php echo t('home_rooms_title'); ?></span>
                 <h2><?php echo t('home_rooms_teaser_title'); ?></h2>
                 <p><?php echo t('home_rooms_teaser_text'); ?></p>
+                <?php if (!$is_logged_in): ?>
+                    <p class="index-login-required-note"><?php echo t('home_login_required_to_book'); ?></p>
+                <?php endif; ?>
             </div>
 
             <div class="rooms-grid index-rooms-grid">
@@ -131,6 +136,32 @@ include dirname(__DIR__) . '/includes/header.php';
     </section>
 <?php endif; ?>
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const roomsSection = document.querySelector('[data-home-rooms-section]');
+    const toggles = Array.from(document.querySelectorAll('[data-home-rooms-toggle]'));
+
+    if (!roomsSection || toggles.length === 0) {
+        return;
+    }
+
+    toggles.forEach(function (toggle) {
+        toggle.addEventListener('click', function () {
+            roomsSection.hidden = false;
+            roomsSection.classList.remove('is-collapsed');
+            roomsSection.classList.add('is-expanded');
+            toggles.forEach(function (item) {
+                item.setAttribute('aria-expanded', 'true');
+            });
+
+            window.requestAnimationFrame(function () {
+                roomsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    });
+});
+</script>
 
 <?php
 mysqli_close($conn);
