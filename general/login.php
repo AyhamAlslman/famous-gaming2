@@ -4,13 +4,15 @@ require_once dirname(__DIR__) . '/includes/functions.php';
 
 ensure_user_auth_schema($conn);
 $auth_redirect = safe_local_redirect($_GET['redirect'] ?? $_POST['redirect'] ?? ($_SESSION['post_login_redirect'] ?? 'user/user_dashboard.php'), 'user/user_dashboard.php');
+$is_admin_redirect = preg_match('#^admin/#', $auth_redirect) === 1;
+$admin_post_login_target = $is_admin_redirect ? $auth_redirect : 'admin/dashboard.php';
 
 if (!empty($_SESSION['admin_logged_in'])) {
-    header('Location: ' . site_url('admin/dashboard.php'));
+    header('Location: ' . site_url($admin_post_login_target));
     exit;
 }
 
-if (!empty($_SESSION['site_user_id'])) {
+if (!empty($_SESSION['site_user_id']) && !$is_admin_redirect) {
     header('Location: ' . site_url($auth_redirect));
     exit;
 }
@@ -57,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['admin_role'] = $admin['role'];
                     log_admin_action($conn, $admin['id'], 'LOGIN', 'admins', $admin['id']);
 
-                    header('Location: ' . site_url('admin/dashboard.php'));
+                    header('Location: ' . site_url($admin_post_login_target));
                     exit;
                 }
             }

@@ -3170,7 +3170,32 @@ html[dir="rtl"] .site-user-shell .bookings-data-table .table-action-group {
         flex: 1 1 calc(50% - 0.42rem);
     }
 
-    .site-user-shell .bookings-data-table .ticket-action-form .btn {
+.site-user-shell .bookings-data-table .ticket-action-form .btn {
         width: 100%;
     }
+}
+
+.site-user-shell .nav-actions {
+    align-items: center !important;
+}
+
+.site-user-shell .nav-actions > * {
+    align-self: center !important;
+}
+
+.site-user-shell .nav-language-link.nav-language-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 54px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0.36rem 0.68rem !important;
+    border-radius: 8px !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.05rem !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
 }
