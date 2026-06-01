@@ -10,7 +10,7 @@ $success_message = '';
 $error_message = '';
 $selected_order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
 $allowed_order_statuses = ['Pending', 'Confirmed', 'Completed', 'Cancelled'];
-$allowed_payment_statuses = ['Unpaid', 'Partial', 'Paid'];
+$allowed_payment_statuses = ['Unpaid', 'Pending Payment', 'Partial', 'Paid'];
 $allowed_payment_methods = ['Cash', 'Visa', 'CliQ', 'Loyalty'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $current_total = (float)$order['total_amount'];
                 $redeemed = ['points' => 0, 'discount' => 0.0];
+                $restock_update_ok = true;
 
                 mysqli_begin_transaction($conn);
 
@@ -82,7 +83,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (mysqli_stmt_execute($stmt)) {
                     $stock_update_ok = true;
-                    $should_deduct_stock = in_array($status, ['Confirmed', 'Completed'], true) && (int)($order['stock_deducted'] ?? 0) === 0;
+                    $should_deduct_stock = in_array($status, ['Confirmed', 'Completed'], true)
+                        && (int)($order['stock_deducted'] ?? 0) === 0
+                        && ($order['status'] ?? 'Pending') === 'Pending';
+                    $should_restore_stock = $status === 'Cancelled'
+                        && ($order['status'] ?? '') !== 'Cancelled'
+                        && (int)($order['stock_deducted'] ?? 0) === 1;
 
                     if ($should_deduct_stock) {
                         $items = [];
@@ -128,7 +134,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
 
-                    if ($stock_update_ok) {
+                    if ($should_restore_stock) {
+                        $items = [];
+                        $items_stmt = mysqli_prepare($conn, "SELECT product_id, quantity FROM store_order_items WHERE order_id = ?");
+                        mysqli_stmt_bind_param($items_stmt, "i", $order_id);
+                        mysqli_stmt_execute($items_stmt);
+                        $items_result = mysqli_stmt_get_result($items_stmt);
+                        if ($items_result) {
+                            $items = mysqli_fetch_all($items_result, MYSQLI_ASSOC);
+                        }
+                        mysqli_stmt_close($items_stmt);
+
+                        foreach ($items as $item) {
+                            $quantity = (int)($item['quantity'] ?? 0);
+                            $product_id = (int)($item['product_id'] ?? 0);
+
+                            if ($quantity <= 0 || $product_id <= 0) {
+                                continue;
+                            }
+
+                            $restore_stmt = mysqli_prepare(
+                                $conn,
+                                "UPDATE store_products
+                                 SET stock_quantity = stock_quantity + ?
+                                 WHERE id = ?"
+                            );
+                            mysqli_stmt_bind_param($restore_stmt, "ii", $quantity, $product_id);
+                            $restock_update_ok = mysqli_stmt_execute($restore_stmt) && $restock_update_ok;
+                            mysqli_stmt_close($restore_stmt);
+                        }
+
+                        if ($restock_update_ok) {
+                            $stock_flag_stmt = mysqli_prepare($conn, "UPDATE store_orders SET stock_deducted = 0 WHERE id = ?");
+                            mysqli_stmt_bind_param($stock_flag_stmt, "i", $order_id);
+                            $restock_update_ok = mysqli_stmt_execute($stock_flag_stmt);
+                            mysqli_stmt_close($stock_flag_stmt);
+                        }
+                    }
+
+                    if ($stock_update_ok && $restock_update_ok) {
+                        if ($payment_status === 'Paid') {
+                            award_store_order_loyalty_points_if_needed($conn, $order_id);
+                        }
                         mysqli_commit($conn);
                         $success_message = t('store_order_update_success');
                         $selected_order_id = $order_id;
@@ -284,7 +331,7 @@ include 'includes/header.php';
                             <select name="payment_status" required>
                                 <?php foreach ($allowed_payment_statuses as $payment_status_option): ?>
                                     <option value="<?php echo htmlspecialchars($payment_status_option); ?>" <?php echo $selected_order['payment_status'] === $payment_status_option ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars(t('status_' . strtolower($payment_status_option), [], $payment_status_option)); ?>
+                                        <?php echo htmlspecialchars(t('status_' . normalize_status_key($payment_status_option), [], $payment_status_option)); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -343,8 +390,8 @@ include 'includes/header.php';
                                 </td>
                                 <td><?php echo number_format((float)$order['total_amount'], 2); ?> JOD</td>
                                 <td>
-                                    <span class="status-badge payment-<?php echo strtolower(htmlspecialchars($order['payment_status'])); ?>">
-                                        <?php echo htmlspecialchars(t('status_' . strtolower($order['payment_status']), [], $order['payment_status'])); ?>
+                                    <span class="status-badge payment-<?php echo htmlspecialchars(normalize_status_class($order['payment_status']), ENT_QUOTES, 'UTF-8'); ?>">
+                                        <?php echo htmlspecialchars(t('status_' . normalize_status_key($order['payment_status']), [], $order['payment_status'])); ?>
                                     </span>
                                 </td>
                                 <td><?php echo htmlspecialchars(t('payment_' . strtolower($order['payment_method']), [], $order['payment_method'])); ?></td>

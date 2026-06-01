@@ -3,7 +3,28 @@ require_once 'auth_check.php';
 
 $stats = [];
 $stats['total_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms"))['count'];
-$stats['available_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms WHERE status = 'Available'"))['count'];
+$live_room_status_query = "SELECT
+        SUM(CASE WHEN current_status = 'Available' THEN 1 ELSE 0 END) AS available_count,
+        SUM(CASE WHEN current_status = 'Busy' THEN 1 ELSE 0 END) AS busy_count
+    FROM (
+        SELECT
+            CASE
+                WHEN r.status = 'Busy' THEN 'Busy'
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM bookings active_booking
+                    WHERE active_booking.room_id = r.id
+                      AND active_booking.status IN ('Pending', 'Confirmed')
+                      AND active_booking.booking_date = CURDATE()
+                      AND CURTIME() >= active_booking.start_time
+                      AND CURTIME() < ADDTIME(active_booking.start_time, SEC_TO_TIME(active_booking.hours * 3600))
+                ) THEN 'Busy'
+                ELSE 'Available'
+            END AS current_status
+        FROM rooms r
+    ) room_statuses";
+$live_room_counts = mysqli_fetch_assoc(mysqli_query($conn, $live_room_status_query)) ?: ['available_count' => 0, 'busy_count' => 0];
+$stats['available_rooms'] = (int)($live_room_counts['available_count'] ?? 0);
 $stats['total_bookings'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM bookings"))['count'];
 $stats['pending_bookings'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM bookings WHERE status = 'Pending'"))['count'];
 $stats['customer_tickets'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM bookings WHERE booking_code IS NOT NULL OR customer_session_token IS NOT NULL"))['count'];
@@ -14,7 +35,7 @@ $stats['menu_items'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) a
 $stats['store_products'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM store_products"))['count'] ?? 0;
 $stats['store_orders'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM store_orders"))['count'] ?? 0;
 $stats['pending_store_orders'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM store_orders WHERE status = 'Pending'"))['count'] ?? 0;
-$stats['busy_rooms'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as count FROM rooms WHERE status = 'Busy'"))['count'] ?? 0;
+$stats['busy_rooms'] = (int)($live_room_counts['busy_count'] ?? 0);
 $stats['pending_menu_orders'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(DISTINCT b.id) as count FROM booking_items bi INNER JOIN bookings b ON bi.booking_id = b.id WHERE b.status IN ('Pending', 'Confirmed') AND b.booking_date >= CURDATE()"))['count'] ?? 0;
 $stats['pending_orders_total'] = (int)$stats['pending_bookings'] + (int)$stats['pending_store_orders'] + (int)$stats['pending_menu_orders'];
 $stats['loyalty_points_balance'] = mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(loyalty_points), 0) as total FROM site_users"))['total'] ?? 0;
@@ -41,6 +62,10 @@ $room_status_result = mysqli_query(
         r.room_name,
         r.room_type,
         r.status,
+        CASE
+            WHEN active_booking.id IS NOT NULL OR r.status = 'Busy' THEN 'Busy'
+            ELSE 'Available'
+        END AS current_status,
         active_booking.customer_name,
         active_booking.start_time,
         active_booking.hours
@@ -51,7 +76,7 @@ $room_status_result = mysqli_query(
         AND active_booking.booking_date = CURDATE()
         AND CURTIME() >= active_booking.start_time
         AND CURTIME() < ADDTIME(active_booking.start_time, SEC_TO_TIME(active_booking.hours * 3600))
-     ORDER BY FIELD(r.status, 'Busy', 'Available'), r.room_name ASC"
+     ORDER BY FIELD(CASE WHEN active_booking.id IS NOT NULL OR r.status = 'Busy' THEN 'Busy' ELSE 'Available' END, 'Busy', 'Available'), r.room_name ASC"
 );
 if ($room_status_result) {
     $room_statuses = mysqli_fetch_all($room_status_result, MYSQLI_ASSOC);
@@ -332,7 +357,7 @@ include 'includes/header.php';
                         <?php foreach ($room_statuses as $room_status): ?>
                             <?php
                             $active_room_booking = !empty($room_status['customer_name']);
-                            $room_display_status = $active_room_booking ? 'Busy' : $room_status['status'];
+                            $room_display_status = $room_status['current_status'] ?? ($active_room_booking ? 'Busy' : $room_status['status']);
                             $room_status_key = strtolower((string)$room_display_status);
                             $room_status_class = preg_replace('/[^a-z0-9_-]+/i', '-', $room_status_key);
                             $room_time_label = '';

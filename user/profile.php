@@ -219,6 +219,7 @@ include dirname(__DIR__) . '/includes/header.php';
                         <div class="form-group">
                             <label class="form-label"><?php echo t('profile_new_password'); ?></label>
                             <input type="password" name="password" class="form-control" autocomplete="new-password" placeholder="<?php echo htmlspecialchars(t('profile_password_placeholder'), ENT_QUOTES, 'UTF-8'); ?>">
+                            <small class="form-text"><?php echo t('profile_new_password_help'); ?></small>
                         </div>
                         <div class="form-group">
                             <label class="form-label"><?php echo t('auth_confirm_password'); ?></label>

@@ -967,6 +967,16 @@ input[type="number"].form-control::-webkit-outer-spin-button {
     box-shadow: 0 0 0 4px rgba(255, 77, 90, 0.14);
 }
 
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.form-control::placeholder,
+.form-select::placeholder,
+input.form-control::placeholder,
+textarea.form-control::placeholder {
+    color: rgba(220, 234, 248, 0.58);
+    opacity: 1;
+}
+
 .phone-validation-error {
     display: block;
     margin-top: 0.45rem;

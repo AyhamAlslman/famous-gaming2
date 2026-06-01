@@ -570,6 +570,16 @@ code {
     font-size: 1.35rem;
 }
 
+.admin-form-group input::placeholder,
+.admin-form-group textarea::placeholder,
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.admin-body .form-control::placeholder,
+.admin-body textarea.form-control::placeholder {
+    color: rgba(223, 235, 249, 0.6);
+    opacity: 1;
+}
+
 /* ============================================
    TABLES
    ============================================ */
@@ -670,7 +680,8 @@ table tr:hover {
 }
 
 .status-pending,
-.payment-partial {
+.payment-partial,
+.payment-pending {
     background: rgba(255, 209, 92, 0.14);
     color: #ffe08d;
     border-color: rgba(255, 209, 92, 0.18);
@@ -2321,7 +2332,8 @@ td:last-child .btn,
 }
 
 .status-pending,
-.payment-partial {
+.payment-partial,
+.payment-pending {
     background: rgba(255, 209, 102, 0.16);
     color: #ffe4a3;
 }

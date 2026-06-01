@@ -106,6 +106,20 @@ function sanitize_input($data) {
     return $data;
 }
 
+function normalize_status_key($status) {
+    return strtolower(str_replace([' ', '-'], '_', trim((string)$status)));
+}
+
+function normalize_status_class($status) {
+    $status_key = normalize_status_key($status);
+
+    if ($status_key === 'pending_payment') {
+        return 'pending';
+    }
+
+    return str_replace('_', '-', $status_key);
+}
+
 /**
  * Validate phone number (Jordan format)
  */
@@ -1534,6 +1548,111 @@ function award_store_order_loyalty_points($conn, $user_id, $order_id, $amount) {
     mysqli_stmt_bind_param($stmt, "ii", $points, $order_id);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
+
+    return $points;
+}
+
+function award_booking_loyalty_points_if_needed($conn, $booking_id) {
+    $booking_id = (int)$booking_id;
+
+    if ($booking_id <= 0) {
+        return 0;
+    }
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT user_id, total_price, additional_items_total, final_total, loyalty_points_earned
+         FROM bookings
+         WHERE id = ?
+         LIMIT 1"
+    );
+    mysqli_stmt_bind_param($stmt, "i", $booking_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $booking = $result ? mysqli_fetch_assoc($result) : null;
+    mysqli_stmt_close($stmt);
+
+    if (!$booking || (int)($booking['user_id'] ?? 0) <= 0 || (int)($booking['loyalty_points_earned'] ?? 0) > 0) {
+        return 0;
+    }
+
+    $amount = isset($booking['final_total'])
+        ? (float)$booking['final_total']
+        : ((float)$booking['total_price'] + (float)$booking['additional_items_total']);
+    $points = calculate_loyalty_points($amount, $conn);
+
+    if ($points <= 0) {
+        return 0;
+    }
+
+    $update_stmt = mysqli_prepare(
+        $conn,
+        "UPDATE bookings
+         SET loyalty_points_earned = ?
+         WHERE id = ? AND user_id = ? AND loyalty_points_earned = 0"
+    );
+    $user_id = (int)$booking['user_id'];
+    mysqli_stmt_bind_param($update_stmt, "iii", $points, $booking_id, $user_id);
+    mysqli_stmt_execute($update_stmt);
+    $updated = mysqli_stmt_affected_rows($update_stmt);
+    mysqli_stmt_close($update_stmt);
+
+    if ($updated <= 0) {
+        return 0;
+    }
+
+    add_loyalty_points($conn, $user_id, $points);
+
+    return $points;
+}
+
+function award_store_order_loyalty_points_if_needed($conn, $order_id) {
+    $order_id = (int)$order_id;
+
+    if ($order_id <= 0) {
+        return 0;
+    }
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT user_id, total_amount, loyalty_points_earned
+         FROM store_orders
+         WHERE id = ?
+         LIMIT 1"
+    );
+    mysqli_stmt_bind_param($stmt, "i", $order_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $order = $result ? mysqli_fetch_assoc($result) : null;
+    mysqli_stmt_close($stmt);
+
+    if (!$order || (int)($order['user_id'] ?? 0) <= 0 || (int)($order['loyalty_points_earned'] ?? 0) > 0) {
+        return 0;
+    }
+
+    $points = calculate_loyalty_points((float)$order['total_amount'], $conn);
+
+    if ($points <= 0) {
+        return 0;
+    }
+
+    $update_stmt = mysqli_prepare(
+        $conn,
+        "UPDATE store_orders
+         SET loyalty_points_earned = ?
+         WHERE id = ? AND user_id = ? AND loyalty_points_earned = 0"
+    );
+    $user_id = (int)$order['user_id'];
+    mysqli_stmt_bind_param($update_stmt, "iii", $points, $order_id, $user_id);
+    mysqli_stmt_execute($update_stmt);
+    $updated = mysqli_stmt_affected_rows($update_stmt);
+    mysqli_stmt_close($update_stmt);
+
+    if ($updated <= 0) {
+        return 0;
+    }
+
+    add_loyalty_points($conn, $user_id, $points);
 
     return $points;
 }

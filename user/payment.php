@@ -51,15 +51,25 @@ $expiry_date = sanitize_input($_POST['expiry_date'] ?? '');
 $cvv = sanitize_input($_POST['cvv'] ?? '');
 $otp_code = sanitize_input($_POST['otp_code'] ?? '');
 $otp_confirmed = sanitize_input($_POST['otp_confirmed'] ?? '0');
+
+function booking_payment_status_key($status) {
+    return strtolower(str_replace(' ', '_', trim((string)$status)));
+}
+
+function booking_payment_status_class($status) {
+    $status_key = booking_payment_status_key($status);
+    return $status_key === 'pending_payment' ? 'pending' : $status_key;
+}
+
 if (!in_array($selected_method, ['Cash', 'Visa', 'CliQ'], true)) {
     $selected_method = 'Cash';
 }
 
 if ($payment_result === 'success') {
     if ($payment_result_method === 'Cash') {
-        $success_msg = 'Cash payment selected. Your booking remains unpaid and the amount will be collected at the venue.';
+        $success_msg = 'Cash payment selected. Your booking is waiting for admin confirmation before the payment is approved at the venue.';
     } elseif ($payment_result_method === 'CliQ') {
-        $success_msg = 'CliQ payment request saved. Transfer the amount to 0798497188. Your booking remains pending until payment is reviewed.';
+        $success_msg = 'CliQ payment request saved. Transfer the amount to 0798497188. Your booking is waiting for admin confirmation.';
     } else {
         $success_msg = t('payment_success');
     }
@@ -89,16 +99,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_msg = t('payment_method_invalid');
     } else {
         if ($selected_method === 'Visa') {
-            $card_number_digits = preg_replace('/\D+/', '', $card_number);
-            $cvv_digits = preg_replace('/\D+/', '', $cvv);
-
-            if (!is_valid_luhn_number($card_number_digits)) {
+            if ($card_number === '') {
                 $error_msg = t('payment_card_invalid');
-            } elseif (!is_valid_future_expiry($expiry_date)) {
+            } elseif ($expiry_date === '') {
                 $error_msg = t('payment_expiry_invalid');
-            } elseif (strlen($cvv_digits) < 3 || strlen($cvv_digits) > 4) {
+            } elseif ($cvv === '') {
                 $error_msg = t('payment_cvv_invalid');
-            } elseif ($otp_confirmed !== '1' || !preg_match('/^[0-9]{4,6}$/', $otp_code)) {
+            } elseif ($otp_confirmed !== '1' || trim($otp_code) === '') {
                 $error_msg = t('payment_otp_invalid');
             }
         }
@@ -108,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ? (float)$booking['final_total']
                 : ((float)$booking['total_price'] + (float)$booking['additional_items_total']);
             $marks_as_paid = $selected_method === 'Visa';
-            $updated_payment_status = $marks_as_paid ? 'Paid' : ($selected_method === 'CliQ' ? 'Pending' : 'Unpaid');
+            $updated_payment_status = $marks_as_paid ? 'Paid' : 'Pending Payment';
             $updated_paid_amount = $marks_as_paid ? $payable_total : 0.00;
 
             $stmt = mysqli_prepare(
@@ -124,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_close($stmt);
 
                 if ($marks_as_paid) {
+                    award_booking_loyalty_points_if_needed($conn, $booking_id);
                     create_admin_notification(
                         $conn,
                         'payment_updated',
@@ -143,11 +151,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                 } else {
                     $admin_message = $selected_method === 'CliQ'
-                        ? 'Booking #' . $booking_id . ' selected CliQ payment. Status remains pending until payment is reviewed.'
-                        : 'Booking #' . $booking_id . ' selected cash payment. Status remains unpaid until payment is collected at the venue.';
+                        ? 'Booking #' . $booking_id . ' selected CliQ payment. Waiting for admin confirmation.'
+                        : 'Booking #' . $booking_id . ' selected cash payment. Waiting for admin confirmation at the venue.';
                     $site_message = $selected_method === 'CliQ'
-                        ? 'CliQ payment selected. Transfer to ' . $cliq_transfer_number . ' and wait for payment confirmation.'
-                        : 'Cash payment selected. The booking will be paid at the venue.';
+                        ? 'CliQ payment selected. Transfer to ' . $cliq_transfer_number . ' and wait for admin confirmation.'
+                        : 'Cash payment selected. Your booking is waiting for admin confirmation before payment is marked as paid.';
 
                     create_admin_notification(
                         $conn,
@@ -215,7 +223,12 @@ include dirname(__DIR__) . '/includes/header.php';
                     <a href="<?php echo htmlspecialchars(site_url('user/user_dashboard.php#dashboard-rooms'), ENT_QUOTES, 'UTF-8'); ?>" class="btn payment-secondary-btn"><?php echo t('payment_new_booking'); ?></a>
                 </div>
             </div>
-        <?php else: ?>
+<?php else: ?>
+            <?php
+            $booking_payment_status = $booking['payment_status'] ?? 'Unpaid';
+            $booking_payment_status_key = booking_payment_status_key($booking_payment_status);
+            $booking_payment_status_class = booking_payment_status_class($booking_payment_status);
+            ?>
             <div class="checkout-shell">
                 <div class="checkout-panel checkout-summary-panel">
                     <div class="checkout-panel-header">
@@ -223,8 +236,8 @@ include dirname(__DIR__) . '/includes/header.php';
                             <span class="ticket-label"><?php echo t('payment_summary'); ?></span>
                             <h2><?php echo t('payment_reservation'); ?><?php echo htmlspecialchars($booking['booking_code'] ?: ('FG-' . str_pad($booking['id'], 6, '0', STR_PAD_LEFT))); ?></h2>
                         </div>
-                        <span class="checkout-status-pill status-<?php echo strtolower(htmlspecialchars($booking['payment_status'] ?? 'unpaid')); ?>">
-                            <?php echo htmlspecialchars(t('status_' . strtolower($booking['payment_status'] ?? 'Unpaid'), [], $booking['payment_status'] ?? 'Unpaid')); ?>
+                        <span class="checkout-status-pill status-<?php echo htmlspecialchars($booking_payment_status_class, ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php echo htmlspecialchars(t('status_' . $booking_payment_status_key, [], $booking_payment_status)); ?>
                         </span>
                     </div>
 

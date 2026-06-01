@@ -74,7 +74,7 @@ $admin_nav_items[] = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?><?php echo t('admin_panel_title'); ?></title>
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.5">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.7">
     <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
 <body class="admin-body <?php echo site_is_rtl() ? 'admin-rtl' : 'admin-ltr'; ?>">

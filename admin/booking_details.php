@@ -1,6 +1,15 @@
 <?php
 require_once 'auth_check.php';
 
+function booking_payment_status_key($status) {
+    return strtolower(str_replace(' ', '_', trim((string)$status)));
+}
+
+function booking_payment_status_class($status) {
+    $status_key = booking_payment_status_key($status);
+    return $status_key === 'pending_payment' ? 'pending' : $status_key;
+}
+
 $success_message = '';
 $error_message = '';
 $booking_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -69,30 +78,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } elseif ($_POST['action'] == 'extend_hours') {
             $extra_hours = intval($_POST['extra_hours']);
 
-            // Get room price per hour
-            $room_query = mysqli_prepare($conn, "SELECT r.price_per_hour FROM bookings b JOIN rooms r ON b.room_id = r.id WHERE b.id = ?");
+            // Get booking and room details before extending to avoid overlap or business-hours issues
+            $room_query = mysqli_prepare($conn, "SELECT b.room_id, b.booking_date, b.start_time, b.hours, r.price_per_hour FROM bookings b JOIN rooms r ON b.room_id = r.id WHERE b.id = ?");
             mysqli_stmt_bind_param($room_query, "i", $booking_id);
             mysqli_stmt_execute($room_query);
             $room_result = mysqli_stmt_get_result($room_query);
 
             if ($room_row = mysqli_fetch_assoc($room_result)) {
+                $new_hours = (int)$room_row['hours'] + $extra_hours;
+                $room_id = (int)$room_row['room_id'];
+                $booking_date = $room_row['booking_date'];
+                $start_time = $room_row['start_time'];
                 $price_per_hour = $room_row['price_per_hour'];
                 $additional_cost = $extra_hours * $price_per_hour;
+                $availability = check_room_availability($conn, $room_id, $booking_date, $start_time, $new_hours, $booking_id);
 
-                // Update booking hours and total_price
-                $stmt = mysqli_prepare($conn, "UPDATE bookings SET hours = hours + ?, total_price = total_price + ? WHERE id = ?");
-                mysqli_stmt_bind_param($stmt, "idi", $extra_hours, $additional_cost, $booking_id);
-
-                if (mysqli_stmt_execute($stmt)) {
-                    $success_message = t('admin_extend_success', [
-                        'hours' => translated_hours_label($extra_hours),
-                        'amount' => number_format($additional_cost, 2)
-                    ]);
-                    log_admin_action($conn, $_SESSION['admin_id'], 'EXTEND_HOURS', 'bookings', $booking_id);
+                if (!is_within_business_hours($conn, $booking_date, $start_time, $new_hours)) {
+                    $error_message = t('booking_business_hours_error');
+                } elseif (!$availability['available']) {
+                    $error_message = t('booking_conflict_intro');
                 } else {
-                    $error_message = t('admin_extend_error');
+                    $stmt = mysqli_prepare($conn, "UPDATE bookings SET hours = hours + ?, total_price = total_price + ? WHERE id = ?");
+                    mysqli_stmt_bind_param($stmt, "idi", $extra_hours, $additional_cost, $booking_id);
+
+                    if (mysqli_stmt_execute($stmt)) {
+                        $success_message = t('admin_extend_success', [
+                            'hours' => translated_hours_label($extra_hours),
+                            'amount' => number_format($additional_cost, 2)
+                        ]);
+                        log_admin_action($conn, $_SESSION['admin_id'], 'EXTEND_HOURS', 'bookings', $booking_id);
+                    } else {
+                        $error_message = t('admin_extend_error');
+                    }
+                    mysqli_stmt_close($stmt);
                 }
-                mysqli_stmt_close($stmt);
             }
             mysqli_stmt_close($room_query);
 
@@ -164,12 +183,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     'booking_details.php?id=' . $booking_id
                 );
                 if ($booking_user_id > 0) {
+                    if ($payment_status === 'Paid') {
+                        award_booking_loyalty_points_if_needed($conn, $booking_id);
+                    }
+                    $site_notification_title = $payment_status === 'Paid' ? t('payment_success') : 'Payment waiting for admin confirmation';
+                    $site_notification_message = $payment_status === 'Paid'
+                        ? t('payment_already_paid_text', ['method' => t('payment_' . strtolower($payment_method), [], $payment_method)])
+                        : 'Your booking payment is waiting for admin confirmation.';
                     create_site_notification(
                         $conn,
                         $booking_user_id,
                         'payment_updated',
-                        t('payment_success'),
-                        t('payment_already_paid_text', ['method' => t('payment_' . strtolower($payment_method), [], $payment_method)]),
+                        $site_notification_title,
+                        $site_notification_message,
                         'user/my_bookings.php'
                     );
                 }
@@ -204,6 +230,8 @@ if (!$booking) {
 $booking_final_total = isset($booking['final_total'])
     ? (float)$booking['final_total']
     : ((float)$booking['total_price'] + (float)($booking['additional_items_total'] ?? 0));
+$booking_payment_status_key = booking_payment_status_key($booking['payment_status'] ?? 'Unpaid');
+$booking_payment_status_class = booking_payment_status_class($booking['payment_status'] ?? 'Unpaid');
 $booking_loyalty_discount = (float)($booking['loyalty_discount'] ?? 0);
 $booking_payable_total = max(0, $booking_final_total - $booking_loyalty_discount);
 $booking_user_loyalty_points = 0;
@@ -317,8 +345,8 @@ include 'includes/header.php';
                     <div class="info-row">
                         <span class="info-label"><?php echo t('admin_payment_status'); ?>:</span>
                         <span class="info-value">
-                            <span class="status-badge payment-<?php echo strtolower($booking['payment_status']); ?>">
-                                <?php echo htmlspecialchars(t('status_' . strtolower($booking['payment_status']), [], $booking['payment_status'])); ?>
+                            <span class="status-badge payment-<?php echo htmlspecialchars($booking_payment_status_class, ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo htmlspecialchars(t('status_' . $booking_payment_status_key, [], $booking['payment_status'])); ?>
                             </span>
                         </span>
                     </div>
@@ -444,6 +472,7 @@ include 'includes/header.php';
                     <label><?php echo t('admin_payment_status'); ?></label>
                     <select name="payment_status" required>
                         <option value="Unpaid" <?php echo $booking['payment_status'] == 'Unpaid' ? 'selected' : ''; ?>><?php echo t('status_unpaid'); ?></option>
+                        <option value="Pending Payment" <?php echo $booking['payment_status'] == 'Pending Payment' ? 'selected' : ''; ?>><?php echo t('status_pending_payment'); ?></option>
                         <option value="Partial" <?php echo $booking['payment_status'] == 'Partial' ? 'selected' : ''; ?>><?php echo t('status_partial'); ?></option>
                         <option value="Paid" <?php echo $booking['payment_status'] == 'Paid' ? 'selected' : ''; ?>><?php echo t('status_paid'); ?></option>
                     </select>

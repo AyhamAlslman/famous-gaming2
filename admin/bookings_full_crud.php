@@ -31,6 +31,63 @@ function notify_booking_user_if_any($conn, $booking_id, $type, $title, $message)
     notify_site_user($conn, get_booking_user_id($conn, $booking_id), $type, $title, $message);
 }
 
+function load_booking_room_for_admin($conn, $room_id) {
+    $stmt = mysqli_prepare($conn, "SELECT id, room_name, price_per_hour, status FROM rooms WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt, "i", $room_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $room = $result ? mysqli_fetch_assoc($result) : null;
+    mysqli_stmt_close($stmt);
+
+    return $room;
+}
+
+function validate_admin_booking_submission($conn, $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $exclude_booking_id = null) {
+    if ($room_id <= 0) {
+        return ['error' => 'Please choose a valid room.', 'room' => null];
+    }
+
+    if ($customer_name === '') {
+        return ['error' => t('booking_validation_name'), 'room' => null];
+    }
+
+    if (!validate_phone($phone)) {
+        return ['error' => t('booking_validation_phone'), 'room' => null];
+    }
+
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $booking_date) || strtotime($booking_date) === false) {
+        return ['error' => t('booking_validation_date'), 'room' => null];
+    }
+
+    if (!validate_time($start_time) || !validate_hour_interval($start_time)) {
+        return ['error' => t('booking_validation_time'), 'room' => null];
+    }
+
+    if ($hours <= 0) {
+        return ['error' => t('booking_validation_hours_range', ['min' => 1, 'max' => 12]), 'room' => null];
+    }
+
+    $room = load_booking_room_for_admin($conn, $room_id);
+    if (!$room) {
+        return ['error' => t('booking_room_not_found'), 'room' => null];
+    }
+
+    if (($room['status'] ?? '') !== 'Available') {
+        return ['error' => t('booking_room_unavailable'), 'room' => $room];
+    }
+
+    if (!is_within_business_hours($conn, $booking_date, $start_time, $hours)) {
+        return ['error' => t('booking_business_hours_error'), 'room' => $room];
+    }
+
+    $availability = check_room_availability($conn, $room_id, $booking_date, $start_time, $hours, $exclude_booking_id);
+    if (!$availability['available']) {
+        return ['error' => t('booking_conflict_intro'), 'room' => $room];
+    }
+
+    return ['error' => '', 'room' => $room];
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] == 'add') {
@@ -40,44 +97,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $booking_date = $_POST['booking_date'];
             $start_time = $_POST['start_time'];
             $hours = intval($_POST['hours']);
-            $total_price = floatval($_POST['total_price']);
             $status = $_POST['status'];
             $booking_code = generate_booking_code();
+            $validation = validate_admin_booking_submission($conn, $room_id, $customer_name, $phone, $booking_date, $start_time, $hours);
 
-            $stmt = mysqli_prepare(
-                $conn,
-                "INSERT INTO bookings (booking_code, room_id, customer_name, phone, booking_date, start_time, hours, total_price, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            );
-            mysqli_stmt_bind_param($stmt, "sissssids", $booking_code, $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $total_price, $status);
-
-            if (mysqli_stmt_execute($stmt)) {
-                $booking_id = mysqli_insert_id($conn);
-                create_admin_notification(
+            if ($validation['error'] !== '') {
+                $error_message = $validation['error'];
+            } else {
+                $total_price = (float)$validation['room']['price_per_hour'] * $hours;
+                $stmt = mysqli_prepare(
                     $conn,
-                    'booking_created',
-                    'New booking created',
-                    $customer_name . ' was added to bookings for ' . $booking_date . ' at ' . $start_time . '.',
-                    'bookings',
-                    $booking_id,
-                    'booking_details.php?id=' . $booking_id
+                    "INSERT INTO bookings (booking_code, room_id, customer_name, phone, booking_date, start_time, hours, total_price, status)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 );
-                if ($status !== 'Cancelled') {
+                mysqli_stmt_bind_param($stmt, "sissssids", $booking_code, $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $total_price, $status);
+
+                if (mysqli_stmt_execute($stmt)) {
+                    $booking_id = mysqli_insert_id($conn);
                     create_admin_notification(
                         $conn,
-                        'payment_pending',
-                        'Payment still pending',
-                        'Booking #' . $booking_id . ' is waiting for payment.',
+                        'booking_created',
+                        'New booking created',
+                        $customer_name . ' was added to bookings for ' . $booking_date . ' at ' . $start_time . '.',
                         'bookings',
                         $booking_id,
                         'booking_details.php?id=' . $booking_id
                     );
+                    if ($status !== 'Cancelled') {
+                        create_admin_notification(
+                            $conn,
+                            'payment_pending',
+                            'Payment still pending',
+                            'Booking #' . $booking_id . ' is waiting for payment.',
+                            'bookings',
+                            $booking_id,
+                            'booking_details.php?id=' . $booking_id
+                        );
+                    }
+                    $success_message = 'Booking added successfully';
+                } else {
+                    $error_message = 'Error adding booking';
                 }
-                $success_message = 'Booking added successfully';
-            } else {
-                $error_message = 'Error adding booking';
+                mysqli_stmt_close($stmt);
             }
-            mysqli_stmt_close($stmt);
         } elseif ($_POST['action'] == 'edit') {
             $id = intval($_POST['id']);
             $room_id = intval($_POST['room_id']);
@@ -86,30 +148,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $booking_date = $_POST['booking_date'];
             $start_time = $_POST['start_time'];
             $hours = intval($_POST['hours']);
-            $total_price = floatval($_POST['total_price']);
             $status = $_POST['status'];
+            $validation = validate_admin_booking_submission($conn, $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $id);
 
-            $stmt = mysqli_prepare(
-                $conn,
-                "UPDATE bookings
-                 SET room_id = ?, customer_name = ?, phone = ?, booking_date = ?, start_time = ?, hours = ?, total_price = ?, status = ?
-                 WHERE id = ?"
-            );
-            mysqli_stmt_bind_param($stmt, "issssidsi", $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $total_price, $status, $id);
-
-            if (mysqli_stmt_execute($stmt)) {
-                $success_message = 'Booking updated successfully';
-                notify_booking_user_if_any(
-                    $conn,
-                    $id,
-                    'booking_updated',
-                    'Booking updated',
-                    'Your booking details were updated by the admin team.'
-                );
+            if ($validation['error'] !== '') {
+                $error_message = $validation['error'];
             } else {
-                $error_message = 'Error updating booking';
+                $total_price = (float)$validation['room']['price_per_hour'] * $hours;
+                $stmt = mysqli_prepare(
+                    $conn,
+                    "UPDATE bookings
+                     SET room_id = ?, customer_name = ?, phone = ?, booking_date = ?, start_time = ?, hours = ?, total_price = ?, status = ?
+                     WHERE id = ?"
+                );
+                mysqli_stmt_bind_param($stmt, "issssidsi", $room_id, $customer_name, $phone, $booking_date, $start_time, $hours, $total_price, $status, $id);
+
+                if (mysqli_stmt_execute($stmt)) {
+                    $success_message = 'Booking updated successfully';
+                    notify_booking_user_if_any(
+                        $conn,
+                        $id,
+                        'booking_updated',
+                        'Booking updated',
+                        'Your booking details were updated by the admin team.'
+                    );
+                } else {
+                    $error_message = 'Error updating booking';
+                }
+                mysqli_stmt_close($stmt);
             }
-            mysqli_stmt_close($stmt);
         } elseif ($_POST['action'] == 'delete') {
             $id = intval($_POST['id']);
             $deleted_user_id = get_booking_user_id($conn, $id);

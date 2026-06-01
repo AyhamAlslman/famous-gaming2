@@ -2,6 +2,10 @@
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 
+function booking_payment_status_key($status) {
+    return strtolower(str_replace(' ', '_', trim((string)$status)));
+}
+
 $page_title = t('my_bookings_page_title');
 $shared_hero_image = site_url('images/shared-public-hero.jpg');
 $success_msg = '';
@@ -208,7 +212,8 @@ include dirname(__DIR__) . '/includes/header.php';
                                 $ticket_code = $booking['booking_code'] ?: ('FG-' . str_pad($booking['id'], 6, '0', STR_PAD_LEFT));
                                 $ticket_device = trim(($booking['room_name'] ?? '') . ' - ' . ($booking['room_type'] ?? ''), ' -');
                                 $ticket_status = t('status_' . strtolower($booking['status']), [], $booking['status']);
-                                $ticket_payment = t('status_' . strtolower($booking['payment_status'] ?? 'Unpaid'), [], $booking['payment_status'] ?? 'Unpaid');
+                                $ticket_payment_status = $booking['payment_status'] ?? 'Unpaid';
+                                $ticket_payment = t('status_' . booking_payment_status_key($ticket_payment_status), [], $ticket_payment_status);
                                 $ticket_total = number_format((float)($booking['final_total'] ?? $booking['total_price']), 2) . ' JOD';
                                 $ticket_time = format_time($booking['start_time']) . ' - ' . translated_hours_label($booking['hours']);
                                 ?>
@@ -272,14 +277,19 @@ include dirname(__DIR__) . '/includes/header.php';
                     <div class="store-order-history-list">
                         <?php foreach ($store_orders as $order): ?>
                             <?php $order_items = get_store_order_items($conn, (int)$order['id']); ?>
+                            <?php
+                            $store_order_payment_status = $order['payment_status'];
+                            $store_order_payment_key = normalize_status_key($store_order_payment_status);
+                            $store_order_payment_class = normalize_status_class($store_order_payment_status);
+                            ?>
                             <article class="store-order-card">
                                 <div class="store-order-card-head">
                                     <div>
                                         <span><?php echo t('store_order_code'); ?></span>
                                         <h3><?php echo htmlspecialchars($order['order_code']); ?></h3>
                                     </div>
-                                    <span class="checkout-status-pill status-<?php echo strtolower(htmlspecialchars($order['payment_status'])); ?>">
-                                        <?php echo htmlspecialchars(t('status_' . strtolower($order['payment_status']), [], $order['payment_status'])); ?>
+                                    <span class="checkout-status-pill status-<?php echo htmlspecialchars($store_order_payment_class, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <?php echo htmlspecialchars(t('status_' . $store_order_payment_key, [], $store_order_payment_status)); ?>
                                     </span>
                                 </div>
                                 <div class="store-order-card-grid">

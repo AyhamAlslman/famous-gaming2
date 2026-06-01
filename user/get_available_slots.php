@@ -41,81 +41,22 @@ while ($row = mysqli_fetch_assoc($result)) {
 }
 mysqli_stmt_close($stmt);
 
-// Check for existing bookings on this date for this room
-$booking_query = "SELECT start_time, end_time
-                  FROM bookings
-                  WHERE room_id = ?
-                  AND booking_date = ?
-                  AND status != 'Cancelled'";
-
-$stmt = mysqli_prepare($conn, $booking_query);
-mysqli_stmt_bind_param($stmt, "is", $room_id, $booking_date);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-
-$booked_times = [];
-while ($row = mysqli_fetch_assoc($result)) {
-    $booked_times[] = [
-        'start' => $row['start_time'],
-        'end' => $row['end_time']
-    ];
-}
-mysqli_stmt_close($stmt);
-
-// Mark slots as unavailable if they conflict with existing bookings
 foreach ($all_slots as $key => $slot) {
     $slot_start = $slot['time'];
-
-    // Calculate end time for this slot based on duration
     $slot_end_timestamp = strtotime($slot_start) + ($hours * 3600);
-    $slot_end = date('H:i:s', $slot_end_timestamp);
-
-    // Check if this slot conflicts with any booking
-    foreach ($booked_times as $booked) {
-        $booked_start = $booked['start'];
-        $booked_end = $booked['end'];
-
-        // Check for overlap
-        // Slot overlaps if: slot_start < booked_end AND slot_end > booked_start
-        if ($slot_start < $booked_end && $slot_end > $booked_start) {
-            $all_slots[$key]['available'] = false;
-            break;
-        }
-    }
-
-    // Also check if slot end time goes beyond midnight (23:59:59)
     if ($slot_end_timestamp > strtotime('23:59:59')) {
         $all_slots[$key]['available'] = false;
+        continue;
     }
-}
 
-// Check business hours
-$day_of_week = date('l', strtotime($booking_date));
-$hours_query = "SELECT opening_time, closing_time, is_open
-                FROM business_hours
-                WHERE day_of_week = ?";
-
-$stmt = mysqli_prepare($conn, $hours_query);
-mysqli_stmt_bind_param($stmt, "s", $day_of_week);
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
-$business_hours = mysqli_fetch_assoc($result);
-mysqli_stmt_close($stmt);
-
-if ($business_hours && !$business_hours['is_open']) {
-    // Mark all slots as unavailable if closed
-    foreach ($all_slots as $key => $slot) {
+    if (!is_within_business_hours($conn, $booking_date, $slot_start, $hours)) {
         $all_slots[$key]['available'] = false;
+        continue;
     }
-} elseif ($business_hours) {
-    // Mark slots outside business hours as unavailable
-    $opening = $business_hours['opening_time'];
-    $closing = $business_hours['closing_time'];
 
-    foreach ($all_slots as $key => $slot) {
-        if ($slot['time'] < $opening || $slot['time'] >= $closing) {
-            $all_slots[$key]['available'] = false;
-        }
+    $availability = check_room_availability($conn, $room_id, $booking_date, $slot_start, $hours);
+    if (!$availability['available']) {
+        $all_slots[$key]['available'] = false;
     }
 }
 

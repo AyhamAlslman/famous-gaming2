@@ -11,7 +11,6 @@ $booking_always_show_flow = $booking_always_show_flow ?? false;
 $booking_show_room_showcase = $booking_show_room_showcase ?? true;
 ensure_user_auth_schema($conn);
 $current_site_user = get_current_site_user($conn);
-$loyalty_points_earned = 0;
 $loyalty_settings = get_loyalty_settings($conn);
 $loyalty_earn_display = rtrim(rtrim(number_format((float)$loyalty_settings['earn_per_jod'], 2), '0'), '.');
 $loyalty_redeem_display = rtrim(rtrim(number_format((float)$loyalty_settings['redeem_points_per_jod'], 2), '0'), '.');
@@ -176,10 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             mysqli_stmt_close($booking_item_stmt);
                         }
 
-                        if ($current_site_user) {
-                            $loyalty_points_earned = award_loyalty_points($conn, $site_user_id, $booking_id, $final_total);
-                        }
-
                         create_admin_notification(
                             $conn,
                             'booking_created',
@@ -207,9 +202,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             'user/my_bookings.php'
                         );
                         $success_msg = t('booking_success');
-                        if ($loyalty_points_earned > 0) {
-                            $success_msg .= ' ' . t('loyalty_earned', ['points' => $loyalty_points_earned]);
-                        }
                         $confirmed_booking = get_customer_booking_by_id($conn, $booking_id);
 
                         // Clear form by redirecting

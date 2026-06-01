@@ -45,8 +45,8 @@ $page_body_class = 'page-' . preg_replace('/[^a-z0-9_-]+/i', '-', pathinfo($curr
     <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/bootstrap.css'), ENT_QUOTES, 'UTF-8'); ?>">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=8.3">
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.1">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=8.4">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.3">
 
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -106,7 +106,7 @@ $page_body_class = 'page-' . preg_replace('/[^a-z0-9_-]+/i', '-', pathinfo($curr
                     <?php if (!$site_header_is_user): ?>
                         <a class="nav-auth-link nav-auth-secondary <?php echo $current_page === 'login.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
                         <a class="nav-auth-link nav-auth-primary <?php echo $current_page === 'register.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_register'); ?></a>
-                        <a class="nav-language-link nav-language-toggle" href="<?php echo htmlspecialchars($language_toggle_url, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($language_toggle_label, ENT_QUOTES, 'UTF-8'); ?></a>
+                        <a class="nav-auth-link nav-auth-secondary" href="<?php echo htmlspecialchars($language_toggle_url, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('language_label'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($language_toggle_label, ENT_QUOTES, 'UTF-8'); ?></a>
                     <?php else: ?>
                         <a class="nav-user-pill <?php echo $current_page === 'profile.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/profile.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('profile_menu_edit'), ENT_QUOTES, 'UTF-8'); ?>">
                             <span class="nav-user-copy">

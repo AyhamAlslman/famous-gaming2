@@ -1043,6 +1043,33 @@ html[dir="rtl"] .about-page-hero p {
     gap: 0.9rem;
 }
 
+.profile-form-grid .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.profile-form-grid .form-group .form-control {
+    width: 100%;
+}
+
+.profile-form-grid .form-text {
+    margin-top: 0;
+    color: rgba(223, 235, 249, 0.64);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.profile-form-actions {
+    justify-content: flex-end;
+}
+
+.profile-form-actions .btn {
+    min-height: 52px;
+    width: 100%;
+}
+
 .profile-page-summary {
     position: sticky;
     top: 5.6rem;
@@ -2212,6 +2239,23 @@ html[dir="rtl"] .store-filter-chips {
     font-size: 0.68rem !important;
     line-height: 1 !important;
     letter-spacing: 0.04rem !important;
+}
+
+.site-public-shell .nav-actions > .nav-language-link.nav-language-toggle {
+    min-width: 0 !important;
+    width: auto !important;
+    min-height: 36px !important;
+    padding: 0.42rem 0.66rem !important;
+    border-radius: 8px !important;
+    font-size: 0.85rem !important;
+    line-height: 1.1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    letter-spacing: 0 !important;
 }
 
 .index-rooms-section {

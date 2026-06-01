@@ -133,7 +133,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['profile_action'] ?? '') ==
 }
 
 $rooms = [];
-$rooms_result = mysqli_query($conn, "SELECT id, room_name, room_type, price_per_hour, status, image_path FROM rooms ORDER BY FIELD(status, 'Available', 'Busy'), room_name ASC");
+$rooms_result = mysqli_query($conn, "SELECT
+        r.id,
+        r.room_name,
+        r.room_type,
+        r.price_per_hour,
+        r.image_path,
+        CASE
+            WHEN r.status = 'Busy' THEN 'Busy'
+            WHEN EXISTS (
+                SELECT 1
+                FROM bookings active_booking
+                WHERE active_booking.room_id = r.id
+                  AND active_booking.status IN ('Pending', 'Confirmed')
+                  AND active_booking.booking_date = CURDATE()
+                  AND CURTIME() >= active_booking.start_time
+                  AND CURTIME() < ADDTIME(active_booking.start_time, SEC_TO_TIME(active_booking.hours * 3600))
+            ) THEN 'Busy'
+            ELSE 'Available'
+        END AS status
+    FROM rooms r
+    ORDER BY FIELD(status, 'Available', 'Busy'), room_name ASC");
 if ($rooms_result) {
     $rooms = mysqli_fetch_all($rooms_result, MYSQLI_ASSOC);
 }

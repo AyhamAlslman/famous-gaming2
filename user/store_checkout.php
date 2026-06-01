@@ -23,6 +23,7 @@ $success_order_items = [];
 $cart_data_raw = $_POST['cart_data'] ?? '';
 $checkout_action = sanitize_input($_POST['checkout_action'] ?? 'review');
 $selected_method = sanitize_input($_POST['payment_method'] ?? 'Cash');
+$cliq_transfer_number = '0798497188';
 $card_number = sanitize_input($_POST['card_number'] ?? '');
 $expiry_date = sanitize_input($_POST['expiry_date'] ?? '');
 $cvv = sanitize_input($_POST['cvv'] ?? '');
@@ -36,6 +37,14 @@ $loyalty_redeem_display = rtrim(rtrim(number_format((float)$loyalty_settings['re
 
 if (!in_array($selected_method, ['Cash', 'Visa', 'CliQ'], true)) {
     $selected_method = 'Cash';
+}
+
+function store_payment_status_key($status) {
+    return normalize_status_key($status);
+}
+
+function store_payment_status_class($status) {
+    return normalize_status_class($status);
 }
 
 function normalize_store_cart_payload($cart_json) {
@@ -141,7 +150,13 @@ $success_order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
 if ($success_order_id > 0 && isset($_GET['success'])) {
     $success_order = fetch_store_order_for_user($conn, $success_order_id, $site_user_id);
     if ($success_order) {
-        $success_msg = t('store_checkout_success');
+        if (($success_order['payment_status'] ?? '') === 'Paid') {
+            $success_msg = t('store_checkout_success');
+        } elseif (($success_order['payment_method'] ?? '') === 'CliQ') {
+            $success_msg = 'Store order saved. Your CliQ payment is waiting for admin confirmation.';
+        } else {
+            $success_msg = 'Store order saved. Your payment is waiting for admin confirmation.';
+        }
         $success_order_items = fetch_store_order_items($conn, $success_order_id);
     }
 }
@@ -158,16 +173,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($checkout_action === 'confirm' && empty($error_msg)) {
             if ($selected_method === 'Visa') {
-                $card_number_digits = preg_replace('/\D+/', '', $card_number);
-                $cvv_digits = preg_replace('/\D+/', '', $cvv);
-
-                if (!is_valid_luhn_number($card_number_digits)) {
+                if (trim($card_number) === '') {
                     $error_msg = t('payment_card_invalid');
-                } elseif (!is_valid_future_expiry($expiry_date)) {
+                } elseif (trim($expiry_date) === '') {
                     $error_msg = t('payment_expiry_invalid');
-                } elseif (strlen($cvv_digits) < 3 || strlen($cvv_digits) > 4) {
+                } elseif (trim($cvv) === '') {
                     $error_msg = t('payment_cvv_invalid');
-                } elseif ($otp_confirmed !== '1' || !preg_match('/^[0-9]{4,6}$/', $otp_code)) {
+                } elseif ($otp_confirmed !== '1' || trim($otp_code) === '') {
                     $error_msg = t('payment_otp_invalid');
                 }
             }
@@ -185,9 +197,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $subtotal = (float)$locked_details['subtotal'];
                     $payable_total = $subtotal;
                     $order_code = generate_store_order_code();
-                    $payment_status = 'Paid';
-                    $order_status = 'Confirmed';
-                    $paid_amount = $payable_total;
+                    $is_paid_immediately = $selected_method === 'Visa';
+                    $payment_status = $is_paid_immediately ? 'Paid' : 'Pending Payment';
+                    $order_status = $is_paid_immediately ? 'Confirmed' : 'Pending';
+                    $paid_amount = $is_paid_immediately ? $payable_total : 0.00;
                     $order_customer_name = $current_site_user['full_name'];
                     $order_customer_phone = $current_site_user['phone'];
                     $order_customer_email = $current_site_user['email'];
@@ -195,8 +208,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt = mysqli_prepare(
                         $conn,
                         "INSERT INTO store_orders
-                         (order_code, user_id, customer_name, phone, email, subtotal, total_amount, payment_status, payment_method, paid_amount, status)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                         (order_code, user_id, customer_name, phone, email, subtotal, total_amount, payment_status, payment_method, paid_amount, status, stock_deducted)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)"
                     );
                     mysqli_stmt_bind_param(
                         $stmt,
@@ -254,23 +267,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     mysqli_stmt_close($item_stmt);
                     mysqli_stmt_close($stock_stmt);
 
-                    $earned_points = award_store_order_loyalty_points($conn, $site_user_id, $order_id, $payable_total);
+                    if ($is_paid_immediately) {
+                        award_store_order_loyalty_points_if_needed($conn, $order_id);
+                    }
 
+                    $admin_notification_title = $is_paid_immediately ? 'New store order' : 'Store order waiting for payment confirmation';
+                    $admin_notification_message = $is_paid_immediately
+                        ? $current_site_user['full_name'] . ' placed store order ' . $order_code . ' via ' . $selected_method . '.'
+                        : $current_site_user['full_name'] . ' placed store order ' . $order_code . ' via ' . $selected_method . ' and it is waiting for admin confirmation.';
                     create_admin_notification(
                         $conn,
                         'store_order_created',
-                        'New store order',
-                        $current_site_user['full_name'] . ' placed store order ' . $order_code . ' via ' . $selected_method . '.',
+                        $admin_notification_title,
+                        $admin_notification_message,
                         'store_orders',
                         $order_id,
                         'store_orders.php?order_id=' . $order_id
                     );
+                    $site_notification_title = $is_paid_immediately ? t('store_checkout_success') : 'Store order saved';
+                    $site_notification_message = $is_paid_immediately
+                        ? t('store_checkout_success')
+                        : 'Your store order is waiting for admin confirmation.';
                     create_site_notification(
                         $conn,
                         $site_user_id,
                         'store_order_created',
-                        t('store_checkout_success'),
-                        t('store_checkout_success_points', ['points' => $earned_points]),
+                        $site_notification_title,
+                        $site_notification_message,
                         'user/my_bookings.php'
                     );
 
@@ -307,6 +330,11 @@ include dirname(__DIR__) . '/includes/header.php';
         <?php endif; ?>
 
         <?php if ($success_order): ?>
+            <?php
+            $success_order_payment_status = $success_order['payment_status'] ?? 'Unpaid';
+            $success_order_payment_key = store_payment_status_key($success_order_payment_status);
+            $success_order_payment_class = store_payment_status_class($success_order_payment_status);
+            ?>
             <div class="checkout-shell store-checkout-success" data-store-order-success>
                 <div class="checkout-panel checkout-summary-panel">
                     <div class="checkout-panel-header">
@@ -314,7 +342,7 @@ include dirname(__DIR__) . '/includes/header.php';
                             <span class="ticket-label"><?php echo t('store_order_code'); ?></span>
                             <h2><?php echo htmlspecialchars($success_order['order_code']); ?></h2>
                         </div>
-                        <span class="checkout-status-pill status-paid"><?php echo htmlspecialchars(t('status_' . strtolower($success_order['payment_status']), [], $success_order['payment_status'])); ?></span>
+                        <span class="checkout-status-pill status-<?php echo htmlspecialchars($success_order_payment_class, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(t('status_' . $success_order_payment_key, [], $success_order_payment_status)); ?></span>
                     </div>
 
                     <div class="checkout-summary-grid">
@@ -353,7 +381,15 @@ include dirname(__DIR__) . '/includes/header.php';
                 <div class="checkout-panel checkout-form-panel">
                     <div class="payment-success-panel">
                         <h3><?php echo t('store_checkout_order_ready'); ?></h3>
-                        <p><?php echo t('store_checkout_success_points', ['points' => (int)$success_order['loyalty_points_earned']]); ?></p>
+                        <p>
+                            <?php
+                            if (($success_order['payment_status'] ?? '') === 'Paid') {
+                                echo htmlspecialchars(t('store_checkout_success_points', ['points' => (int)$success_order['loyalty_points_earned']]));
+                            } else {
+                                echo htmlspecialchars('Your order was saved and is waiting for admin confirmation.');
+                            }
+                            ?>
+                        </p>
                         <div class="user-loyalty-rules checkout-loyalty-rules">
                             <b><?php echo t('loyalty_calculation_title'); ?></b>
                             <span><?php echo t('loyalty_calculation_earn', ['points' => $loyalty_earn_display]); ?></span>
@@ -476,6 +512,12 @@ include dirname(__DIR__) . '/includes/header.php';
                             </div>
                         </div>
 
+                        <div class="visa-fields cliq-fields" id="cliq-fields" <?php echo $selected_method === 'CliQ' ? '' : 'hidden'; ?>>
+                            <strong class="cliq-fields-title">CliQ Transfer Number</strong>
+                            <p class="cliq-fields-text">Transfer the payment amount to this CliQ number before confirming:</p>
+                            <div class="cliq-number-badge"><?php echo htmlspecialchars($cliq_transfer_number, ENT_QUOTES, 'UTF-8'); ?></div>
+                        </div>
+
                         <div class="checkout-submit-row">
                             <div class="checkout-amount-badge">
                                 <?php echo t('payment_total_prefix'); ?> <?php echo number_format($payable_total, 2); ?> JOD
@@ -515,6 +557,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const paymentInputs = document.querySelectorAll('.payment-method-input');
     const visaFields = document.getElementById('visa-fields');
+    const cliqFields = document.getElementById('cliq-fields');
     const cardNumberInput = document.getElementById('card_number');
     const expiryDateInput = document.getElementById('expiry_date');
     const cvvInput = document.getElementById('cvv');
@@ -525,25 +568,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const otpConfirmed = document.getElementById('otp_confirmed');
     const confirmOtpButton = document.getElementById('confirmOtpButton');
 
-    function toggleVisaFields() {
+    function togglePaymentFields() {
         const selected = document.querySelector('.payment-method-input:checked');
         const isVisa = selected && selected.value === 'Visa';
+        const isCliQ = selected && selected.value === 'CliQ';
 
-        if (!visaFields) {
-            return;
+        if (visaFields) {
+            visaFields.hidden = !isVisa;
         }
-
-        visaFields.hidden = !isVisa;
 
         [cardNumberInput, expiryDateInput, cvvInput].forEach(function (field) {
             if (field) {
                 field.required = !!isVisa;
             }
         });
+
+        if (cliqFields) {
+            cliqFields.hidden = !isCliQ;
+        }
     }
 
     paymentInputs.forEach(function (input) {
-        input.addEventListener('change', toggleVisaFields);
+        input.addEventListener('change', togglePaymentFields);
     });
 
     if (cardNumberInput) {
@@ -636,7 +682,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    toggleVisaFields();
+    togglePaymentFields();
 });
 </script>
 
