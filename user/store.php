@@ -350,15 +350,6 @@ include dirname(__DIR__) . '/includes/header.php';
         }
 
         function showToast(message) {
-            if (typeof window.showSiteModal === 'function') {
-                window.showSiteModal({
-                    title: <?php echo json_encode(t('modal_message_title'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
-                    message: message,
-                    type: 'info'
-                });
-                return;
-            }
-
             if (!toast || !toastText) {
                 return;
             }
@@ -373,7 +364,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 window.setTimeout(function () {
                     toast.hidden = true;
                 }, 220);
-            }, 1800);
+            }, 2400);
         }
 
         function updateModalButtonState(productId) {

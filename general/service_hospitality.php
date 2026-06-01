@@ -20,7 +20,7 @@ include dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <main class="service-detail-page">
-    <section class="hero arena-page-hero service-detail-hero" style="--page-hero-image: url('<?php echo htmlspecialchars(site_url('images/service-food.png'), ENT_QUOTES, 'UTF-8'); ?>');">
+    <section class="hero arena-page-hero service-detail-hero" style="--page-hero-image: url('<?php echo htmlspecialchars(site_url('images/service-food-optimized.jpg'), ENT_QUOTES, 'UTF-8'); ?>');">
         <div class="container">
             <span class="ticket-label"><?php echo t('services_hospitality_type'); ?></span>
             <h1><?php echo t('services_hospitality_title'); ?></h1>

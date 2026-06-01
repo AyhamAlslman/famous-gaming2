@@ -415,21 +415,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const bookingTicketModal = document.querySelector('.booking-ticket-modal');
     if (bookingTicketModal) {
-        document.body.classList.add('booking-ticket-modal-open');
-
-        function closeBookingTicketModal() {
-            bookingTicketModal.classList.add('is-hidden');
-            document.body.classList.remove('booking-ticket-modal-open');
+        function isBookingTicketModalVisible() {
+            return !bookingTicketModal.hidden && !bookingTicketModal.classList.contains('is-hidden');
         }
 
-        bookingTicketModal.querySelectorAll('[data-close-ticket-modal]').forEach(function(button) {
+        function syncBookingTicketModalState() {
+            document.body.classList.toggle('booking-ticket-modal-open', isBookingTicketModalVisible());
+        }
+
+        function closeBookingTicketModal() {
+            bookingTicketModal.hidden = true;
+            bookingTicketModal.classList.add('is-hidden');
+            syncBookingTicketModalState();
+        }
+
+        bookingTicketModal.querySelectorAll('[data-close-ticket-modal], [data-ticket-preview-close]').forEach(function(button) {
             button.addEventListener('click', closeBookingTicketModal);
         });
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !bookingTicketModal.classList.contains('is-hidden')) {
+            if (e.key === 'Escape' && isBookingTicketModalVisible()) {
                 closeBookingTicketModal();
             }
         });
+
+        syncBookingTicketModalState();
     }
 });

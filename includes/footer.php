@@ -62,6 +62,6 @@
             'estimatedTotal' => t('booking_total_estimate')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
     </script>
-    <script src="<?php echo htmlspecialchars(site_url('assets/js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=2.7"></script>
+    <script src="<?php echo htmlspecialchars(site_url('assets/js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=2.8"></script>
 </body>
 </html>

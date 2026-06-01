@@ -8,9 +8,9 @@ $booking_target = 'user/room_booking.php#booking-form';
 $booking_url = site_url($booking_target);
 $booking_login_link = site_url('general/login.php?redirect=' . urlencode($booking_target));
 $is_logged_in = !empty($_SESSION['site_user_id']);
-$home_hero_image = site_url('images/home-hero-2026.png');
+$home_hero_image = site_url('images/home-hero-2026-optimized.jpg');
 $home_booking_image = site_url('images/home-game-collage.jpg');
-$home_food_image = site_url('images/service-food.png');
+$home_food_image = site_url('images/service-food-optimized.jpg');
 $home_store_image = site_url('images/store.jpg');
 $home_rooms = [];
 $home_rooms_result = mysqli_query($conn, "SELECT id, room_name, room_type, price_per_hour, status, services, description, image_path FROM rooms ORDER BY FIELD(status, 'Available', 'Busy'), room_name ASC");
@@ -107,7 +107,7 @@ include dirname(__DIR__) . '/includes/header.php';
                     <?php
                     $room_status_key = strtolower((string)$room['status']);
                     $is_available = $room['status'] === 'Available';
-                    $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background.png');
+                    $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background-optimized.jpg');
                     $room_booking_target = 'user/room_booking.php?room_id=' . (int)$room['id'] . '#booking-form';
                     $room_booking_url = $is_logged_in
                         ? site_url($room_booking_target)

@@ -38,7 +38,10 @@ function get_checkout_booking_items($conn, $booking_id) {
 }
 
 $page_title = t('payment_page_title');
-$success_msg = isset($_GET['payment']) && $_GET['payment'] === 'success' ? t('payment_success') : '';
+$cliq_transfer_number = '0798497188';
+$payment_result = sanitize_input($_GET['payment'] ?? '');
+$payment_result_method = sanitize_input($_GET['method'] ?? '');
+$success_msg = '';
 $error_msg = '';
 $customer_session_token = $_SESSION['customer_booking_token'] ?? '';
 $booking_id = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : (isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0);
@@ -50,6 +53,16 @@ $otp_code = sanitize_input($_POST['otp_code'] ?? '');
 $otp_confirmed = sanitize_input($_POST['otp_confirmed'] ?? '0');
 if (!in_array($selected_method, ['Cash', 'Visa', 'CliQ'], true)) {
     $selected_method = 'Cash';
+}
+
+if ($payment_result === 'success') {
+    if ($payment_result_method === 'Cash') {
+        $success_msg = 'Cash payment selected. Your booking remains unpaid and the amount will be collected at the venue.';
+    } elseif ($payment_result_method === 'CliQ') {
+        $success_msg = 'CliQ payment request saved. Transfer the amount to 0798497188. Your booking remains pending until payment is reviewed.';
+    } else {
+        $success_msg = t('payment_success');
+    }
 }
 
 $booking = null;
@@ -94,36 +107,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $payable_total = isset($booking['final_total'])
                 ? (float)$booking['final_total']
                 : ((float)$booking['total_price'] + (float)$booking['additional_items_total']);
+            $marks_as_paid = $selected_method === 'Visa';
+            $updated_payment_status = $marks_as_paid ? 'Paid' : ($selected_method === 'CliQ' ? 'Pending' : 'Unpaid');
+            $updated_paid_amount = $marks_as_paid ? $payable_total : 0.00;
 
             $stmt = mysqli_prepare(
                 $conn,
                 "UPDATE bookings
-                 SET payment_status = 'Paid', payment_method = ?, paid_amount = ?
+                 SET payment_status = ?, payment_method = ?, paid_amount = ?
                  WHERE id = ? AND (customer_session_token = ? OR user_id = ?)"
             );
             $payment_site_user_id = $current_site_user ? (int)$current_site_user['id'] : 0;
-            mysqli_stmt_bind_param($stmt, "sdisi", $selected_method, $payable_total, $booking_id, $customer_session_token, $payment_site_user_id);
+            mysqli_stmt_bind_param($stmt, "ssdisi", $updated_payment_status, $selected_method, $updated_paid_amount, $booking_id, $customer_session_token, $payment_site_user_id);
 
             if (mysqli_stmt_execute($stmt)) {
                 mysqli_stmt_close($stmt);
-                create_admin_notification(
-                    $conn,
-                    'payment_updated',
-                    'Payment updated',
-                    'Booking #' . $booking_id . ' was marked paid via ' . $selected_method . '.',
-                    'bookings',
-                    $booking_id,
-                    'booking_details.php?id=' . $booking_id
-                );
-                create_site_notification(
-                    $conn,
-                    (int)($booking['user_id'] ?? 0),
-                    'payment_updated',
-                    t('payment_success'),
-                    t('payment_already_paid_text', ['method' => t('payment_' . strtolower($selected_method), [], $selected_method)]),
-                    'user/my_bookings.php'
-                );
-                header('Location: ' . site_url('user/payment.php?booking_id=' . $booking_id . '&payment=success'));
+
+                if ($marks_as_paid) {
+                    create_admin_notification(
+                        $conn,
+                        'payment_updated',
+                        'Payment updated',
+                        'Booking #' . $booking_id . ' was marked paid via ' . $selected_method . '.',
+                        'bookings',
+                        $booking_id,
+                        'booking_details.php?id=' . $booking_id
+                    );
+                    create_site_notification(
+                        $conn,
+                        (int)($booking['user_id'] ?? 0),
+                        'payment_updated',
+                        t('payment_success'),
+                        t('payment_already_paid_text', ['method' => t('payment_' . strtolower($selected_method), [], $selected_method)]),
+                        'user/my_bookings.php'
+                    );
+                } else {
+                    $admin_message = $selected_method === 'CliQ'
+                        ? 'Booking #' . $booking_id . ' selected CliQ payment. Status remains pending until payment is reviewed.'
+                        : 'Booking #' . $booking_id . ' selected cash payment. Status remains unpaid until payment is collected at the venue.';
+                    $site_message = $selected_method === 'CliQ'
+                        ? 'CliQ payment selected. Transfer to ' . $cliq_transfer_number . ' and wait for payment confirmation.'
+                        : 'Cash payment selected. The booking will be paid at the venue.';
+
+                    create_admin_notification(
+                        $conn,
+                        'payment_pending',
+                        'Payment method updated',
+                        $admin_message,
+                        'bookings',
+                        $booking_id,
+                        'booking_details.php?id=' . $booking_id
+                    );
+                    create_site_notification(
+                        $conn,
+                        (int)($booking['user_id'] ?? 0),
+                        'payment_pending',
+                        'Payment method saved',
+                        $site_message,
+                        'user/my_bookings.php'
+                    );
+                }
+
+                header('Location: ' . site_url('user/payment.php?booking_id=' . $booking_id . '&payment=success&method=' . urlencode($selected_method)));
                 exit;
             }
 
@@ -324,6 +369,12 @@ include dirname(__DIR__) . '/includes/header.php';
                                 </div>
                             </div>
 
+                            <div class="visa-fields cliq-fields" id="cliq-fields" <?php echo $selected_method === 'CliQ' ? '' : 'hidden'; ?>>
+                                <strong class="cliq-fields-title">CliQ Transfer Number</strong>
+                                <p class="cliq-fields-text">Transfer the payment amount to this CliQ number before confirming:</p>
+                                <div class="cliq-number-badge"><?php echo htmlspecialchars($cliq_transfer_number, ENT_QUOTES, 'UTF-8'); ?></div>
+                            </div>
+
                             <div class="checkout-submit-row">
                                 <div class="checkout-amount-badge">
                                     <?php echo t('payment_total_prefix'); ?> <?php echo number_format($payable_total, 2); ?> JOD
@@ -360,6 +411,7 @@ include dirname(__DIR__) . '/includes/header.php';
 document.addEventListener('DOMContentLoaded', function () {
     const paymentInputs = document.querySelectorAll('.payment-method-input');
     const visaFields = document.getElementById('visa-fields');
+    const cliqFields = document.getElementById('cliq-fields');
     const cardNumberInput = document.getElementById('card_number');
     const expiryDateInput = document.getElementById('expiry_date');
     const cvvInput = document.getElementById('cvv');
@@ -373,12 +425,15 @@ document.addEventListener('DOMContentLoaded', function () {
     function toggleVisaFields() {
         const selected = document.querySelector('.payment-method-input:checked');
         const isVisa = selected && selected.value === 'Visa';
+        const isCliQ = selected && selected.value === 'CliQ';
 
-        if (!visaFields) {
-            return;
+        if (visaFields) {
+            visaFields.hidden = !isVisa;
         }
 
-        visaFields.hidden = !isVisa;
+        if (cliqFields) {
+            cliqFields.hidden = !isCliQ;
+        }
 
         [cardNumberInput, expiryDateInput, cvvInput].forEach(function (field) {
             if (field) {

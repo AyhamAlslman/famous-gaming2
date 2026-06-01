@@ -5,6 +5,7 @@ require_once dirname(__DIR__) . '/includes/functions.php';
 ensure_user_auth_schema($conn);
 
 $page_title = t('home_menu_title') . ' - FAMOUS GAMING';
+$shared_hero_image = site_url('images/shared-public-hero.jpg');
 $menu_items = [];
 $selected_category = isset($_GET['category']) ? sanitize_input($_GET['category']) : '';
 $allowed_categories = ['Drinks', 'Snacks'];
@@ -45,7 +46,7 @@ foreach ($menu_items as $menu_count_item) {
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
-<section class="hero menu-hero">
+<section class="hero menu-hero" style="--page-hero-image: url('<?php echo htmlspecialchars($shared_hero_image, ENT_QUOTES, 'UTF-8'); ?>');">
     <div class="container">
         <div class="store-hero-shell">
             <div class="store-hero-copy store-hero-copy-centered">
@@ -92,7 +93,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 <?php foreach ($menu_items as $item): ?>
                     <article class="menu-preview-card" data-menu-category="<?php echo htmlspecialchars($item['item_category'], ENT_QUOTES, 'UTF-8'); ?>">
                         <div class="menu-preview-visual">
-                            <img src="<?php echo htmlspecialchars(site_url('images/service-food.png'), ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                            <img src="<?php echo htmlspecialchars(site_url('images/service-food-optimized.jpg'), ENT_QUOTES, 'UTF-8'); ?>" alt="" loading="lazy" decoding="async">
                             <span class="menu-preview-icon"><?php echo strtoupper(substr($item['item_category'], 0, 1)); ?></span>
                         </div>
                         <div class="menu-preview-copy">

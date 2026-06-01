@@ -1,12 +1,12 @@
 <?php
 require_once dirname(__DIR__) . '/includes/config.php';
 $page_title = t('contact_page_title');
-$contact_hero_image = site_url('images/home-hero-background.png');
+$contact_hero_image = site_url('images/home-hero-background-optimized.jpg');
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <section class="hero page-hero arena-page-hero contact-page-hero" style="--page-hero-image: url('<?php echo htmlspecialchars($contact_hero_image, ENT_QUOTES, 'UTF-8'); ?>');">
-    <img class="page-hero-visual" src="<?php echo htmlspecialchars($contact_hero_image, ENT_QUOTES, 'UTF-8'); ?>" alt="" aria-hidden="true">
+    <img class="page-hero-visual" src="<?php echo htmlspecialchars($contact_hero_image, ENT_QUOTES, 'UTF-8'); ?>" alt="" aria-hidden="true" loading="lazy" decoding="async" fetchpriority="low">
     <div class="container">
         <span class="ticket-label">FAMOUS GAMING 2026</span>
         <h1><?php echo t('contact_hero_title'); ?></h1>

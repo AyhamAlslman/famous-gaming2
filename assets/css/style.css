@@ -1,4 +1,4 @@
-/* ========================================
+﻿/* ========================================
    ESPORTS ARENA THEME
    Broadcast-Inspired Arena Lighting
    ======================================== */
@@ -378,7 +378,7 @@ body {
 .hero {
     background:
         linear-gradient(120deg, rgba(3, 8, 18, 0.94) 0%, rgba(3, 8, 18, 0.72) 45%, rgba(4, 8, 18, 0.94) 100%),
-        url('../../images/home-hero-background.png') center/cover no-repeat;
+        url('../../images/home-hero-background-optimized.jpg') center/cover no-repeat;
     padding: 6rem 0 5.5rem;
     text-align: center;
     border-bottom: 1px solid rgba(39, 211, 255, 0.24);
@@ -1868,7 +1868,7 @@ body.rtl-layout {
 }
 
 .booking-info-list li::before {
-    content: 'â€¢';
+    content: 'Ã¢â‚¬Â¢';
     color: var(--cyan);
     font-weight: bold;
     position: absolute;
@@ -1897,6 +1897,10 @@ body.rtl-layout {
 
 .booking-ticket-modal.is-hidden {
     display: none;
+}
+
+.booking-ticket-modal[hidden] {
+    display: none !important;
 }
 
 .booking-ticket-modal-backdrop {
@@ -2213,6 +2217,12 @@ body.booking-ticket-modal-open {
     border-color: rgba(255, 209, 92, 0.24);
 }
 
+.checkout-status-pill.status-pending {
+    color: var(--warning);
+    background: rgba(255, 209, 92, 0.14);
+    border-color: rgba(255, 209, 92, 0.28);
+}
+
 .checkout-summary-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2385,6 +2395,34 @@ body.booking-ticket-modal-open {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
+}
+
+.cliq-fields-title {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--white);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.cliq-fields-text {
+    margin: 0 0 0.9rem;
+    color: var(--gray-text);
+}
+
+.cliq-number-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(96, 216, 255, 0.18), rgba(82, 224, 175, 0.12));
+    border: 1px solid rgba(126, 231, 255, 0.28);
+    color: var(--white);
+    font-size: 1.08rem;
+    font-weight: 800;
+    letter-spacing: 0.08rem;
 }
 
 .checkout-submit-row {
@@ -3818,32 +3856,55 @@ body.card-detail-modal-open {
 
 .card-detail-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr);
+    grid-template-columns: minmax(0, 45%) minmax(0, 55%);
+    align-items: stretch;
+    gap: 1.4rem;
+    width: 100%;
+    overflow: hidden;
 }
 
 .card-detail-media-shell {
     position: relative;
     background: radial-gradient(circle at top, rgba(93, 213, 255, 0.18), transparent 58%), #09111f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
     min-height: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .card-detail-media-shell .store-product-media,
 .card-detail-media-shell .service-image {
-    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: auto;
     min-height: 360px;
     margin: 0;
     border-bottom: none;
+    border-radius: 22px;
+    overflow: hidden;
 }
 
 .card-detail-media-shell img,
 .card-detail-media-shell .store-product-placeholder {
+    display: block;
     width: 100%;
     height: 100%;
+    max-width: 100%;
 }
 
 .card-detail-media-shell img {
     min-height: 360px;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
+    padding: 0.9rem;
 }
 
 .card-detail-media-shell .store-product-placeholder {
@@ -3855,6 +3916,9 @@ body.card-detail-modal-open {
     flex-direction: column;
     gap: 1rem;
     padding: 2rem;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .card-detail-type {
@@ -3876,6 +3940,7 @@ body.card-detail-modal-open {
     color: #f7fbff;
     font-size: clamp(1.8rem, 3vw, 2.55rem);
     line-height: 1.05;
+    overflow-wrap: anywhere;
 }
 
 .card-detail-description {
@@ -3883,6 +3948,7 @@ body.card-detail-modal-open {
     color: rgba(224, 236, 255, 0.76);
     font-size: 1rem;
     line-height: 1.8;
+    overflow-wrap: anywhere;
 }
 
 .card-detail-meta {
@@ -3955,12 +4021,14 @@ body.card-detail-modal-open {
     right: 1.25rem;
     bottom: 1.25rem;
     z-index: 1220;
+    max-width: min(360px, calc(100vw - 2rem));
     padding: 0.95rem 1.15rem;
     border-radius: 16px;
     background: rgba(11, 18, 31, 0.96);
     border: 1px solid rgba(122, 220, 255, 0.18);
     color: #f7fbff;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+    pointer-events: none;
     opacity: 0;
     transform: translateY(16px);
     transition: opacity 0.22s ease, transform 0.22s ease;
@@ -3993,6 +4061,7 @@ body.card-detail-modal-open {
     }
 }
 
+
 @media (max-width: 1199px) {
     .store-layout {
         grid-template-columns: minmax(0, 1fr);
@@ -4011,6 +4080,28 @@ body.card-detail-modal-open {
     .store-hero-shell {
         display: flex;
         justify-content: center;
+    }
+}
+
+@media (max-width: 1100px) {
+    .card-detail-dialog {
+        width: min(100%, 920px);
+    }
+
+    .card-detail-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .card-detail-copy {
+        padding-top: 1.4rem;
+    }
+
+    .card-detail-media-shell .store-product-media,
+    .card-detail-media-shell .service-image,
+    .card-detail-media-shell img,
+    .card-detail-media-shell .store-product-placeholder {
+        min-height: 280px;
     }
 }
 
@@ -5561,7 +5652,7 @@ body.site-modal-open {
 body {
     background:
         linear-gradient(180deg, rgba(5, 13, 29, 0.92), rgba(7, 18, 36, 0.96)),
-        url('../../images/home-hero-background.png') center top / cover fixed;
+        url('../../images/home-hero-background-optimized.jpg') center top / cover fixed;
 }
 
 .navbar {
@@ -5711,7 +5802,7 @@ body {
     border-bottom: 1px solid rgba(86, 208, 255, 0.3);
     background:
         linear-gradient(90deg, rgba(5, 13, 29, 0.93), rgba(7, 27, 52, 0.7), rgba(5, 13, 29, 0.36)),
-        url('../../images/home-hero-background.png') center / cover;
+        url('../../images/home-hero-background-optimized.jpg') center / cover;
 }
 
 .about-page-hero {
@@ -5838,7 +5929,7 @@ body {
     padding-bottom: 4rem;
     background:
         linear-gradient(90deg, rgba(5, 13, 29, 0.92), rgba(7, 31, 56, 0.72), rgba(5, 13, 29, 0.28)),
-        url('../../images/home-hero-background.png') center / cover !important;
+        url('../../images/home-hero-background-optimized.jpg') center / cover !important;
     border-bottom: 1px solid rgba(86, 208, 255, 0.3);
 }
 
@@ -5965,7 +6056,7 @@ body {
 body {
     background:
         linear-gradient(180deg, rgba(20, 32, 51, 0.92), rgba(15, 26, 42, 0.96)),
-        url('../../images/home-hero-background.png') center top / cover fixed;
+        url('../../images/home-hero-background-optimized.jpg') center top / cover fixed;
     color: var(--fg-text);
 }
 
@@ -6444,7 +6535,7 @@ body,
 body {
     background:
         linear-gradient(180deg, rgba(24, 38, 58, 0.94), rgba(18, 30, 48, 0.97)),
-        url('../../images/home-hero-background.png') center top / cover fixed;
+        url('../../images/home-hero-background-optimized.jpg') center top / cover fixed;
     color: var(--fg-text);
 }
 
@@ -7044,7 +7135,7 @@ body {
     inset: -18px;
     z-index: -1;
     border-radius: 18px;
-    background: url('../../images/home-hero-2026.png') center / cover no-repeat;
+    background: url('../../images/home-hero-2026-optimized.jpg') center / cover no-repeat;
     filter: blur(18px) saturate(1.18);
     opacity: 0.58;
 }
@@ -7382,7 +7473,7 @@ body {
     background:
         linear-gradient(90deg, rgba(2, 8, 18, 0.88) 0%, rgba(2, 8, 18, 0.55) 34%, rgba(2, 8, 18, 0.18) 62%, rgba(2, 8, 18, 0.62) 100%),
         linear-gradient(180deg, rgba(2, 8, 18, 0.12) 0%, rgba(2, 8, 18, 0.18) 48%, rgba(2, 8, 18, 0.9) 100%),
-        url('../../images/home-hero-2026.png') center 48% / cover no-repeat;
+        url('../../images/home-hero-2026-optimized.jpg') center 48% / cover no-repeat;
 }
 
 .index-hero-redesign::before {
@@ -7671,7 +7762,7 @@ body {
     background:
         linear-gradient(90deg, rgba(2, 8, 18, 0.9) 0%, rgba(2, 8, 18, 0.62) 32%, rgba(2, 8, 18, 0.18) 64%, rgba(2, 8, 18, 0.5) 100%),
         linear-gradient(180deg, rgba(2, 8, 18, 0.06) 0%, rgba(2, 8, 18, 0.2) 55%, rgba(2, 8, 18, 0.92) 100%),
-        url('../../images/home-hero-2026.png') center center / cover no-repeat;
+        url('../../images/home-hero-2026-optimized.jpg') center center / cover no-repeat;
 }
 
 .index-hero-layout {
@@ -7726,7 +7817,7 @@ body {
     background:
         linear-gradient(270deg, rgba(2, 8, 18, 0.9) 0%, rgba(2, 8, 18, 0.62) 32%, rgba(2, 8, 18, 0.18) 64%, rgba(2, 8, 18, 0.5) 100%),
         linear-gradient(180deg, rgba(2, 8, 18, 0.06) 0%, rgba(2, 8, 18, 0.2) 55%, rgba(2, 8, 18, 0.92) 100%),
-        url('../../images/home-hero-2026.png') center center / cover no-repeat;
+        url('../../images/home-hero-2026-optimized.jpg') center center / cover no-repeat;
 }
 
 [dir="rtl"] .index-hero-layout {
@@ -7785,7 +7876,7 @@ body {
         padding-bottom: 3.5rem;
         background:
             linear-gradient(180deg, rgba(2, 8, 18, 0.2) 0%, rgba(2, 8, 18, 0.52) 42%, rgba(2, 8, 18, 0.94) 100%),
-            url('../../images/home-hero-2026.png') center top / cover no-repeat;
+            url('../../images/home-hero-2026-optimized.jpg') center top / cover no-repeat;
     }
 
     .index-hero-layout,
@@ -7896,7 +7987,7 @@ body {
     content: '';
     position: absolute;
     inset: -24px;
-    background: url('../../images/home-hero-2026.png') center / contain no-repeat;
+    background: url('../../images/home-hero-2026-optimized.jpg') center / contain no-repeat;
     filter: blur(22px) saturate(1.14);
     opacity: 0.38;
 }
@@ -8992,7 +9083,7 @@ body {
     border-radius: 8px;
     background:
         linear-gradient(180deg, rgba(4, 14, 30, 0.34), rgba(4, 14, 30, 0.92)),
-        url('../../images/home-hero-2026.png') center / cover no-repeat;
+        url('../../images/home-hero-2026-optimized.jpg') center / cover no-repeat;
     color: #ffffff;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
     overflow: hidden;
@@ -9101,14 +9192,14 @@ body {
     background:
         linear-gradient(90deg, rgba(3, 11, 24, 0.88) 0%, rgba(3, 11, 24, 0.58) 36%, rgba(3, 11, 24, 0.22) 66%, rgba(3, 11, 24, 0.56) 100%),
         linear-gradient(180deg, rgba(3, 11, 24, 0.1) 0%, rgba(3, 11, 24, 0.1) 58%, rgba(3, 11, 24, 0.86) 100%),
-        url('../../images/home-hero-2026.png') center / cover no-repeat;
+        url('../../images/home-hero-2026-optimized.jpg') center / cover no-repeat;
 }
 
 [dir="rtl"] .index-hero-redesign {
     background:
         linear-gradient(270deg, rgba(3, 11, 24, 0.88) 0%, rgba(3, 11, 24, 0.58) 36%, rgba(3, 11, 24, 0.22) 66%, rgba(3, 11, 24, 0.56) 100%),
         linear-gradient(180deg, rgba(3, 11, 24, 0.1) 0%, rgba(3, 11, 24, 0.1) 58%, rgba(3, 11, 24, 0.86) 100%),
-        url('../../images/home-hero-2026.png') center / cover no-repeat;
+        url('../../images/home-hero-2026-optimized.jpg') center / cover no-repeat;
 }
 
 .index-hero-redesign::before {
@@ -9327,13 +9418,13 @@ body {
     isolation: isolate;
     background:
         linear-gradient(90deg, rgba(3, 11, 24, 0.9), rgba(3, 11, 24, 0.45), rgba(3, 11, 24, 0.75)),
-        url('../../images/home-hero-2026.png') center / cover no-repeat !important;
+        url('../../images/home-hero-2026-optimized.jpg') center / cover no-repeat !important;
 }
 
 [dir="rtl"] .arena-page-hero {
     background:
         linear-gradient(270deg, rgba(3, 11, 24, 0.9), rgba(3, 11, 24, 0.45), rgba(3, 11, 24, 0.75)),
-        url('../../images/home-hero-2026.png') center / cover no-repeat !important;
+        url('../../images/home-hero-2026-optimized.jpg') center / cover no-repeat !important;
 }
 
 .arena-page-hero .container {
@@ -9986,14 +10077,14 @@ body {
     background:
         linear-gradient(90deg, rgba(3, 11, 24, 0.88) 0%, rgba(3, 11, 24, 0.58) 36%, rgba(3, 11, 24, 0.22) 66%, rgba(3, 11, 24, 0.56) 100%),
         linear-gradient(180deg, rgba(3, 11, 24, 0.1) 0%, rgba(3, 11, 24, 0.1) 58%, rgba(3, 11, 24, 0.86) 100%),
-        var(--page-hero-image, url('../../images/home-hero-2026.png')) center / cover no-repeat !important;
+        var(--page-hero-image, url('../../images/home-hero-2026-optimized.jpg')) center / cover no-repeat !important;
 }
 
 [dir="rtl"] .index-hero-redesign {
     background:
         linear-gradient(270deg, rgba(3, 11, 24, 0.88) 0%, rgba(3, 11, 24, 0.58) 36%, rgba(3, 11, 24, 0.22) 66%, rgba(3, 11, 24, 0.56) 100%),
         linear-gradient(180deg, rgba(3, 11, 24, 0.1) 0%, rgba(3, 11, 24, 0.1) 58%, rgba(3, 11, 24, 0.86) 100%),
-        var(--page-hero-image, url('../../images/home-hero-2026.png')) center / cover no-repeat !important;
+        var(--page-hero-image, url('../../images/home-hero-2026-optimized.jpg')) center / cover no-repeat !important;
 }
 
 .index-hero-media {
@@ -10010,7 +10101,7 @@ body {
 }
 
 .index-hero-media::before {
-    background: var(--page-hero-image, url('../../images/home-hero-2026.png')) center / contain no-repeat !important;
+    background: var(--page-hero-image, url('../../images/home-hero-2026-optimized.jpg')) center / contain no-repeat !important;
 }
 
 .index-hero-media img {
@@ -10046,13 +10137,13 @@ body {
 [dir="rtl"] .arena-page-hero {
     background:
         linear-gradient(90deg, rgba(3, 11, 24, 0.92), rgba(3, 11, 24, 0.58), rgba(3, 11, 24, 0.34)),
-        var(--page-hero-image, url('../../images/home-hero-2026.png')) center / cover no-repeat !important;
+        var(--page-hero-image, url('../../images/home-hero-2026-optimized.jpg')) center / cover no-repeat !important;
 }
 
 [dir="rtl"] .arena-page-hero {
     background:
         linear-gradient(270deg, rgba(3, 11, 24, 0.92), rgba(3, 11, 24, 0.58), rgba(3, 11, 24, 0.34)),
-        var(--page-hero-image, url('../../images/home-hero-2026.png')) center / cover no-repeat !important;
+        var(--page-hero-image, url('../../images/home-hero-2026-optimized.jpg')) center / cover no-repeat !important;
 }
 
 .arena-page-hero .page-hero-visual {
@@ -12741,3 +12832,4 @@ body {
         white-space: normal;
     }
 }
+

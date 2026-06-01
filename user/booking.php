@@ -326,7 +326,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 <div class="booking-room-compact-list">
                     <?php foreach ($booking_rooms as $room): ?>
                         <?php
-                        $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background.png');
+                        $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background-optimized.jpg');
                         ?>
                         <article class="live-room-row-item booking-room-row">
                             <div class="booking-room-row-media">

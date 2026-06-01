@@ -77,7 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['profile_action'] ?? '') ==
 
         if (mysqli_stmt_execute($update_stmt)) {
             $profile_success_msg = t('profile_update_success');
-            $current_site_user = get_current_site_user($conn);
+            clear_current_site_user_cache($site_user_id);
+            $current_site_user = get_current_site_user($conn, true);
             $_SESSION['site_user_name'] = $current_site_user['full_name'];
             $_SESSION['site_user_loyalty_points'] = (int)$current_site_user['loyalty_points'];
         } else {
@@ -200,7 +201,7 @@ include dirname(__DIR__) . '/includes/header.php';
                                     <?php
                                     $room_status_key = strtolower((string)$room['status']);
                                     $is_available = $room['status'] === 'Available';
-                                    $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background.png');
+                                    $room_image = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background-optimized.jpg');
                                     ?>
                                     <article class="dashboard-v2-room-card">
                                         <div class="dashboard-v2-room-main">

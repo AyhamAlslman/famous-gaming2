@@ -3,24 +3,25 @@ require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 
 $page_title = t('services_page_title');
+$shared_hero_image = site_url('images/shared-public-hero.jpg');
 $services = [
     [
         'url' => site_url('general/service_gaming.php'),
-        'image' => site_url('images/service-gaming.png'),
+        'image' => site_url('images/service-gaming-optimized.jpg'),
         'type' => t('services_gaming_type'),
         'title' => t('services_gaming_title'),
         'description' => t('services_gaming_desc')
     ],
     [
         'url' => site_url('general/service_hospitality.php'),
-        'image' => site_url('images/service-food.png'),
+        'image' => site_url('images/service-food-optimized.jpg'),
         'type' => t('services_hospitality_type'),
         'title' => t('services_hospitality_title'),
         'description' => t('services_hospitality_desc')
     ],
     [
         'url' => site_url('general/service_events.php'),
-        'image' => site_url('images/service-events.png'),
+        'image' => site_url('images/service-events-optimized.jpg'),
         'class' => 'service-hub-card-featured',
         'type' => t('services_events_type'),
         'title' => t('services_events_title'),
@@ -32,7 +33,7 @@ include dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <main class="service-hub-page">
-    <section class="hero arena-page-hero service-hub-hero" style="--page-hero-image: url('<?php echo htmlspecialchars(site_url('images/home-neon-sign.jpg'), ENT_QUOTES, 'UTF-8'); ?>');">
+    <section class="hero arena-page-hero service-hub-hero" style="--page-hero-image: url('<?php echo htmlspecialchars($shared_hero_image, ENT_QUOTES, 'UTF-8'); ?>');">
         <div class="container">
             <span class="ticket-label"><?php echo t('nav_services'); ?></span>
             <h1><?php echo t('services_hero_title'); ?></h1>

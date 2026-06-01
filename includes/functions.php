@@ -4,6 +4,93 @@
  * Validation, Sanitization, Image Handling, and Utilities
  */
 
+if (!defined('SITE_SCHEMA_BOOTSTRAP_VERSION')) {
+    define('SITE_SCHEMA_BOOTSTRAP_VERSION', '2026-06-01-performance-1');
+}
+
+if (!defined('SITE_RUNTIME_CACHE_TTL_SHORT')) {
+    define('SITE_RUNTIME_CACHE_TTL_SHORT', 15);
+}
+
+if (!defined('SITE_RUNTIME_CACHE_TTL_MEDIUM')) {
+    define('SITE_RUNTIME_CACHE_TTL_MEDIUM', 30);
+}
+
+function runtime_cache_storage_key() {
+    return '_site_runtime_cache';
+}
+
+function runtime_cache_get($key, &$found = null) {
+    if (!isset($GLOBALS['site_runtime_request_cache']) || !is_array($GLOBALS['site_runtime_request_cache'])) {
+        $GLOBALS['site_runtime_request_cache'] = [];
+    }
+
+    if (array_key_exists($key, $GLOBALS['site_runtime_request_cache'])) {
+        $found = true;
+        return $GLOBALS['site_runtime_request_cache'][$key];
+    }
+
+    $storage_key = runtime_cache_storage_key();
+    $session_cache = $_SESSION[$storage_key][$key] ?? null;
+
+    if (is_array($session_cache) && (int)($session_cache['expires_at'] ?? 0) >= time()) {
+        $GLOBALS['site_runtime_request_cache'][$key] = $session_cache['value'];
+        $found = true;
+        return $session_cache['value'];
+    }
+
+    $found = false;
+    return null;
+}
+
+function runtime_cache_set($key, $value, $ttl = SITE_RUNTIME_CACHE_TTL_SHORT) {
+    if (!isset($GLOBALS['site_runtime_request_cache']) || !is_array($GLOBALS['site_runtime_request_cache'])) {
+        $GLOBALS['site_runtime_request_cache'] = [];
+    }
+
+    $GLOBALS['site_runtime_request_cache'][$key] = $value;
+    $storage_key = runtime_cache_storage_key();
+
+    if (!isset($_SESSION[$storage_key]) || !is_array($_SESSION[$storage_key])) {
+        $_SESSION[$storage_key] = [];
+    }
+
+    $_SESSION[$storage_key][$key] = [
+        'expires_at' => time() + max(1, (int)$ttl),
+        'value' => $value,
+    ];
+
+    return $value;
+}
+
+function runtime_cache_forget($prefix = null) {
+    if (!isset($GLOBALS['site_runtime_request_cache']) || !is_array($GLOBALS['site_runtime_request_cache'])) {
+        $GLOBALS['site_runtime_request_cache'] = [];
+    }
+
+    $storage_key = runtime_cache_storage_key();
+
+    if ($prefix === null) {
+        $GLOBALS['site_runtime_request_cache'] = [];
+        unset($_SESSION[$storage_key]);
+        return;
+    }
+
+    foreach (array_keys($GLOBALS['site_runtime_request_cache']) as $key) {
+        if (strpos($key, $prefix) === 0) {
+            unset($GLOBALS['site_runtime_request_cache'][$key]);
+        }
+    }
+
+    if (!empty($_SESSION[$storage_key]) && is_array($_SESSION[$storage_key])) {
+        foreach (array_keys($_SESSION[$storage_key]) as $key) {
+            if (strpos($key, $prefix) === 0) {
+                unset($_SESSION[$storage_key][$key]);
+            }
+        }
+    }
+}
+
 // =====================================================
 // 1. INPUT SANITIZATION & VALIDATION
 // =====================================================
@@ -206,6 +293,40 @@ function upload_store_product_image($file, $product_id) {
     }
 
     // Set proper permissions
+    chmod($file_path, 0644);
+
+    return [
+        'success' => true,
+        'message' => 'Image uploaded successfully',
+        'file_path' => $relative_path,
+        'filename' => $filename
+    ];
+}
+
+/**
+ * Upload site user profile image with security checks
+ * Returns array with 'success' boolean, 'message', and 'file_path' if successful
+ */
+function upload_site_user_profile_image($file, $user_id) {
+    $validation = validate_image($file, 4);
+    if (!$validation['success']) {
+        return $validation;
+    }
+
+    $extension = $validation['extension'];
+    $filename = 'site_user_' . $user_id . '_' . time() . '.' . $extension;
+    $upload_dir = __DIR__ . '/../uploads/site_users/';
+    $file_path = $upload_dir . $filename;
+    $relative_path = 'uploads/site_users/' . $filename;
+
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+    }
+
+    if (!move_uploaded_file($file['tmp_name'], $file_path)) {
+        return ['success' => false, 'message' => 'Failed to save uploaded file'];
+    }
+
     chmod($file_path, 0644);
 
     return [
@@ -769,12 +890,66 @@ function seed_project_default_data($conn) {
     }
 }
 
+function schema_bootstrap_flag_path() {
+    $cache_dir = dirname(__DIR__) . '/uploads/cache';
+
+    if (!is_dir($cache_dir)) {
+        @mkdir($cache_dir, 0755, true);
+    }
+
+    return $cache_dir . '/schema-bootstrap-' . SITE_SCHEMA_BOOTSTRAP_VERSION . '.flag';
+}
+
+function mark_schema_bootstrap_ready() {
+    $_SESSION['site_schema_bootstrap_version'] = SITE_SCHEMA_BOOTSTRAP_VERSION;
+    $_SESSION['site_schema_bootstrap_checked_at'] = time();
+    @touch(schema_bootstrap_flag_path());
+}
+
+function is_schema_bootstrap_ready($conn) {
+    if (($_SESSION['site_schema_bootstrap_version'] ?? '') === SITE_SCHEMA_BOOTSTRAP_VERSION) {
+        return true;
+    }
+
+    $flag_path = schema_bootstrap_flag_path();
+    if (!is_file($flag_path)) {
+        return false;
+    }
+
+    $core_tables = ['site_users', 'admins', 'rooms', 'bookings'];
+    foreach ($core_tables as $core_table) {
+        if (!database_table_exists($conn, $core_table)) {
+            return false;
+        }
+    }
+
+    mark_schema_bootstrap_ready();
+    return true;
+}
+
 function ensure_user_auth_schema($conn) {
+    static $request_bootstrapped = false;
+
+    if ($request_bootstrapped) {
+        return;
+    }
+
+    $request_bootstrapped = true;
+
+    if (is_schema_bootstrap_ready($conn)) {
+        $profile_image_column = mysqli_query($conn, "SHOW COLUMNS FROM site_users LIKE 'profile_image'");
+        if ($profile_image_column && mysqli_num_rows($profile_image_column) === 0) {
+            mysqli_query($conn, "ALTER TABLE site_users ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL AFTER phone");
+        }
+        return;
+    }
+
     mysqli_query($conn, "CREATE TABLE IF NOT EXISTS site_users (
         id INT PRIMARY KEY AUTO_INCREMENT,
         full_name VARCHAR(120) NOT NULL,
         email VARCHAR(150) NOT NULL UNIQUE,
         phone VARCHAR(20) DEFAULT NULL,
+        profile_image VARCHAR(255) DEFAULT NULL,
         password VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL DEFAULT 'user',
         loyalty_points INT NOT NULL DEFAULT 0,
@@ -783,6 +958,11 @@ function ensure_user_auth_schema($conn) {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_site_users_role_status (role, status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    $profile_image_column = mysqli_query($conn, "SHOW COLUMNS FROM site_users LIKE 'profile_image'");
+    if ($profile_image_column && mysqli_num_rows($profile_image_column) === 0) {
+        mysqli_query($conn, "ALTER TABLE site_users ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL AFTER phone");
+    }
 
     ensure_core_project_schema($conn);
     ensure_loyalty_settings_schema($conn);
@@ -795,6 +975,7 @@ function ensure_user_auth_schema($conn) {
     ensure_database_relationships($conn);
     ensure_reporting_views($conn);
     seed_project_default_data($conn);
+    mark_schema_bootstrap_ready();
 }
 
 /**
@@ -1131,15 +1312,33 @@ function get_loyalty_settings($conn = null) {
 /**
  * Get the currently logged in site user, if any.
  */
-function get_current_site_user($conn) {
+function clear_current_site_user_cache($user_id = null) {
+    if ($user_id !== null && (int)$user_id > 0) {
+        runtime_cache_forget('site_user_profile_' . (int)$user_id);
+        return;
+    }
+
+    runtime_cache_forget('site_user_profile_');
+}
+
+function get_current_site_user($conn, $force_refresh = false) {
     ensure_user_auth_schema($conn);
 
     $user_id = isset($_SESSION['site_user_id']) ? (int)$_SESSION['site_user_id'] : 0;
     if ($user_id <= 0) {
+        clear_current_site_user_cache();
         return null;
     }
 
-    $stmt = mysqli_prepare($conn, "SELECT id, full_name, email, phone, role, loyalty_points, status FROM site_users WHERE id = ? LIMIT 1");
+    $cache_key = 'site_user_profile_' . $user_id;
+    if (!$force_refresh) {
+        $cached_user = runtime_cache_get($cache_key, $found_cached_user);
+        if ($found_cached_user) {
+            return $cached_user;
+        }
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT id, full_name, email, phone, profile_image, role, loyalty_points, status FROM site_users WHERE id = ? LIMIT 1");
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
@@ -1147,14 +1346,16 @@ function get_current_site_user($conn) {
     mysqli_stmt_close($stmt);
 
     if (!$user || $user['status'] !== 'Active') {
+        clear_current_site_user_cache($user_id);
         unset($_SESSION['site_user_id'], $_SESSION['site_user_name'], $_SESSION['site_user_role']);
         return null;
     }
 
     $_SESSION['site_user_name'] = $user['full_name'];
     $_SESSION['site_user_loyalty_points'] = (int)$user['loyalty_points'];
+    $_SESSION['site_user_avatar'] = $user['profile_image'] ?? '';
 
-    return $user;
+    return runtime_cache_set($cache_key, $user, SITE_RUNTIME_CACHE_TTL_MEDIUM);
 }
 
 function calculate_loyalty_points($amount, $conn = null) {
@@ -1514,6 +1715,19 @@ function get_customer_booking_by_id($conn, $booking_id) {
  * Ensure admin notifications table exists.
  */
 function ensure_admin_notifications_table($conn) {
+    static $checked = false;
+
+    if ($checked) {
+        return;
+    }
+
+    $checked = true;
+
+    $cached_ready = runtime_cache_get('schema_admin_notifications_table_ready', $found_cached_ready);
+    if ($found_cached_ready && $cached_ready) {
+        return;
+    }
+
     $query = "CREATE TABLE IF NOT EXISTS admin_notifications (
         id INT PRIMARY KEY AUTO_INCREMENT,
         notification_type VARCHAR(50) NOT NULL,
@@ -1530,6 +1744,11 @@ function ensure_admin_notifications_table($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
     mysqli_query($conn, $query);
+    runtime_cache_set('schema_admin_notifications_table_ready', true, 21600);
+}
+
+function clear_admin_notification_cache() {
+    runtime_cache_forget('admin_notifications_');
 }
 
 /**
@@ -1552,6 +1771,10 @@ function create_admin_notification($conn, $type, $title, $message, $related_tabl
     $success = mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
 
+    if ($success) {
+        clear_admin_notification_cache();
+    }
+
     return $success;
 }
 
@@ -1561,9 +1784,14 @@ function create_admin_notification($conn, $type, $title, $message, $related_tabl
 function count_unread_admin_notifications($conn) {
     ensure_admin_notifications_table($conn);
 
+    $cached_count = runtime_cache_get('admin_notifications_unread_count', $found_cached_count);
+    if ($found_cached_count) {
+        return (int)$cached_count;
+    }
+
     $result = mysqli_query($conn, "SELECT COUNT(*) AS unread_count FROM admin_notifications WHERE is_read = 0");
     if ($result && ($row = mysqli_fetch_assoc($result))) {
-        return (int)$row['unread_count'];
+        return (int)runtime_cache_set('admin_notifications_unread_count', (int)$row['unread_count'], SITE_RUNTIME_CACHE_TTL_SHORT);
     }
 
     return 0;
@@ -1575,6 +1803,13 @@ function count_unread_admin_notifications($conn) {
 function get_recent_admin_notifications($conn, $limit = 6) {
     ensure_admin_notifications_table($conn);
     $limit = max(1, min(20, (int)$limit));
+    $cache_key = 'admin_notifications_recent_' . $limit;
+    $cached_notifications = runtime_cache_get($cache_key, $found_cached_notifications);
+
+    if ($found_cached_notifications) {
+        return is_array($cached_notifications) ? $cached_notifications : [];
+    }
+
     $notifications = [];
 
     $result = mysqli_query(
@@ -1586,7 +1821,7 @@ function get_recent_admin_notifications($conn, $limit = 6) {
         $notifications = mysqli_fetch_all($result, MYSQLI_ASSOC);
     }
 
-    return $notifications;
+    return runtime_cache_set($cache_key, $notifications, SITE_RUNTIME_CACHE_TTL_SHORT);
 }
 
 /**
@@ -1604,6 +1839,10 @@ function mark_admin_notification_read($conn, $notification_id) {
     $success = mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
 
+    if ($success) {
+        clear_admin_notification_cache();
+    }
+
     return $success;
 }
 
@@ -1612,7 +1851,13 @@ function mark_admin_notification_read($conn, $notification_id) {
  */
 function mark_all_admin_notifications_read($conn) {
     ensure_admin_notifications_table($conn);
-    return mysqli_query($conn, "UPDATE admin_notifications SET is_read = 1, read_at = NOW() WHERE is_read = 0");
+    $success = mysqli_query($conn, "UPDATE admin_notifications SET is_read = 1, read_at = NOW() WHERE is_read = 0");
+
+    if ($success) {
+        clear_admin_notification_cache();
+    }
+
+    return $success;
 }
 
 /**
@@ -1639,6 +1884,19 @@ function get_all_admin_notifications($conn, $limit = 120) {
  * Ensure customer-facing notifications table exists.
  */
 function ensure_site_notifications_table($conn) {
+    static $checked = false;
+
+    if ($checked) {
+        return;
+    }
+
+    $checked = true;
+
+    $cached_ready = runtime_cache_get('schema_site_notifications_table_ready', $found_cached_ready);
+    if ($found_cached_ready && $cached_ready) {
+        return;
+    }
+
     $query = "CREATE TABLE IF NOT EXISTS site_notifications (
         id INT PRIMARY KEY AUTO_INCREMENT,
         user_id INT NOT NULL,
@@ -1654,6 +1912,16 @@ function ensure_site_notifications_table($conn) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
     mysqli_query($conn, $query);
+    runtime_cache_set('schema_site_notifications_table_ready', true, 21600);
+}
+
+function clear_site_notification_cache($user_id = null) {
+    if ($user_id !== null && (int)$user_id > 0) {
+        runtime_cache_forget('site_notifications_' . (int)$user_id . '_');
+        return;
+    }
+
+    runtime_cache_forget('site_notifications_');
 }
 
 /**
@@ -1681,6 +1949,10 @@ function create_site_notification($conn, $user_id, $type, $title, $message, $act
     $success = mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
 
+    if ($success) {
+        clear_site_notification_cache($user_id);
+    }
+
     return $success;
 }
 
@@ -1695,6 +1967,12 @@ function count_unread_site_notifications($conn, $user_id) {
         return 0;
     }
 
+    $cache_key = 'site_notifications_' . $user_id . '_unread_count';
+    $cached_count = runtime_cache_get($cache_key, $found_cached_count);
+    if ($found_cached_count) {
+        return (int)$cached_count;
+    }
+
     $stmt = mysqli_prepare($conn, "SELECT COUNT(*) AS unread_count FROM site_notifications WHERE user_id = ? AND is_read = 0");
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
@@ -1702,7 +1980,7 @@ function count_unread_site_notifications($conn, $user_id) {
     $row = mysqli_fetch_assoc($result);
     mysqli_stmt_close($stmt);
 
-    return $row ? (int)$row['unread_count'] : 0;
+    return (int)runtime_cache_set($cache_key, $row ? (int)$row['unread_count'] : 0, SITE_RUNTIME_CACHE_TTL_SHORT);
 }
 
 /**
@@ -1716,6 +1994,12 @@ function get_site_notifications($conn, $user_id, $limit = 80) {
 
     if ($user_id <= 0) {
         return $notifications;
+    }
+
+    $cache_key = 'site_notifications_' . $user_id . '_list_' . $limit;
+    $cached_notifications = runtime_cache_get($cache_key, $found_cached_notifications);
+    if ($found_cached_notifications) {
+        return is_array($cached_notifications) ? $cached_notifications : [];
     }
 
     $stmt = mysqli_prepare(
@@ -1732,7 +2016,7 @@ function get_site_notifications($conn, $user_id, $limit = 80) {
 
     mysqli_stmt_close($stmt);
 
-    return $notifications;
+    return runtime_cache_set($cache_key, $notifications, SITE_RUNTIME_CACHE_TTL_SHORT);
 }
 
 function get_recent_site_notifications($conn, $user_id, $limit = 5) {
@@ -1759,6 +2043,10 @@ function mark_site_notification_read($conn, $user_id, $notification_id) {
     $success = mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
 
+    if ($success) {
+        clear_site_notification_cache($user_id);
+    }
+
     return $success;
 }
 
@@ -1780,6 +2068,10 @@ function mark_all_site_notifications_read($conn, $user_id) {
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     $success = mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
+
+    if ($success) {
+        clear_site_notification_cache($user_id);
+    }
 
     return $success;
 }

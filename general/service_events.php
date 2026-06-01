@@ -10,7 +10,7 @@ $items = [
     t('services_events_item_4'),
     t('services_events_item_5')
 ];
-$service_image = site_url('images/service-events.png');
+$service_image = site_url('images/service-events-optimized.jpg');
 
 include dirname(__DIR__) . '/includes/header.php';
 ?>

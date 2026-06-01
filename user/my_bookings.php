@@ -3,6 +3,7 @@ require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 
 $page_title = t('my_bookings_page_title');
+$shared_hero_image = site_url('images/shared-public-hero.jpg');
 $success_msg = '';
 $error_msg = '';
 
@@ -145,7 +146,7 @@ if ($current_site_user) {
 include dirname(__DIR__) . '/includes/header.php';
 ?>
 
-<section class="hero my-bookings-hero">
+<section class="hero my-bookings-hero" style="--page-hero-image: url('<?php echo htmlspecialchars($shared_hero_image, ENT_QUOTES, 'UTF-8'); ?>');">
     <div class="container my-bookings-hero-copy">
         <h1><?php echo t('my_bookings_hero_title'); ?></h1>
         <p><?php echo t('my_bookings_hero_text'); ?></p>

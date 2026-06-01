@@ -184,7 +184,7 @@ include 'includes/header.php';
                     </thead>
                     <tbody>
                         <?php while ($room = mysqli_fetch_assoc($rooms)): ?>
-                        <?php $room_thumb = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background.png'); ?>
+                        <?php $room_thumb = site_asset_url($room['image_path'] ?? '', 'images/home-hero-background-optimized.jpg'); ?>
                         <tr>
                             <td><?php echo $room['id']; ?></td>
                             <td>
