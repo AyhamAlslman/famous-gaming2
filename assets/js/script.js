@@ -441,4 +441,143 @@ document.addEventListener('DOMContentLoaded', function() {
 
         syncBookingTicketModalState();
     }
+
+    const chatbot = document.querySelector('[data-support-chatbot]');
+    if (chatbot && window.supportChatbotConfig) {
+        const toggle = chatbot.querySelector('[data-support-chatbot-toggle]');
+        const panel = chatbot.querySelector('[data-support-chatbot-panel]');
+        const closeButton = chatbot.querySelector('[data-support-chatbot-close]');
+        const form = chatbot.querySelector('[data-support-chatbot-form]');
+        const input = chatbot.querySelector('[data-support-chatbot-input]');
+        const messages = chatbot.querySelector('[data-support-chatbot-messages]');
+        const chatbotConfig = window.supportChatbotConfig;
+
+        chatbot.hidden = false;
+
+        function setChatbotOpen(isOpen) {
+            if (!panel || !toggle) {
+                return;
+            }
+
+            panel.hidden = !isOpen;
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            chatbot.classList.toggle('is-open', isOpen);
+
+            if (isOpen && input) {
+                input.focus();
+            }
+        }
+
+        function appendMessage(text, type) {
+            if (!messages) {
+                return null;
+            }
+
+            const message = document.createElement('article');
+            message.className = 'support-chatbot-message is-' + (type || 'bot');
+            message.textContent = text;
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+            return message;
+        }
+
+        function appendBotResponse(data) {
+            appendMessage(data.answer || chatbotConfig.error, 'bot');
+
+            if (Array.isArray(data.sections) && data.sections.length) {
+                data.sections.forEach(function(section) {
+                    if (!section.items || !section.items.length) {
+                        return;
+                    }
+
+                    const block = document.createElement('article');
+                    block.className = 'support-chatbot-recommendations';
+                    const title = document.createElement('strong');
+                    title.textContent = section.title || '';
+                    block.appendChild(title);
+
+                    const list = document.createElement('ul');
+                    section.items.slice(0, 4).forEach(function(item) {
+                        const listItem = document.createElement('li');
+                        const itemTitle = document.createElement('span');
+                        const itemMeta = document.createElement('em');
+                        itemTitle.textContent = item.title || '';
+                        itemMeta.textContent = item.meta || '';
+                        listItem.appendChild(itemTitle);
+                        if (item.meta) {
+                            listItem.appendChild(itemMeta);
+                        }
+                        list.appendChild(listItem);
+                    });
+                    block.appendChild(list);
+                    messages.appendChild(block);
+                });
+            }
+
+            if (Array.isArray(data.actions) && data.actions.length) {
+                const actions = document.createElement('div');
+                actions.className = 'support-chatbot-actions';
+                data.actions.forEach(function(action) {
+                    const link = document.createElement('a');
+                    link.href = action.url || '#';
+                    link.textContent = action.label || '';
+                    actions.appendChild(link);
+                });
+                messages.appendChild(actions);
+            }
+
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        if (toggle) {
+            toggle.addEventListener('click', function() {
+                setChatbotOpen(panel ? panel.hidden : true);
+            });
+        }
+
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                setChatbotOpen(false);
+            });
+        }
+
+        if (form && input) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const text = input.value.trim();
+                if (!text) {
+                    return;
+                }
+
+                appendMessage(text, 'user');
+                input.value = '';
+                input.disabled = true;
+
+                fetch(chatbotConfig.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: text })
+                })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('Chatbot request failed');
+                        }
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        appendBotResponse(data);
+                    })
+                    .catch(function() {
+                        appendMessage(chatbotConfig.error, 'bot');
+                    })
+                    .finally(function() {
+                        input.disabled = false;
+                        input.focus();
+                    });
+            });
+        }
+    }
 });

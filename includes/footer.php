@@ -44,6 +44,51 @@
         </div>
     </footer>
 
+    <?php
+    $support_chatbot_texts = site_language() === 'ar'
+        ? [
+            'title' => 'مساعد الدعم الذكي',
+            'subtitle' => 'اسأل عن الحجز، الشكاوى، المتجر، أو التوصيات.',
+            'placeholder' => 'اكتب سؤالك هنا...',
+            'send' => 'إرسال',
+            'open' => 'الدعم الذكي',
+            'welcome' => 'مرحبا! كيف أقدر أساعدك اليوم؟',
+            'error' => 'تعذر تشغيل المساعد الآن. حاول مرة أخرى.',
+        ]
+        : [
+            'title' => 'Smart Support Assistant',
+            'subtitle' => 'Ask about bookings, complaints, store, or recommendations.',
+            'placeholder' => 'Type your question...',
+            'send' => 'Send',
+            'open' => 'Smart support',
+            'welcome' => 'Hi! How can I help you today?',
+            'error' => 'The assistant is unavailable right now. Please try again.',
+        ];
+    ?>
+    <div class="support-chatbot" data-support-chatbot hidden>
+        <button type="button" class="support-chatbot-toggle" data-support-chatbot-toggle aria-expanded="false">
+            <?php echo htmlspecialchars($support_chatbot_texts['open'], ENT_QUOTES, 'UTF-8'); ?>
+        </button>
+        <section class="support-chatbot-panel" data-support-chatbot-panel hidden>
+            <header class="support-chatbot-header">
+                <div>
+                    <span><?php echo htmlspecialchars($support_chatbot_texts['subtitle'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    <h2><?php echo htmlspecialchars($support_chatbot_texts['title'], ENT_QUOTES, 'UTF-8'); ?></h2>
+                </div>
+                <button type="button" data-support-chatbot-close aria-label="<?php echo htmlspecialchars(t('common_close'), ENT_QUOTES, 'UTF-8'); ?>">X</button>
+            </header>
+            <div class="support-chatbot-messages" data-support-chatbot-messages>
+                <article class="support-chatbot-message is-bot">
+                    <?php echo htmlspecialchars($support_chatbot_texts['welcome'], ENT_QUOTES, 'UTF-8'); ?>
+                </article>
+            </div>
+            <form class="support-chatbot-form" data-support-chatbot-form>
+                <input type="text" data-support-chatbot-input placeholder="<?php echo htmlspecialchars($support_chatbot_texts['placeholder'], ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
+                <button type="submit"><?php echo htmlspecialchars($support_chatbot_texts['send'], ENT_QUOTES, 'UTF-8'); ?></button>
+            </form>
+        </section>
+    </div>
+
     <!-- Bootstrap JS (Local) -->
     <script src="<?php echo htmlspecialchars(site_url('assets/js/bootstrap.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 
@@ -61,7 +106,12 @@
             'datePast' => t('booking_validation_date'),
             'estimatedTotal' => t('booking_total_estimate')
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+        window.supportChatbotConfig = <?php echo json_encode([
+            'endpoint' => site_url('user/support_chatbot.php'),
+            'error' => $support_chatbot_texts['error'],
+            'dir' => site_direction(),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
     </script>
-    <script src="<?php echo htmlspecialchars(site_url('assets/js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=2.8"></script>
+    <script src="<?php echo htmlspecialchars(site_url('assets/js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=2.9"></script>
 </body>
 </html>

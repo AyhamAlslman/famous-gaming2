@@ -226,6 +226,11 @@ if ($top_products_result) {
     }
 }
 
+$smart_insights = get_admin_smart_insights($conn);
+$smart_popular_times = get_popular_booking_times($conn, 4);
+$smart_room_recommendations = get_smart_room_recommendations($conn, 0, 3);
+$smart_store_recommendations = get_smart_store_recommendations($conn, 0, 3);
+
 $dashboard_chart_payload = [
     'dailyRevenue' => [
         'labels' => $daily_revenue_labels,
@@ -466,6 +471,56 @@ include 'includes/header.php';
                     <?php endif; ?>
                 </section>
             </div>
+
+            <section class="admin-overview-panel admin-ai-insights-panel">
+                <div class="admin-panel-heading">
+                    <span><?php echo t('admin_dashboard_smart_recommendations'); ?></span>
+                    <h2><?php echo htmlspecialchars(smart_i18n('insight_reports_title'), ENT_QUOTES, 'UTF-8'); ?></h2>
+                </div>
+
+                <div class="admin-ai-insights-grid">
+                    <?php foreach ($smart_insights as $insight): ?>
+                        <article class="admin-ai-insight-card">
+                            <span><?php echo htmlspecialchars($insight['title'], ENT_QUOTES, 'UTF-8'); ?></span>
+                            <strong><?php echo htmlspecialchars((string)$insight['value'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                            <p><?php echo htmlspecialchars($insight['text'], ENT_QUOTES, 'UTF-8'); ?></p>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="admin-ai-lists-grid">
+                    <div class="admin-ai-list">
+                        <h3><?php echo htmlspecialchars(smart_i18n('insight_peak_title'), ENT_QUOTES, 'UTF-8'); ?></h3>
+                        <?php if (empty($smart_popular_times)): ?>
+                            <p><?php echo htmlspecialchars(smart_i18n('no_data'), ENT_QUOTES, 'UTF-8'); ?></p>
+                        <?php else: ?>
+                            <?php foreach ($smart_popular_times as $time): ?>
+                                <div><span><?php echo htmlspecialchars($time['time'], ENT_QUOTES, 'UTF-8'); ?></span><strong><?php echo (int)$time['count']; ?></strong></div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="admin-ai-list">
+                        <h3><?php echo htmlspecialchars(smart_i18n('insight_room_title'), ENT_QUOTES, 'UTF-8'); ?></h3>
+                        <?php foreach ($smart_room_recommendations as $room): ?>
+                            <div>
+                                <span><?php echo htmlspecialchars($room['room_name'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                <strong><?php echo htmlspecialchars($room['room_type'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="admin-ai-list">
+                        <h3><?php echo htmlspecialchars(smart_i18n('insight_store_title'), ENT_QUOTES, 'UTF-8'); ?></h3>
+                        <?php foreach ($smart_store_recommendations as $product): ?>
+                            <div>
+                                <span><?php echo htmlspecialchars($product['product_name'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                <strong><?php echo number_format((float)$product['price'], 2); ?> JOD</strong>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </section>
 
             <section class="admin-overview-panel admin-loyalty-report">
                 <div class="admin-panel-heading">

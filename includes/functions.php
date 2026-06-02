@@ -2284,4 +2284,345 @@ function log_admin_action($conn, $admin_id, $action, $table_name, $record_id = n
     mysqli_stmt_close($stmt);
 }
 
+function smart_i18n($key, $replacements = []) {
+    $language = function_exists('site_language') ? site_language() : 'en';
+    $texts = [
+        'en' => [
+            'chat_default' => 'I can help with bookings, complaints, store products, popular times, and recommendations. Ask me what you need.',
+            'chat_booking' => 'To book, choose a room, date, duration, and available start time. I can also suggest popular rooms and booking times below.',
+            'chat_complaint' => 'For complaints or support notes, open the support form and describe the issue. The admin team will see it in the dashboard.',
+            'chat_store' => 'Here are smart store picks based on recent store activity and your history when available.',
+            'chat_hours' => 'Popular booking times are based on confirmed and pending bookings in the system.',
+            'chat_products' => 'These products are recommended from store sales and available stock.',
+            'chat_rooms' => 'These rooms are recommended from booking demand and your history when available.',
+            'action_book' => 'Book a room',
+            'action_complaint' => 'Send complaint',
+            'action_store' => 'Open store',
+            'action_bookings' => 'My bookings',
+            'recommended_rooms' => 'Recommended rooms',
+            'recommended_products' => 'Recommended products',
+            'popular_times' => 'Popular times',
+            'no_data' => 'Not enough data yet. Add more bookings or store orders to improve recommendations.',
+            'insight_demand_title' => 'Booking demand forecast',
+            'insight_customer_title' => 'Customer behavior',
+            'insight_reports_title' => 'Automatic admin report',
+            'insight_peak_title' => 'Popular booking times',
+            'insight_store_title' => 'Smart store recommendations',
+            'insight_room_title' => 'Smart room recommendations',
+            'demand_low' => 'Demand looks light. Good time to promote available rooms.',
+            'demand_medium' => 'Demand is steady. Keep staff ready around the peak slots.',
+            'demand_high' => 'Demand is high. Watch room availability and pending payments closely.',
+            'customer_summary' => ':users active users, :bookings bookings, :complaints complaints.',
+            'admin_summary' => 'Today: :todayBookings bookings, :todayRevenue JOD paid revenue, :pending pending actions.',
+        ],
+        'ar' => [
+            'chat_default' => 'أقدر أساعدك بالحجوزات، الشكاوى، منتجات المتجر، الأوقات المشهورة، والتوصيات. اسألني شو بتحتاج.',
+            'chat_booking' => 'للحجز اختار الغرفة والتاريخ والمدة ووقت البداية المتاح. كمان أقدر أقترح غرف وأوقات مناسبة بالأسفل.',
+            'chat_complaint' => 'للشكاوى أو ملاحظات الدعم افتح نموذج الدعم واكتب المشكلة. الإدارة ستراها داخل لوحة التحكم.',
+            'chat_store' => 'هاي اختيارات ذكية من المتجر حسب حركة المبيعات وتاريخك إذا كنت مسجل دخول.',
+            'chat_hours' => 'الأوقات المشهورة محسوبة من الحجوزات المؤكدة والمعلقة داخل النظام.',
+            'chat_products' => 'هاي المنتجات مقترحة من مبيعات المتجر والمخزون المتاح.',
+            'chat_rooms' => 'هاي الغرف مقترحة من الطلب على الحجوزات وتاريخك إذا كان متوفر.',
+            'action_book' => 'احجز غرفة',
+            'action_complaint' => 'إرسال شكوى',
+            'action_store' => 'افتح المتجر',
+            'action_bookings' => 'حجوزاتي',
+            'recommended_rooms' => 'غرف مقترحة',
+            'recommended_products' => 'منتجات مقترحة',
+            'popular_times' => 'أوقات مشهورة',
+            'no_data' => 'لا توجد بيانات كافية بعد. أضف حجوزات أو طلبات متجر أكثر لتحسين التوصيات.',
+            'insight_demand_title' => 'توقع الطلب على الحجوزات',
+            'insight_customer_title' => 'سلوك العملاء',
+            'insight_reports_title' => 'تقرير تلقائي للإدارة',
+            'insight_peak_title' => 'أوقات الحجز المشهورة',
+            'insight_store_title' => 'توصيات المتجر الذكية',
+            'insight_room_title' => 'توصيات الغرف الذكية',
+            'demand_low' => 'الطلب خفيف. وقت مناسب لترويج الغرف المتاحة.',
+            'demand_medium' => 'الطلب مستقر. جهز الفريق حول أوقات الذروة.',
+            'demand_high' => 'الطلب مرتفع. راقب توفر الغرف والمدفوعات المعلقة.',
+            'customer_summary' => ':users مستخدم نشط، :bookings حجز، :complaints شكوى.',
+            'admin_summary' => 'اليوم: :todayBookings حجوزات، :todayRevenue دينار مدفوع، :pending إجراء معلق.',
+        ],
+    ];
+
+    $text = $texts[$language][$key] ?? $texts['en'][$key] ?? $key;
+
+    foreach ($replacements as $placeholder => $value) {
+        $text = str_replace(':' . $placeholder, (string)$value, $text);
+    }
+
+    return $text;
+}
+
+function get_smart_room_recommendations($conn, $user_id = 0, $limit = 3) {
+    $limit = max(1, min(6, (int)$limit));
+    $user_id = (int)$user_id;
+    $rooms = [];
+
+    if ($user_id > 0) {
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT r.id, r.room_name, r.room_type, r.price_per_hour, r.description, COUNT(b.id) AS score
+             FROM bookings b
+             INNER JOIN rooms r ON r.id = b.room_id
+             WHERE b.user_id = ?
+             GROUP BY r.id, r.room_name, r.room_type, r.price_per_hour, r.description
+             ORDER BY score DESC, MAX(b.created_at) DESC
+             LIMIT " . $limit
+        );
+
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "i", $user_id);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            if ($result) {
+                $rooms = mysqli_fetch_all($result, MYSQLI_ASSOC);
+            }
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    if (count($rooms) < $limit) {
+        $result = mysqli_query(
+            $conn,
+            "SELECT r.id, r.room_name, r.room_type, r.price_per_hour, r.description, COUNT(b.id) AS score
+             FROM rooms r
+             LEFT JOIN bookings b ON b.room_id = r.id AND b.status IN ('Pending', 'Confirmed', 'Completed')
+             GROUP BY r.id, r.room_name, r.room_type, r.price_per_hour, r.description
+             ORDER BY score DESC, r.status ASC, r.room_name ASC
+             LIMIT " . $limit
+        );
+
+        if ($result) {
+            foreach (mysqli_fetch_all($result, MYSQLI_ASSOC) as $room) {
+                $exists = false;
+                foreach ($rooms as $existing_room) {
+                    if ((int)$existing_room['id'] === (int)$room['id']) {
+                        $exists = true;
+                        break;
+                    }
+                }
+                if (!$exists) {
+                    $rooms[] = $room;
+                }
+                if (count($rooms) >= $limit) {
+                    break;
+                }
+            }
+        }
+    }
+
+    return array_slice($rooms, 0, $limit);
+}
+
+function get_smart_store_recommendations($conn, $user_id = 0, $limit = 4) {
+    $limit = max(1, min(8, (int)$limit));
+    $user_id = (int)$user_id;
+    $category = '';
+
+    if ($user_id > 0) {
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT soi.category, COUNT(*) AS score
+             FROM store_orders so
+             INNER JOIN store_order_items soi ON soi.order_id = so.id
+             WHERE so.user_id = ?
+             GROUP BY soi.category
+             ORDER BY score DESC
+             LIMIT 1"
+        );
+
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "i", $user_id);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $row = $result ? mysqli_fetch_assoc($result) : null;
+            $category = $row['category'] ?? '';
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    $products = [];
+
+    if ($category !== '') {
+        $stmt = mysqli_prepare(
+            $conn,
+            "SELECT id, product_name, category, price, description, image_path, stock_quantity
+             FROM store_products
+             WHERE status = 'Active' AND stock_quantity > 0 AND category = ?
+             ORDER BY stock_quantity DESC, created_at DESC
+             LIMIT " . $limit
+        );
+
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "s", $category);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            if ($result) {
+                $products = mysqli_fetch_all($result, MYSQLI_ASSOC);
+            }
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    if (count($products) < $limit) {
+        $result = mysqli_query(
+            $conn,
+            "SELECT sp.id, sp.product_name, sp.category, sp.price, sp.description, sp.image_path, sp.stock_quantity,
+                    COALESCE(SUM(soi.quantity), 0) AS units_sold
+             FROM store_products sp
+             LEFT JOIN store_order_items soi ON soi.product_id = sp.id
+             LEFT JOIN store_orders so ON so.id = soi.order_id AND so.payment_status = 'Paid'
+             WHERE sp.status = 'Active' AND sp.stock_quantity > 0
+             GROUP BY sp.id, sp.product_name, sp.category, sp.price, sp.description, sp.image_path, sp.stock_quantity
+             ORDER BY units_sold DESC, sp.created_at DESC
+             LIMIT " . $limit
+        );
+
+        if ($result) {
+            foreach (mysqli_fetch_all($result, MYSQLI_ASSOC) as $product) {
+                $exists = false;
+                foreach ($products as $existing_product) {
+                    if ((int)$existing_product['id'] === (int)$product['id']) {
+                        $exists = true;
+                        break;
+                    }
+                }
+                if (!$exists) {
+                    $products[] = $product;
+                }
+                if (count($products) >= $limit) {
+                    break;
+                }
+            }
+        }
+    }
+
+    return array_slice($products, 0, $limit);
+}
+
+function get_popular_booking_times($conn, $limit = 4) {
+    $limit = max(1, min(8, (int)$limit));
+    $times = [];
+    $result = mysqli_query(
+        $conn,
+        "SELECT start_time, COUNT(*) AS booking_count
+         FROM bookings
+         WHERE status IN ('Pending', 'Confirmed', 'Completed')
+         GROUP BY start_time
+         ORDER BY booking_count DESC, start_time ASC
+         LIMIT " . $limit
+    );
+
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $times[] = [
+                'time' => format_time($row['start_time']),
+                'count' => (int)$row['booking_count'],
+            ];
+        }
+    }
+
+    return $times;
+}
+
+function get_admin_smart_insights($conn) {
+    $today_bookings = (int)(mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM bookings WHERE booking_date = CURDATE()"))['count'] ?? 0);
+    $next_7_bookings = (int)(mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM bookings WHERE booking_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)"))['count'] ?? 0);
+    $active_users = (int)(mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM site_users WHERE status = 'Active'"))['count'] ?? 0);
+    $booking_count = (int)(mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM bookings"))['count'] ?? 0);
+    $complaints_count = (int)(mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM complaints"))['count'] ?? 0);
+    $pending_bookings = (int)(mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM bookings WHERE status = 'Pending'"))['count'] ?? 0);
+    $pending_store_orders = (int)(mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS count FROM store_orders WHERE status = 'Pending'"))['count'] ?? 0);
+    $today_booking_revenue = (float)(mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) AS total FROM bookings WHERE payment_status = 'Paid' AND booking_date = CURDATE()"))['total'] ?? 0);
+    $today_store_revenue = (float)(mysqli_fetch_assoc(mysqli_query($conn, "SELECT IFNULL(SUM(paid_amount), 0) AS total FROM store_orders WHERE payment_status = 'Paid' AND DATE(created_at) = CURDATE()"))['total'] ?? 0);
+    $demand_level = $next_7_bookings >= 18 ? 'high' : ($next_7_bookings >= 7 ? 'medium' : 'low');
+
+    return [
+        [
+            'type' => 'demand',
+            'title' => smart_i18n('insight_demand_title'),
+            'value' => $next_7_bookings,
+            'text' => smart_i18n('demand_' . $demand_level),
+        ],
+        [
+            'type' => 'customers',
+            'title' => smart_i18n('insight_customer_title'),
+            'value' => $active_users,
+            'text' => smart_i18n('customer_summary', [
+                'users' => $active_users,
+                'bookings' => $booking_count,
+                'complaints' => $complaints_count,
+            ]),
+        ],
+        [
+            'type' => 'report',
+            'title' => smart_i18n('insight_reports_title'),
+            'value' => number_format($today_booking_revenue + $today_store_revenue, 2),
+            'text' => smart_i18n('admin_summary', [
+                'todayBookings' => $today_bookings,
+                'todayRevenue' => number_format($today_booking_revenue + $today_store_revenue, 2),
+                'pending' => $pending_bookings + $pending_store_orders,
+            ]),
+        ],
+    ];
+}
+
+function build_support_chatbot_response($conn, $message, $user_id = 0) {
+    $message = trim((string)$message);
+    $message = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
+    $rooms = get_smart_room_recommendations($conn, $user_id, 3);
+    $products = get_smart_store_recommendations($conn, $user_id, 3);
+    $times = get_popular_booking_times($conn, 3);
+    $answer_key = 'chat_default';
+
+    if (preg_match('/حجز|احجز|booking|book|room|غرفة|وقت/u', $message)) {
+        $answer_key = 'chat_booking';
+    } elseif (preg_match('/شكوى|مشكلة|complaint|support|دعم|مساعدة/u', $message)) {
+        $answer_key = 'chat_complaint';
+    } elseif (preg_match('/store|product|منتج|منتجات|متجر|شراء|بلايستيشن|controller|game/u', $message)) {
+        $answer_key = 'chat_store';
+    } elseif (preg_match('/توصية|اقترح|recommend|suggest/u', $message)) {
+        $answer_key = 'chat_products';
+    }
+
+    return [
+        'answer' => smart_i18n($answer_key),
+        'sections' => [
+            [
+                'title' => smart_i18n('recommended_rooms'),
+                'items' => array_map(static function ($room) {
+                    return [
+                        'title' => $room['room_name'] ?? '',
+                        'meta' => trim(($room['room_type'] ?? '') . ' - ' . number_format((float)($room['price_per_hour'] ?? 0), 2) . ' JOD/hr'),
+                    ];
+                }, $rooms),
+            ],
+            [
+                'title' => smart_i18n('recommended_products'),
+                'items' => array_map(static function ($product) {
+                    return [
+                        'title' => $product['product_name'] ?? '',
+                        'meta' => trim(($product['category'] ?? '') . ' - ' . number_format((float)($product['price'] ?? 0), 2) . ' JOD'),
+                    ];
+                }, $products),
+            ],
+            [
+                'title' => smart_i18n('popular_times'),
+                'items' => array_map(static function ($time) {
+                    return [
+                        'title' => $time['time'] ?? '',
+                        'meta' => (string)($time['count'] ?? 0),
+                    ];
+                }, $times),
+            ],
+        ],
+        'actions' => [
+            ['label' => smart_i18n('action_book'), 'url' => site_url('user/room_booking.php#booking-form')],
+            ['label' => smart_i18n('action_complaint'), 'url' => site_url('user/complaints.php')],
+            ['label' => smart_i18n('action_store'), 'url' => site_url('user/store.php')],
+        ],
+    ];
+}
+
 ?>
