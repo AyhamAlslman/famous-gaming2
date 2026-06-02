@@ -4813,3 +4813,61 @@ html[dir="rtl"] .support-chatbot-message.is-user {
         width: 100%;
     }
 }
+
+.site-user-shell .smart-notification-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.site-user-shell .smart-notification-summary-card {
+    border: 1px solid rgba(143, 183, 255, 0.22);
+    background: rgba(5, 15, 26, 0.72);
+    border-radius: 8px;
+    padding: 14px 16px;
+}
+
+.site-user-shell .smart-notification-summary-card span,
+.site-user-shell .smart-notification-badge {
+    display: inline-flex;
+    align-items: center;
+    color: rgba(225, 236, 255, 0.74);
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.site-user-shell .smart-notification-summary-card strong {
+    display: block;
+    margin-top: 6px;
+    color: #ffffff;
+    font-size: 1.55rem;
+    line-height: 1;
+}
+
+.site-user-shell .smart-notification-badge {
+    width: fit-content;
+    margin-bottom: 10px;
+    padding: 5px 9px;
+    border: 1px solid rgba(143, 183, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.site-user-shell .smart-notification-badge.notification-type-booking {
+    color: #9fd0ff;
+}
+
+.site-user-shell .smart-notification-badge.notification-type-store {
+    color: #8df2d0;
+}
+
+.site-user-shell .smart-notification-badge.notification-type-support {
+    color: #ffd28a;
+}
+
+@media (max-width: 760px) {
+    .site-user-shell .smart-notification-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

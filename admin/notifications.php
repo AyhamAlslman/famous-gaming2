@@ -32,6 +32,20 @@ $page_title = t('admin_notifications');
 $active_page = 'notifications';
 $notifications = get_all_admin_notifications($conn, 160);
 $unread_count = count_unread_admin_notifications($conn);
+$notification_summary = [
+    'total' => count($notifications),
+    'unread' => $unread_count,
+    'booking' => 0,
+    'store' => 0,
+    'support' => 0,
+];
+
+foreach ($notifications as $notification) {
+    $meta = get_notification_type_meta($notification['notification_type'] ?? '');
+    if (isset($notification_summary[$meta['group']])) {
+        $notification_summary[$meta['group']]++;
+    }
+}
 
 include 'includes/header.php';
 ?>
@@ -56,11 +70,23 @@ include 'includes/header.php';
         <div class="admin-notification-summary-grid">
             <div class="admin-notification-summary-card">
                 <span><?php echo t('admin_notifications'); ?></span>
-                <strong><?php echo count($notifications); ?></strong>
+                <strong><?php echo (int)$notification_summary['total']; ?></strong>
             </div>
             <div class="admin-notification-summary-card">
                 <span><?php echo t('admin_unread', ['count' => $unread_count]); ?></span>
-                <strong><?php echo $unread_count; ?></strong>
+                <strong><?php echo (int)$notification_summary['unread']; ?></strong>
+            </div>
+            <div class="admin-notification-summary-card">
+                <span><?php echo site_language() === 'ar' ? 'الحجوزات' : 'Bookings'; ?></span>
+                <strong><?php echo (int)$notification_summary['booking']; ?></strong>
+            </div>
+            <div class="admin-notification-summary-card">
+                <span><?php echo site_language() === 'ar' ? 'المتجر' : 'Store'; ?></span>
+                <strong><?php echo (int)$notification_summary['store']; ?></strong>
+            </div>
+            <div class="admin-notification-summary-card">
+                <span><?php echo site_language() === 'ar' ? 'الدعم' : 'Support'; ?></span>
+                <strong><?php echo (int)$notification_summary['support']; ?></strong>
             </div>
         </div>
 
@@ -72,9 +98,12 @@ include 'includes/header.php';
                 </div>
             <?php else: ?>
                 <?php foreach ($notifications as $notification): ?>
+                    <?php $notification_meta = get_notification_type_meta($notification['notification_type'] ?? ''); ?>
                     <article class="admin-notification-page-card <?php echo (int)$notification['is_read'] === 0 ? 'is-unread' : 'is-read'; ?>">
                         <div class="admin-notification-page-body">
-                            <span class="admin-notification-type"><?php echo htmlspecialchars(str_replace('_', ' ', $notification['notification_type'])); ?></span>
+                            <span class="admin-notification-type <?php echo htmlspecialchars($notification_meta['class'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo htmlspecialchars($notification_meta['label'], ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlspecialchars(str_replace('_', ' ', $notification['notification_type'])); ?>
+                            </span>
                             <div class="admin-notification-page-head">
                                 <h2><?php echo htmlspecialchars($notification['title']); ?></h2>
                                 <?php if ((int)$notification['is_read'] === 0): ?>

@@ -72,6 +72,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = t('notifications_page_title');
 $notifications = get_site_notifications($conn, $site_user_id, 120);
 $unread_count = count_unread_site_notifications($conn, $site_user_id);
+$notification_summary = [
+    'total' => count($notifications),
+    'unread' => $unread_count,
+    'booking' => 0,
+    'store' => 0,
+];
+
+foreach ($notifications as $notification) {
+    $meta = get_notification_type_meta($notification['notification_type'] ?? '');
+    if (isset($notification_summary[$meta['group']])) {
+        $notification_summary[$meta['group']]++;
+    }
+}
 
 include dirname(__DIR__) . '/includes/header.php';
 ?>
@@ -86,6 +99,25 @@ include dirname(__DIR__) . '/includes/header.php';
 <section class="content notifications-content">
     <div class="container">
         <div class="notifications-shell">
+            <div class="smart-notification-summary">
+                <div class="smart-notification-summary-card">
+                    <span><?php echo site_language() === 'ar' ? 'كل الإشعارات' : 'All'; ?></span>
+                    <strong><?php echo (int)$notification_summary['total']; ?></strong>
+                </div>
+                <div class="smart-notification-summary-card">
+                    <span><?php echo site_language() === 'ar' ? 'غير مقروء' : 'Unread'; ?></span>
+                    <strong><?php echo (int)$notification_summary['unread']; ?></strong>
+                </div>
+                <div class="smart-notification-summary-card">
+                    <span><?php echo site_language() === 'ar' ? 'الحجوزات' : 'Bookings'; ?></span>
+                    <strong><?php echo (int)$notification_summary['booking']; ?></strong>
+                </div>
+                <div class="smart-notification-summary-card">
+                    <span><?php echo site_language() === 'ar' ? 'المتجر' : 'Store'; ?></span>
+                    <strong><?php echo (int)$notification_summary['store']; ?></strong>
+                </div>
+            </div>
+
             <div class="notifications-toolbar">
                 <div>
                     <span class="ticket-label"><?php echo t('nav_notifications'); ?></span>
@@ -111,8 +143,12 @@ include dirname(__DIR__) . '/includes/header.php';
             <?php else: ?>
                 <div class="notifications-list">
                     <?php foreach ($notifications as $notification): ?>
+                        <?php $notification_meta = get_notification_type_meta($notification['notification_type'] ?? ''); ?>
                         <article class="notification-card <?php echo (int)$notification['is_read'] === 0 ? 'is-unread' : 'is-read'; ?>">
                             <div class="notification-card-main">
+                                <span class="smart-notification-badge <?php echo htmlspecialchars($notification_meta['class'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php echo htmlspecialchars($notification_meta['label'], ENT_QUOTES, 'UTF-8'); ?>
+                                </span>
                                 <div class="notification-card-head">
                                     <h3><?php echo htmlspecialchars($notification['title']); ?></h3>
                                     <?php if ((int)$notification['is_read'] === 0): ?>

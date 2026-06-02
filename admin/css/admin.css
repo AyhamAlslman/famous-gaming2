@@ -4227,3 +4227,20 @@ html[dir="rtl"] .admin-sidebar,
         grid-template-columns: 1fr;
     }
 }
+
+.admin-notification-type.notification-type-booking {
+    color: #9fd0ff;
+}
+
+.admin-notification-type.notification-type-store {
+    color: #8df2d0;
+}
+
+.admin-notification-type.notification-type-support {
+    color: #ffd28a;
+}
+
+.admin-notification-type.notification-type-account,
+.admin-notification-type.notification-type-system {
+    color: rgba(224, 241, 255, 0.7);
+}

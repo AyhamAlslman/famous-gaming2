@@ -2043,6 +2043,341 @@ function clear_site_notification_cache($user_id = null) {
     runtime_cache_forget('site_notifications_');
 }
 
+function ensure_smart_notification_events_table($conn) {
+    static $checked = false;
+
+    if ($checked) {
+        return;
+    }
+
+    $checked = true;
+    $query = "CREATE TABLE IF NOT EXISTS smart_notification_events (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        event_key VARCHAR(160) NOT NULL UNIQUE,
+        audience_type VARCHAR(20) NOT NULL,
+        audience_id INT DEFAULT NULL,
+        notification_table VARCHAR(40) DEFAULT NULL,
+        notification_id INT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_smart_notification_audience (audience_type, audience_id, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+    mysqli_query($conn, $query);
+}
+
+function smart_notifications_enabled($conn) {
+    $value = get_setting($conn, 'smart_notifications_enabled', null);
+
+    if ($value === null) {
+        mysqli_query(
+            $conn,
+            "INSERT IGNORE INTO system_settings (setting_key, setting_value, setting_type, description)
+             VALUES ('smart_notifications_enabled', '1', 'boolean', 'Enable smart booking reminders, availability alerts, and store activity notifications')"
+        );
+        $value = '1';
+    }
+
+    return $value !== '0';
+}
+
+function smart_notification_text($en, $ar) {
+    return function_exists('site_language') && site_language() === 'ar' ? $ar : $en;
+}
+
+function get_notification_type_meta($type) {
+    $type = (string)$type;
+    $groups = [
+        'booking' => [
+            'booking_created',
+            'booking_updated',
+            'booking_cancelled',
+            'booking_reminder',
+            'booking_available',
+            'payment_received',
+            'payment_pending',
+        ],
+        'store' => [
+            'store_order_created',
+            'store_order_updated',
+            'store_activity',
+            'low_stock',
+        ],
+        'support' => [
+            'complaint_created',
+            'support_message',
+            'feedback_created',
+        ],
+        'account' => [
+            'welcome',
+            'account',
+        ],
+    ];
+
+    $group = 'system';
+    foreach ($groups as $group_key => $types) {
+        if (in_array($type, $types, true) || str_starts_with($type, $group_key . '_')) {
+            $group = $group_key;
+            break;
+        }
+    }
+
+    $labels = [
+        'booking' => smart_notification_text('Booking', 'الحجوزات'),
+        'store' => smart_notification_text('Store', 'المتجر'),
+        'support' => smart_notification_text('Support', 'الدعم'),
+        'account' => smart_notification_text('Account', 'الحساب'),
+        'system' => smart_notification_text('System', 'النظام'),
+    ];
+
+    return [
+        'group' => $group,
+        'label' => $labels[$group] ?? $labels['system'],
+        'class' => 'notification-type-' . $group,
+    ];
+}
+
+function record_smart_notification_event($conn, $event_key, $audience_type, $audience_id = null, $notification_table = null, $notification_id = null) {
+    ensure_smart_notification_events_table($conn);
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "INSERT IGNORE INTO smart_notification_events (event_key, audience_type, audience_id, notification_table, notification_id)
+         VALUES (?, ?, ?, ?, ?)"
+    );
+
+    if (!$stmt) {
+        return false;
+    }
+
+    $audience_id = $audience_id !== null ? (int)$audience_id : null;
+    $notification_id = $notification_id !== null ? (int)$notification_id : null;
+    mysqli_stmt_bind_param($stmt, "ssisi", $event_key, $audience_type, $audience_id, $notification_table, $notification_id);
+    $success = mysqli_stmt_execute($stmt) && mysqli_stmt_affected_rows($stmt) > 0;
+    mysqli_stmt_close($stmt);
+
+    return $success;
+}
+
+function create_unique_admin_notification($conn, $event_key, $type, $title, $message, $related_table = null, $related_id = null, $action_url = null) {
+    if (!record_smart_notification_event($conn, $event_key, 'admin', null, null, null)) {
+        return false;
+    }
+
+    $success = create_admin_notification($conn, $type, $title, $message, $related_table, $related_id, $action_url);
+
+    if ($success) {
+        $notification_id = (int)mysqli_insert_id($conn);
+        $stmt = mysqli_prepare($conn, "UPDATE smart_notification_events SET notification_table = 'admin_notifications', notification_id = ? WHERE event_key = ?");
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "is", $notification_id, $event_key);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    return $success;
+}
+
+function create_unique_site_notification($conn, $event_key, $user_id, $type, $title, $message, $action_url = null) {
+    $user_id = (int)$user_id;
+    if ($user_id <= 0 || !record_smart_notification_event($conn, $event_key, 'user', $user_id, null, null)) {
+        return false;
+    }
+
+    $success = create_site_notification($conn, $user_id, $type, $title, $message, $action_url);
+
+    if ($success) {
+        $notification_id = (int)mysqli_insert_id($conn);
+        $stmt = mysqli_prepare($conn, "UPDATE smart_notification_events SET notification_table = 'site_notifications', notification_id = ? WHERE event_key = ?");
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "is", $notification_id, $event_key);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    return $success;
+}
+
+function generate_site_smart_notifications($conn, $user_id) {
+    $user_id = (int)$user_id;
+    if ($user_id <= 0 || !smart_notifications_enabled($conn)) {
+        return 0;
+    }
+
+    ensure_site_notifications_table($conn);
+    ensure_smart_notification_events_table($conn);
+    $created = 0;
+    $today = date('Y-m-d');
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT b.id, b.booking_code, b.booking_date, b.start_time, b.status, r.room_name
+         FROM bookings b
+         LEFT JOIN rooms r ON r.id = b.room_id
+         WHERE b.user_id = ?
+           AND b.status IN ('Pending', 'Confirmed')
+           AND TIMESTAMP(b.booking_date, b.start_time) BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 24 HOUR)
+         ORDER BY b.booking_date ASC, b.start_time ASC
+         LIMIT 5"
+    );
+
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "i", $user_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        while ($booking = $result ? mysqli_fetch_assoc($result) : null) {
+            $booking_id = (int)$booking['id'];
+            $event_key = 'user_booking_reminder_' . $user_id . '_' . $booking_id . '_' . $today;
+            $title = smart_notification_text('Booking reminder', 'تذكير بالحجز');
+            $message = smart_notification_text(
+                'Your booking for ' . ($booking['room_name'] ?? 'a room') . ' starts on ' . format_date($booking['booking_date']) . ' at ' . format_time($booking['start_time']) . '.',
+                'حجزك في ' . ($booking['room_name'] ?? 'الغرفة') . ' يبدأ بتاريخ ' . format_date($booking['booking_date']) . ' الساعة ' . format_time($booking['start_time']) . '.'
+            );
+            $created += create_unique_site_notification($conn, $event_key, $user_id, 'booking_reminder', $title, $message, 'user/my_bookings.php') ? 1 : 0;
+        }
+        mysqli_stmt_close($stmt);
+    }
+
+    $available_result = mysqli_query(
+        $conn,
+        "SELECT COUNT(*) AS available_rooms
+         FROM rooms
+         WHERE status = 'Available'"
+    );
+    $available_row = $available_result ? mysqli_fetch_assoc($available_result) : null;
+    $available_rooms = (int)($available_row['available_rooms'] ?? 0);
+
+    if ($available_rooms > 0) {
+        $event_key = 'user_availability_' . $user_id . '_' . $today;
+        $title = smart_notification_text('Rooms available today', 'غرف متاحة اليوم');
+        $message = smart_notification_text(
+            $available_rooms . ' room(s) are available now. Good time to reserve your gaming session.',
+            'يوجد ' . $available_rooms . ' غرف متاحة الآن. وقت مناسب لتحجز جلستك.'
+        );
+        $created += create_unique_site_notification($conn, $event_key, $user_id, 'booking_available', $title, $message, 'user/room_booking.php#booking-form') ? 1 : 0;
+    }
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT id, order_code, status, payment_status, updated_at
+         FROM store_orders
+         WHERE user_id = ?
+           AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+           AND (payment_status IN ('Pending Payment', 'Paid') OR status IN ('Confirmed', 'Completed'))
+         ORDER BY updated_at DESC, id DESC
+         LIMIT 4"
+    );
+
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "i", $user_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        while ($order = $result ? mysqli_fetch_assoc($result) : null) {
+            $order_id = (int)$order['id'];
+            $event_key = 'user_store_activity_' . $user_id . '_' . $order_id . '_' . normalize_status_key($order['status'] . '_' . $order['payment_status']);
+            $title = smart_notification_text('Store order update', 'تحديث طلب المتجر');
+            $message = smart_notification_text(
+                'Store order ' . $order['order_code'] . ' is now ' . $order['status'] . ' / ' . $order['payment_status'] . '.',
+                'طلب المتجر ' . $order['order_code'] . ' حالته الآن ' . $order['status'] . ' / ' . $order['payment_status'] . '.'
+            );
+            $created += create_unique_site_notification($conn, $event_key, $user_id, 'store_activity', $title, $message, 'user/my_bookings.php') ? 1 : 0;
+        }
+        mysqli_stmt_close($stmt);
+    }
+
+    return $created;
+}
+
+function generate_admin_smart_notifications($conn) {
+    if (!smart_notifications_enabled($conn)) {
+        return 0;
+    }
+
+    ensure_admin_notifications_table($conn);
+    ensure_smart_notification_events_table($conn);
+    $created = 0;
+    $today = date('Y-m-d');
+
+    $result = mysqli_query(
+        $conn,
+        "SELECT b.id, b.customer_name, b.booking_date, b.start_time, b.status, r.room_name
+         FROM bookings b
+         LEFT JOIN rooms r ON r.id = b.room_id
+         WHERE b.status IN ('Pending', 'Confirmed')
+           AND TIMESTAMP(b.booking_date, b.start_time) BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 3 HOUR)
+         ORDER BY b.booking_date ASC, b.start_time ASC
+         LIMIT 8"
+    );
+
+    if ($result) {
+        while ($booking = mysqli_fetch_assoc($result)) {
+            $booking_id = (int)$booking['id'];
+            $event_key = 'admin_booking_due_' . $booking_id . '_' . date('YmdH', strtotime($booking['booking_date'] . ' ' . $booking['start_time']));
+            $title = smart_notification_text('Upcoming booking reminder', 'تذكير حجز قريب');
+            $message = smart_notification_text(
+                ($booking['customer_name'] ?? 'Customer') . ' has a booking for ' . ($booking['room_name'] ?? 'room') . ' at ' . format_time($booking['start_time']) . '.',
+                ($booking['customer_name'] ?? 'العميل') . ' لديه حجز في ' . ($booking['room_name'] ?? 'الغرفة') . ' الساعة ' . format_time($booking['start_time']) . '.'
+            );
+            $created += create_unique_admin_notification($conn, $event_key, 'booking_reminder', $title, $message, 'bookings', $booking_id, 'booking_details.php?id=' . $booking_id) ? 1 : 0;
+        }
+    }
+
+    $pending_store_result = mysqli_query(
+        $conn,
+        "SELECT COUNT(*) AS pending_count
+         FROM store_orders
+         WHERE status = 'Pending' OR payment_status = 'Pending Payment'"
+    );
+    $pending_store_row = $pending_store_result ? mysqli_fetch_assoc($pending_store_result) : null;
+    $pending_store_count = (int)($pending_store_row['pending_count'] ?? 0);
+
+    if ($pending_store_count > 0) {
+        $event_key = 'admin_store_pending_' . $today . '_' . $pending_store_count;
+        $title = smart_notification_text('Store activity needs review', 'نشاط متجر يحتاج متابعة');
+        $message = smart_notification_text(
+            $pending_store_count . ' store order(s) are waiting for payment or status review.',
+            'يوجد ' . $pending_store_count . ' طلب متجر بانتظار مراجعة الدفع أو الحالة.'
+        );
+        $created += create_unique_admin_notification($conn, $event_key, 'store_activity', $title, $message, 'store_orders', null, 'store_orders.php') ? 1 : 0;
+    }
+
+    $low_stock_result = mysqli_query(
+        $conn,
+        "SELECT COUNT(*) AS low_stock_count
+         FROM store_products
+         WHERE status = 'Active' AND stock_quantity BETWEEN 1 AND 3"
+    );
+    $low_stock_row = $low_stock_result ? mysqli_fetch_assoc($low_stock_result) : null;
+    $low_stock_count = (int)($low_stock_row['low_stock_count'] ?? 0);
+
+    if ($low_stock_count > 0) {
+        $event_key = 'admin_store_low_stock_' . $today . '_' . $low_stock_count;
+        $title = smart_notification_text('Low stock alert', 'تنبيه مخزون منخفض');
+        $message = smart_notification_text(
+            $low_stock_count . ' active product(s) are close to running out.',
+            'يوجد ' . $low_stock_count . ' منتجات فعالة قاربت على النفاد.'
+        );
+        $created += create_unique_admin_notification($conn, $event_key, 'store_activity', $title, $message, 'store_products', null, 'store_products.php') ? 1 : 0;
+    }
+
+    $available_result = mysqli_query($conn, "SELECT COUNT(*) AS available_rooms FROM rooms WHERE status = 'Available'");
+    $available_row = $available_result ? mysqli_fetch_assoc($available_result) : null;
+    $available_rooms = (int)($available_row['available_rooms'] ?? 0);
+
+    if ($available_rooms > 0) {
+        $event_key = 'admin_booking_availability_' . $today;
+        $title = smart_notification_text('Booking availability today', 'توفر حجوزات اليوم');
+        $message = smart_notification_text(
+            $available_rooms . ' room(s) are available. Use this window for walk-ins or promotions.',
+            'يوجد ' . $available_rooms . ' غرف متاحة. استغلها للحجوزات السريعة أو العروض.'
+        );
+        $created += create_unique_admin_notification($conn, $event_key, 'booking_available', $title, $message, 'rooms', null, 'rooms_full_crud.php') ? 1 : 0;
+    }
+
+    return $created;
+}
+
 /**
  * Create a new customer-facing notification.
  */
@@ -2568,6 +2903,146 @@ function get_admin_smart_insights($conn) {
     ];
 }
 
+function ensure_smart_support_tables($conn) {
+    static $checked = false;
+    if ($checked) {
+        return true;
+    }
+
+    $checked = true;
+    $session_table = "CREATE TABLE IF NOT EXISTS chatbot_sessions (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NULL,
+        session_token VARCHAR(64) NOT NULL,
+        language VARCHAR(5) NOT NULL DEFAULT 'en',
+        page_url VARCHAR(255) DEFAULT NULL,
+        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_chatbot_sessions_user_started (user_id, started_at),
+        INDEX idx_chatbot_sessions_token (session_token)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+    $message_table = "CREATE TABLE IF NOT EXISTS chatbot_messages (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        session_id INT NOT NULL,
+        sender VARCHAR(20) NOT NULL,
+        message_text TEXT NOT NULL,
+        intent VARCHAR(50) DEFAULT NULL,
+        response_payload LONGTEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_chatbot_messages_session_created (session_id, created_at),
+        INDEX idx_chatbot_messages_intent (intent)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+    $report_table = "CREATE TABLE IF NOT EXISTS smart_report_snapshots (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        report_type VARCHAR(50) NOT NULL,
+        report_title VARCHAR(150) NOT NULL,
+        metric_value VARCHAR(80) DEFAULT NULL,
+        report_payload LONGTEXT DEFAULT NULL,
+        created_by_admin_id INT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_smart_report_type_created (report_type, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+    return mysqli_query($conn, $session_table)
+        && mysqli_query($conn, $message_table)
+        && mysqli_query($conn, $report_table);
+}
+
+function get_support_chatbot_session_id($conn, $user_id = 0) {
+    ensure_smart_support_tables($conn);
+
+    if (empty($_SESSION['support_chatbot_token'])) {
+        $_SESSION['support_chatbot_token'] = bin2hex(random_bytes(16));
+    }
+
+    $session_token = $_SESSION['support_chatbot_token'];
+    $language = function_exists('site_language') ? site_language() : 'en';
+    $page_url = $_SERVER['HTTP_REFERER'] ?? ($_SERVER['REQUEST_URI'] ?? null);
+    $user_id = $user_id > 0 ? (int)$user_id : null;
+
+    $stmt = mysqli_prepare($conn, "SELECT id FROM chatbot_sessions WHERE session_token = ? ORDER BY id DESC LIMIT 1");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "s", $session_token);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $row = $result ? mysqli_fetch_assoc($result) : null;
+        mysqli_stmt_close($stmt);
+        if ($row) {
+            return (int)$row['id'];
+        }
+    }
+
+    if ($user_id === null) {
+        $stmt = mysqli_prepare($conn, "INSERT INTO chatbot_sessions (user_id, session_token, language, page_url) VALUES (NULL, ?, ?, ?)");
+        if (!$stmt) {
+            return 0;
+        }
+
+        mysqli_stmt_bind_param($stmt, "sss", $session_token, $language, $page_url);
+        mysqli_stmt_execute($stmt);
+        $session_id = (int)mysqli_insert_id($conn);
+        mysqli_stmt_close($stmt);
+
+        return $session_id;
+    }
+
+    $stmt = mysqli_prepare($conn, "INSERT INTO chatbot_sessions (user_id, session_token, language, page_url) VALUES (?, ?, ?, ?)");
+    if (!$stmt) {
+        return 0;
+    }
+
+    mysqli_stmt_bind_param($stmt, "isss", $user_id, $session_token, $language, $page_url);
+    mysqli_stmt_execute($stmt);
+    $session_id = (int)mysqli_insert_id($conn);
+    mysqli_stmt_close($stmt);
+
+    return $session_id;
+}
+
+function detect_support_chatbot_intent($message) {
+    $message = trim((string)$message);
+    $message = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
+
+    if (preg_match('/booking|book|room/u', $message)) {
+        return 'booking';
+    }
+
+    if (preg_match('/complaint|support/u', $message)) {
+        return 'complaint';
+    }
+
+    if (preg_match('/store|product|controller|game/u', $message)) {
+        return 'store';
+    }
+
+    if (preg_match('/recommend|suggest/u', $message)) {
+        return 'recommendation';
+    }
+
+    return 'general';
+}
+
+function log_support_chatbot_message($conn, $session_id, $sender, $message_text, $intent = null, $payload = null) {
+    $session_id = (int)$session_id;
+    if ($session_id <= 0) {
+        return false;
+    }
+
+    $payload_text = $payload === null ? null : json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $stmt = mysqli_prepare($conn, "INSERT INTO chatbot_messages (session_id, sender, message_text, intent, response_payload) VALUES (?, ?, ?, ?, ?)");
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "issss", $session_id, $sender, $message_text, $intent, $payload_text);
+    $saved = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    return $saved;
+}
+
 function build_support_chatbot_response($conn, $message, $user_id = 0) {
     $message = trim((string)$message);
     $message = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
@@ -2586,7 +3061,15 @@ function build_support_chatbot_response($conn, $message, $user_id = 0) {
         $answer_key = 'chat_products';
     }
 
+    $intent = [
+        'chat_booking' => 'booking',
+        'chat_complaint' => 'complaint',
+        'chat_store' => 'store',
+        'chat_products' => 'recommendation',
+    ][$answer_key] ?? 'general';
+
     return [
+        'intent' => $intent,
         'answer' => smart_i18n($answer_key),
         'sections' => [
             [

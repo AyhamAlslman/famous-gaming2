@@ -15,6 +15,10 @@ USE playroom_db;
 DROP TABLE IF EXISTS `audit_log`;
 DROP TABLE IF EXISTS `admin_notifications`;
 DROP TABLE IF EXISTS `site_notifications`;
+DROP TABLE IF EXISTS `smart_notification_events`;
+DROP TABLE IF EXISTS `chatbot_messages`;
+DROP TABLE IF EXISTS `chatbot_sessions`;
+DROP TABLE IF EXISTS `smart_report_snapshots`;
 DROP TABLE IF EXISTS `complaints`;
 DROP TABLE IF EXISTS `booking_items`;
 DROP TABLE IF EXISTS `bookings`;
@@ -91,6 +95,46 @@ CREATE TABLE `site_notifications` (
     FOREIGN KEY (`user_id`) REFERENCES `site_users`(`id`) ON DELETE CASCADE,
     INDEX `idx_site_notifications_user_read` (`user_id`, `is_read`, `created_at`),
     INDEX `idx_site_notifications_user_created` (`user_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: smart_notification_events
+CREATE TABLE `smart_notification_events` (
+    `id` INT PRIMARY KEY AUTO_INCREMENT,
+    `event_key` VARCHAR(160) NOT NULL UNIQUE,
+    `audience_type` VARCHAR(20) NOT NULL,
+    `audience_id` INT DEFAULT NULL,
+    `notification_table` VARCHAR(40) DEFAULT NULL,
+    `notification_id` INT DEFAULT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_smart_notification_audience` (`audience_type`, `audience_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: chatbot_sessions
+CREATE TABLE `chatbot_sessions` (
+    `id` INT PRIMARY KEY AUTO_INCREMENT,
+    `user_id` INT NULL,
+    `session_token` VARCHAR(64) NOT NULL,
+    `language` VARCHAR(5) NOT NULL DEFAULT 'en',
+    `page_url` VARCHAR(255) DEFAULT NULL,
+    `started_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (`user_id`) REFERENCES `site_users`(`id`) ON DELETE SET NULL,
+    INDEX `idx_chatbot_sessions_user_started` (`user_id`, `started_at`),
+    INDEX `idx_chatbot_sessions_token` (`session_token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: chatbot_messages
+CREATE TABLE `chatbot_messages` (
+    `id` INT PRIMARY KEY AUTO_INCREMENT,
+    `session_id` INT NOT NULL,
+    `sender` VARCHAR(20) NOT NULL,
+    `message_text` TEXT NOT NULL,
+    `intent` VARCHAR(50) DEFAULT NULL,
+    `response_payload` LONGTEXT DEFAULT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`session_id`) REFERENCES `chatbot_sessions`(`id`) ON DELETE CASCADE,
+    INDEX `idx_chatbot_messages_session_created` (`session_id`, `created_at`),
+    INDEX `idx_chatbot_messages_intent` (`intent`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table: bookings
@@ -282,6 +326,19 @@ CREATE TABLE `audit_log` (
     FOREIGN KEY (`admin_id`) REFERENCES `admins`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Table: smart_report_snapshots
+CREATE TABLE `smart_report_snapshots` (
+    `id` INT PRIMARY KEY AUTO_INCREMENT,
+    `report_type` VARCHAR(50) NOT NULL,
+    `report_title` VARCHAR(150) NOT NULL,
+    `metric_value` VARCHAR(80) DEFAULT NULL,
+    `report_payload` LONGTEXT DEFAULT NULL,
+    `created_by_admin_id` INT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`created_by_admin_id`) REFERENCES `admins`(`id`) ON DELETE SET NULL,
+    INDEX `idx_smart_report_type_created` (`report_type`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- =====================================================
 -- 3. INSERT SYSTEM CONFIG & DEFAULT DATA
@@ -293,7 +350,11 @@ INSERT INTO `system_settings` (`id`, `setting_key`, `setting_value`, `setting_ty
 (1, 'max_booking_hours', '12', 'integer', 'Maximum hours allowed per booking'),
 (2, 'min_booking_hours', '1', 'integer', 'Minimum hours allowed per booking'),
 (3, 'loyalty_points_per_jod', '1', 'decimal', 'Loyalty points earned for each paid JOD'),
-(4, 'loyalty_points_per_jod_discount', '10', 'decimal', 'Loyalty points needed for 1 JOD discount');
+(4, 'loyalty_points_per_jod_discount', '10', 'decimal', 'Loyalty points needed for 1 JOD discount'),
+(5, 'support_chatbot_enabled', '1', 'boolean', 'Enable the smart support chatbot widget'),
+(6, 'smart_recommendations_enabled', '1', 'boolean', 'Enable room and store recommendations'),
+(7, 'smart_report_retention_days', '90', 'integer', 'Days to keep smart report snapshots'),
+(8, 'smart_notifications_enabled', '1', 'boolean', 'Enable smart booking reminders, availability alerts, and store activity notifications');
 UNLOCK TABLES;
 
 -- Admin Accounts

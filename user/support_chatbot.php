@@ -24,7 +24,10 @@ if ($message === '') {
     $message = smart_i18n('chat_default');
 }
 
+$chatbot_session_id = get_support_chatbot_session_id($conn, $site_user_id);
 $response = build_support_chatbot_response($conn, $message, $site_user_id);
+log_support_chatbot_message($conn, $chatbot_session_id, 'user', $message, $response['intent'] ?? detect_support_chatbot_intent($message));
+log_support_chatbot_message($conn, $chatbot_session_id, 'bot', $response['answer'] ?? '', $response['intent'] ?? 'general', $response);
 
 echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 

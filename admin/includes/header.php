@@ -1,4 +1,7 @@
 <?php
+if (function_exists('generate_admin_smart_notifications')) {
+    generate_admin_smart_notifications($conn);
+}
 $admin_notification_unread_count = count_unread_admin_notifications($conn);
 $admin_notifications = get_recent_admin_notifications($conn, 6);
 $current_admin_path = basename($_SERVER['PHP_SELF']);
@@ -74,7 +77,7 @@ $admin_nav_items[] = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?><?php echo t('admin_panel_title'); ?></title>
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.8">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.9">
     <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
 <body class="admin-body <?php echo site_is_rtl() ? 'admin-rtl' : 'admin-ltr'; ?>">

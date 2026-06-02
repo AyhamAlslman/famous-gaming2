@@ -22,6 +22,9 @@ if ($site_user_id > 0 && function_exists('get_current_site_user')) {
         $site_user_points = 0;
     }
 }
+if ($site_user_logged_in && function_exists('generate_site_smart_notifications')) {
+    generate_site_smart_notifications($conn, $site_user_id);
+}
 $site_user_notification_count = $site_user_logged_in ? count_unread_site_notifications($conn, $site_user_id) : 0;
 $site_user_initial = $site_user_name !== '' ? (function_exists('mb_substr') ? mb_substr($site_user_name, 0, 1, 'UTF-8') : substr($site_user_name, 0, 1)) : 'F';
 $is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_password.php'], true);
@@ -46,7 +49,7 @@ $page_body_class = 'page-' . preg_replace('/[^a-z0-9_-]+/i', '-', pathinfo($curr
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=8.4">
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=4.0">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=4.1">
 
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
