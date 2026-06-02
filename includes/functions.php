@@ -3001,23 +3001,33 @@ function get_support_chatbot_session_id($conn, $user_id = 0) {
     return $session_id;
 }
 
+function support_chatbot_message_has_any($message, $keywords) {
+    foreach ($keywords as $keyword) {
+        if ($keyword !== '' && (function_exists('mb_strpos') ? mb_strpos($message, $keyword, 0, 'UTF-8') : strpos($message, $keyword)) !== false) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function detect_support_chatbot_intent($message) {
     $message = trim((string)$message);
     $message = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
 
-    if (preg_match('/booking|book|room/u', $message)) {
+    if (support_chatbot_message_has_any($message, ['booking', 'book', 'room', 'حجز', 'احجز', 'أحجز', 'غرفة', 'غرف', 'وقت', 'موعد'])) {
         return 'booking';
     }
 
-    if (preg_match('/complaint|support/u', $message)) {
+    if (support_chatbot_message_has_any($message, ['complaint', 'support', 'help', 'شكوى', 'مشكلة', 'دعم', 'مساعدة', 'ساعدني'])) {
         return 'complaint';
     }
 
-    if (preg_match('/store|product|controller|game/u', $message)) {
+    if (support_chatbot_message_has_any($message, ['store', 'product', 'controller', 'game', 'متجر', 'منتج', 'منتجات', 'شراء', 'بلايستيشن', 'يد', 'لعبة', 'العاب', 'ألعاب'])) {
         return 'store';
     }
 
-    if (preg_match('/recommend|suggest/u', $message)) {
+    if (support_chatbot_message_has_any($message, ['recommend', 'suggest', 'توصية', 'اقترح', 'اقتراح', 'رشح', 'انصح'])) {
         return 'recommendation';
     }
 
@@ -3049,24 +3059,19 @@ function build_support_chatbot_response($conn, $message, $user_id = 0) {
     $rooms = get_smart_room_recommendations($conn, $user_id, 3);
     $products = get_smart_store_recommendations($conn, $user_id, 3);
     $times = get_popular_booking_times($conn, 3);
-    $answer_key = 'chat_default';
-
-    if (preg_match('/حجز|احجز|booking|book|room|غرفة|وقت/u', $message)) {
-        $answer_key = 'chat_booking';
-    } elseif (preg_match('/شكوى|مشكلة|complaint|support|دعم|مساعدة/u', $message)) {
-        $answer_key = 'chat_complaint';
-    } elseif (preg_match('/store|product|منتج|منتجات|متجر|شراء|بلايستيشن|controller|game/u', $message)) {
-        $answer_key = 'chat_store';
-    } elseif (preg_match('/توصية|اقترح|recommend|suggest/u', $message)) {
-        $answer_key = 'chat_products';
-    }
-
+    $intent = detect_support_chatbot_intent($message);
     $intent = [
-        'chat_booking' => 'booking',
-        'chat_complaint' => 'complaint',
-        'chat_store' => 'store',
-        'chat_products' => 'recommendation',
-    ][$answer_key] ?? 'general';
+        'booking' => 'booking',
+        'complaint' => 'complaint',
+        'store' => 'store',
+        'recommendation' => 'recommendation',
+    ][$intent] ?? 'general';
+    $answer_key = [
+        'booking' => 'chat_booking',
+        'complaint' => 'chat_complaint',
+        'store' => 'chat_store',
+        'recommendation' => 'chat_products',
+    ][$intent] ?? 'chat_default';
 
     return [
         'intent' => $intent,
