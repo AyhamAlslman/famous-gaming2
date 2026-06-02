@@ -3355,3 +3355,1264 @@ html[dir="rtl"] .site-user-shell .bookings-data-table .table-action-group {
     white-space: nowrap !important;
     vertical-align: middle !important;
 }
+
+/* Calmer public pages: keep the same content, with less generated-looking effects. */
+.page-index,
+.page-services,
+.page-service_gaming,
+.page-service_hospitality,
+.page-service_events,
+.page-about,
+.page-contact,
+.page-login,
+.page-register,
+.page-forgot_password {
+    background: #07111f !important;
+    background-image: linear-gradient(180deg, #07111f 0%, #0a1726 100%) !important;
+}
+
+.page-index::before,
+.page-services::before,
+.page-service_gaming::before,
+.page-service_hospitality::before,
+.page-service_events::before,
+.page-about::before,
+.page-contact::before,
+.page-login::before,
+.page-register::before,
+.page-forgot_password::before {
+    opacity: 0.16 !important;
+}
+
+.site-public-shell .navbar,
+.page-services .navbar,
+.page-service_gaming .navbar,
+.page-service_hospitality .navbar,
+.page-service_events .navbar {
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(7, 17, 31, 0.96) !important;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.site-public-shell .logo-mark,
+.site-public-shell .controller-core,
+.site-public-shell .controller-highlight,
+.site-public-shell .controller-orb,
+.page-services .logo-mark,
+.page-service_gaming .logo-mark,
+.page-service_hospitality .logo-mark,
+.page-service_events .logo-mark {
+    animation: none !important;
+    filter: none !important;
+}
+
+.site-public-shell .logo-word-famous,
+.site-public-shell .logo-word-gaming,
+.page-services .logo-word-famous,
+.page-service_gaming .logo-word-famous,
+.page-service_hospitality .logo-word-famous,
+.page-service_events .logo-word-famous {
+    letter-spacing: 0.08rem !important;
+    text-shadow: none !important;
+}
+
+.site-public-shell .nav-menu .nav-link::after,
+.page-services .nav-menu .nav-link::after,
+.page-service_gaming .nav-menu .nav-link::after,
+.page-service_hospitality .nav-menu .nav-link::after,
+.page-service_events .nav-menu .nav-link::after {
+    height: 1px !important;
+    background: #65d4ee !important;
+}
+
+.site-public-shell .btn,
+.page-services .btn,
+.page-service_gaming .btn,
+.page-service_hospitality .btn,
+.page-service_events .btn {
+    clip-path: none !important;
+    border-radius: 8px !important;
+    background: #65d4ee !important;
+    color: #06111f !important;
+    box-shadow: none !important;
+    letter-spacing: 0.02rem !important;
+    text-transform: none !important;
+}
+
+.site-public-shell .btn::before,
+.page-services .btn::before,
+.page-service_gaming .btn::before,
+.page-service_hospitality .btn::before,
+.page-service_events .btn::before {
+    display: none !important;
+}
+
+.site-public-shell .btn:hover,
+.page-services .btn:hover,
+.page-service_gaming .btn:hover,
+.page-service_hospitality .btn:hover,
+.page-service_events .btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22) !important;
+}
+
+.index-hero-redesign,
+.service-hub-hero,
+.service-detail-hero,
+.contact-page-hero,
+.about-page-hero {
+    background:
+        linear-gradient(90deg, rgba(4, 12, 24, 0.78) 0%, rgba(4, 12, 24, 0.54) 52%, rgba(4, 12, 24, 0.24) 100%),
+        var(--page-hero-image, url('../../images/shared-public-hero.jpg')) center / cover no-repeat,
+        #07111f !important;
+}
+
+html[dir="rtl"] .index-hero-redesign,
+html[dir="rtl"] .service-hub-hero,
+html[dir="rtl"] .service-detail-hero,
+html[dir="rtl"] .contact-page-hero,
+html[dir="rtl"] .about-page-hero {
+    background:
+        linear-gradient(270deg, rgba(4, 12, 24, 0.78) 0%, rgba(4, 12, 24, 0.54) 52%, rgba(4, 12, 24, 0.24) 100%),
+        var(--page-hero-image, url('../../images/shared-public-hero.jpg')) center / cover no-repeat,
+        #07111f !important;
+}
+
+.index-hero-redesign::before,
+.index-hero-redesign::after,
+.service-hub-hero::before,
+.service-hub-hero::after,
+.service-detail-hero::before,
+.service-detail-hero::after,
+.contact-page-hero::before,
+.contact-page-hero::after,
+.about-page-hero::before,
+.about-page-hero::after {
+    opacity: 0.12 !important;
+    filter: none !important;
+}
+
+.site-public-shell h1,
+.site-public-shell h2,
+.site-public-shell h3,
+.page-services h1,
+.page-service_gaming h1,
+.page-service_hospitality h1,
+.page-service_events h1 {
+    background: none !important;
+    color: #f7fbff !important;
+    -webkit-text-fill-color: currentColor !important;
+    letter-spacing: 0 !important;
+    text-shadow: none !important;
+}
+
+.index-hero-copy h1,
+.service-hub-hero h1,
+.service-detail-hero h1,
+.contact-page-hero h1,
+.about-page-hero h1 {
+    max-width: 12ch !important;
+    font-size: clamp(2.1rem, 4.5vw, 4rem) !important;
+    line-height: 1.06 !important;
+}
+
+.index-hero-copy p,
+.service-hub-hero p,
+.service-detail-hero p,
+.contact-page-hero p,
+.about-page-hero p {
+    color: rgba(238, 248, 255, 0.84) !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+}
+
+.ticket-label,
+.home-status-pill,
+.ticket-status,
+.index-hero-badges span,
+.nav-auth-link,
+.nav-language-link.nav-language-toggle {
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    box-shadow: none !important;
+    letter-spacing: 0.02rem !important;
+    text-transform: none !important;
+}
+
+.home-intro-panel,
+.home-service-card,
+.room-card,
+.service-card,
+.contact-main-container,
+.contact-info-card,
+.contact-hours-container,
+.contact-social-container,
+.about-intro-card,
+.about-copy-block,
+.about-value-card,
+.form-container {
+    clip-path: none !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    background:
+        linear-gradient(180deg, rgba(13, 28, 45, 0.94), rgba(8, 18, 31, 0.98)),
+        rgba(255, 255, 255, 0.025) !important;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22) !important;
+}
+
+.home-service-card::before,
+.room-card::before,
+.service-card::before,
+.about-intro-card::before,
+.about-copy-block::before,
+.about-value-card::before {
+    opacity: 0 !important;
+}
+
+.home-service-card:hover,
+.room-card:hover,
+.service-card:hover,
+.about-value-card:hover {
+    transform: translateY(-2px) !important;
+    border-color: rgba(101, 212, 238, 0.32) !important;
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.25) !important;
+}
+
+.home-service-card:hover img,
+.room-card:hover .room-image img,
+.service-card:hover .service-image img {
+    transform: scale(1.02) !important;
+}
+
+.section-title::after,
+.home-section-heading h2::after,
+.arena-section-heading h2::after {
+    background: #65d4ee !important;
+    height: 2px !important;
+}
+
+@media (max-width: 767px) {
+    .index-hero-redesign,
+    .service-hub-hero,
+    .service-detail-hero,
+    .contact-page-hero,
+    .about-page-hero {
+        min-height: auto !important;
+        padding-top: 5.35rem !important;
+    }
+}
+
+/* Public general polish pass */
+.site-public-shell {
+    --public-bg: #08111d;
+    --public-surface: #101c2b;
+    --public-surface-2: #142235;
+    --public-border: rgba(222, 232, 244, 0.14);
+    --public-border-strong: rgba(222, 232, 244, 0.24);
+    --public-text: #f4f8fc;
+    --public-muted: #aebdcc;
+    --public-accent: #7ccce0;
+    --public-good: #78d6a3;
+    --public-danger: #f47b86;
+    --public-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    font-family: 'Tajawal', 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    color: var(--public-text) !important;
+    background:
+        linear-gradient(180deg, #07111d 0%, #0a1624 44%, #08111d 100%) !important;
+}
+
+.site-public-shell *,
+.site-public-shell *::before,
+.site-public-shell *::after {
+    letter-spacing: 0 !important;
+}
+
+.site-public-shell .container {
+    max-width: 1180px !important;
+    padding-inline: clamp(1rem, 3vw, 1.5rem) !important;
+}
+
+.site-public-shell .content,
+.site-public-shell .arena-page-content,
+.site-public-shell .service-hub-content,
+.site-public-shell .service-detail-content,
+.site-public-shell .auth-page-content {
+    padding: clamp(2.5rem, 6vw, 4.25rem) 0 !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0)),
+        var(--public-bg) !important;
+}
+
+.site-public-shell .navbar {
+    padding: 0.7rem 0 !important;
+}
+
+.site-public-shell .navbar-brand.logo .logo-mark {
+    width: 54px !important;
+    height: 54px !important;
+}
+
+.site-public-shell .logo-word-famous {
+    font-size: 1.08rem !important;
+}
+
+.site-public-shell .logo-word-gaming {
+    font-size: 0.82rem !important;
+}
+
+.site-public-shell .nav-menu {
+    gap: 0.15rem !important;
+}
+
+.site-public-shell .nav-menu .nav-link,
+.site-public-shell .nav-auth-link {
+    min-height: 38px !important;
+    padding: 0.48rem 0.76rem !important;
+    color: var(--public-muted) !important;
+    font-size: 0.94rem !important;
+    font-weight: 700 !important;
+    text-transform: none !important;
+}
+
+.site-public-shell .nav-menu .nav-link:hover,
+.site-public-shell .nav-menu .nav-link.active,
+.site-public-shell .nav-auth-link:hover,
+.site-public-shell .nav-auth-link.active {
+    color: #ffffff !important;
+}
+
+.site-public-shell .nav-auth-primary {
+    border-color: rgba(124, 204, 224, 0.3) !important;
+    background: rgba(124, 204, 224, 0.12) !important;
+    color: #dff8ff !important;
+}
+
+.site-public-shell .index-hero-redesign,
+.site-public-shell .service-hub-hero,
+.site-public-shell .service-detail-hero,
+.site-public-shell .contact-page-hero,
+.site-public-shell .about-page-hero {
+    min-height: clamp(360px, 54svh, 560px) !important;
+    padding: clamp(5.7rem, 10vw, 7.2rem) 0 clamp(2.4rem, 6vw, 4rem) !important;
+    border-bottom: 1px solid var(--public-border) !important;
+}
+
+.site-public-shell .index-hero-layout,
+.site-public-shell .index-hero-copy,
+.site-public-shell .service-hub-hero .container,
+.site-public-shell .service-detail-hero .container,
+.site-public-shell .contact-page-hero .container,
+.site-public-shell .about-page-hero .container {
+    width: min(100%, 1180px) !important;
+    max-width: 1180px !important;
+    margin-inline: auto !important;
+    padding-inline: clamp(1rem, 3vw, 1.5rem) !important;
+    text-align: start !important;
+}
+
+.site-public-shell .index-hero-copy {
+    max-width: 680px !important;
+}
+
+.site-public-shell .index-hero-copy h1,
+.site-public-shell .service-hub-hero h1,
+.site-public-shell .service-detail-hero h1,
+.site-public-shell .contact-page-hero h1,
+.site-public-shell .about-page-hero h1 {
+    max-width: 13ch !important;
+    margin-bottom: 0.85rem !important;
+    color: #ffffff !important;
+    font-family: 'Tajawal', 'Rajdhani', sans-serif !important;
+    font-size: clamp(2rem, 4.4vw, 3.8rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.05 !important;
+    text-transform: none !important;
+}
+
+.site-public-shell .index-hero-copy p,
+.site-public-shell .service-hub-hero p,
+.site-public-shell .service-detail-hero p,
+.site-public-shell .contact-page-hero p,
+.site-public-shell .about-page-hero p {
+    max-width: 56ch !important;
+    color: rgba(244, 248, 252, 0.82) !important;
+    font-size: clamp(1rem, 1.35vw, 1.15rem) !important;
+    font-weight: 500 !important;
+    line-height: 1.7 !important;
+}
+
+.site-public-shell .index-hero-kicker {
+    display: block !important;
+    margin: 0.7rem 0 0.55rem !important;
+    color: var(--public-muted) !important;
+    font-size: 0.86rem !important;
+    font-weight: 800 !important;
+    text-transform: none !important;
+}
+
+.site-public-shell .index-hero-actions,
+.site-public-shell .booking-ticket-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.7rem !important;
+    margin-top: 1.25rem !important;
+}
+
+.site-public-shell .btn,
+.site-public-shell .auth-submit-btn,
+.site-public-shell .auth-side-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+    padding: 0.7rem 1.05rem !important;
+    border: 1px solid rgba(124, 204, 224, 0.28) !important;
+    border-radius: 8px !important;
+    background: var(--public-accent) !important;
+    color: #06111d !important;
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+}
+
+.site-public-shell .index-hero-secondary-btn,
+.site-public-shell .room-book-btn-disabled {
+    background: rgba(255, 255, 255, 0.075) !important;
+    color: #edf6fa !important;
+}
+
+.site-public-shell .home-status-pill,
+.site-public-shell .ticket-label,
+.site-public-shell .ticket-status,
+.site-public-shell .auth-eyebrow,
+.site-public-shell .index-hero-badges span,
+.site-public-shell .service-hub-card span,
+.site-public-shell .index-service-card-copy span {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 28px !important;
+    width: fit-content !important;
+    padding: 0.28rem 0.55rem !important;
+    border: 1px solid var(--public-border) !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.055) !important;
+    color: var(--public-muted) !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+}
+
+.site-public-shell .home-status-pill.status-open,
+.site-public-shell .ticket-status.status-available {
+    border-color: rgba(120, 214, 163, 0.28) !important;
+    background: rgba(120, 214, 163, 0.12) !important;
+    color: #c7f3da !important;
+}
+
+.site-public-shell .ticket-status.status-busy,
+.site-public-shell .message.error {
+    border-color: rgba(244, 123, 134, 0.32) !important;
+    background: rgba(244, 123, 134, 0.12) !important;
+    color: #ffd0d5 !important;
+}
+
+.site-public-shell .message.success {
+    border-color: rgba(120, 214, 163, 0.32) !important;
+    background: rgba(120, 214, 163, 0.12) !important;
+    color: #d6f8e5 !important;
+}
+
+.site-public-shell .home-section-heading,
+.site-public-shell .arena-section-heading,
+.site-public-shell .service-hub-heading {
+    max-width: 780px !important;
+    margin: 0 auto clamp(1.4rem, 3vw, 2.2rem) !important;
+    text-align: center !important;
+}
+
+.site-public-shell .home-section-heading h2,
+.site-public-shell .arena-section-heading h2,
+.site-public-shell .service-hub-heading h2,
+.site-public-shell .service-detail-copy h2,
+.site-public-shell .auth-card h1 {
+    margin: 0.45rem 0 0.5rem !important;
+    color: #ffffff !important;
+    font-family: 'Tajawal', 'Rajdhani', sans-serif !important;
+    font-size: clamp(1.55rem, 3vw, 2.35rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.16 !important;
+    text-transform: none !important;
+}
+
+.site-public-shell .home-section-heading p,
+.site-public-shell .service-detail-copy p,
+.site-public-shell .auth-help-text,
+.site-public-shell .about-text,
+.site-public-shell .about-intro,
+.site-public-shell .contact-card-hint,
+.site-public-shell .contact-card-text {
+    color: var(--public-muted) !important;
+    font-size: 1rem !important;
+    line-height: 1.75 !important;
+}
+
+.site-public-shell .home-intro-panel,
+.site-public-shell .home-service-card,
+.site-public-shell .room-card,
+.site-public-shell .service-hub-card,
+.site-public-shell .service-hub-cta,
+.site-public-shell .service-detail-copy,
+.site-public-shell .service-detail-list-card,
+.site-public-shell .service-menu-item,
+.site-public-shell .contact-info-card,
+.site-public-shell .contact-hours-container,
+.site-public-shell .contact-social-container,
+.site-public-shell .contact-social-link,
+.site-public-shell .about-intro-card,
+.site-public-shell .about-copy-block,
+.site-public-shell .about-value-card,
+.site-public-shell .auth-card,
+.site-public-shell .auth-side-panel,
+.site-public-shell .database-table-card {
+    overflow: hidden !important;
+    border: 1px solid var(--public-border) !important;
+    border-radius: 8px !important;
+    background: var(--public-surface) !important;
+    box-shadow: var(--public-shadow) !important;
+}
+
+.site-public-shell .home-service-card,
+.site-public-shell .service-hub-card {
+    display: grid !important;
+    color: inherit !important;
+    text-align: start !important;
+    text-decoration: none !important;
+}
+
+.site-public-shell .home-service-card img,
+.site-public-shell .service-hub-card img,
+.site-public-shell .room-image img {
+    filter: none !important;
+}
+
+.site-public-shell .index-service-card-copy,
+.site-public-shell .service-hub-card div {
+    padding: 1.05rem !important;
+}
+
+.site-public-shell .index-service-card-copy h3,
+.site-public-shell .service-hub-card h3,
+.site-public-shell .room-card h3,
+.site-public-shell .contact-card-title,
+.site-public-shell .contact-hours-title,
+.site-public-shell .contact-social-title,
+.site-public-shell .about-section-title,
+.site-public-shell .about-value-title {
+    color: #ffffff !important;
+    font-family: 'Tajawal', 'Rajdhani', sans-serif !important;
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+    text-transform: none !important;
+}
+
+.site-public-shell .index-service-card-copy p,
+.site-public-shell .service-hub-card p,
+.site-public-shell .index-room-description,
+.site-public-shell .about-value-text {
+    color: var(--public-muted) !important;
+    line-height: 1.65 !important;
+}
+
+.site-public-shell .index-experience-section,
+.site-public-shell .index-rooms-section,
+.site-public-shell .about-page-content,
+.site-public-shell .contact-page-content {
+    background: var(--public-bg) !important;
+}
+
+.site-public-shell .home-intro-panel {
+    max-width: 860px !important;
+    margin: 0 auto clamp(1.8rem, 4vw, 3rem) !important;
+    padding: clamp(1.1rem, 2.5vw, 1.6rem) !important;
+    text-align: center !important;
+}
+
+.site-public-shell .home-service-grid,
+.site-public-shell .service-hub-grid,
+.site-public-shell .service-menu-grid {
+    gap: 1rem !important;
+}
+
+.site-public-shell .room-card {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.site-public-shell .room-card h3,
+.site-public-shell .room-card .room-type,
+.site-public-shell .index-room-description,
+.site-public-shell .room-price,
+.site-public-shell .room-card-actions {
+    padding-inline: 1rem !important;
+}
+
+.site-public-shell .room-card h3 {
+    padding-top: 1rem !important;
+    margin-bottom: 0.35rem !important;
+}
+
+.site-public-shell .room-card .room-type {
+    color: var(--public-accent) !important;
+    font-size: 0.84rem !important;
+    font-weight: 800 !important;
+    text-transform: none !important;
+}
+
+.site-public-shell .room-price {
+    color: #ffffff !important;
+    font-size: 1.25rem !important;
+}
+
+.site-public-shell .service-hub-cta,
+.site-public-shell .service-detail-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    margin-top: clamp(1.2rem, 3vw, 2rem) !important;
+    padding: clamp(1rem, 2.4vw, 1.4rem) !important;
+}
+
+.site-public-shell .service-detail-layout {
+    grid-template-columns: minmax(0, 0.95fr) minmax(300px, 1.05fr) !important;
+    align-items: stretch !important;
+}
+
+.site-public-shell .service-detail-copy,
+.site-public-shell .service-detail-list-card {
+    padding: clamp(1.1rem, 2.6vw, 1.6rem) !important;
+}
+
+.site-public-shell .service-detail-list-card {
+    display: grid !important;
+    gap: 0.65rem !important;
+}
+
+.site-public-shell .service-detail-list-item {
+    display: grid !important;
+    grid-template-columns: 10px minmax(0, 1fr) !important;
+    gap: 0.7rem !important;
+    align-items: start !important;
+    padding: 0.78rem !important;
+    border: 1px solid var(--public-border) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.045) !important;
+}
+
+.site-public-shell .service-detail-list-item span {
+    width: 8px !important;
+    height: 8px !important;
+    margin-top: 0.45rem !important;
+    border-radius: 50% !important;
+    background: var(--public-accent) !important;
+}
+
+.site-public-shell .service-detail-list-item strong {
+    color: #eef7fb !important;
+    font-weight: 700 !important;
+}
+
+.site-public-shell .service-menu-item {
+    padding: 1rem !important;
+}
+
+.site-public-shell .contact-main-container {
+    max-width: 1120px !important;
+    margin-inline: auto !important;
+    text-align: start !important;
+}
+
+.site-public-shell .contact-info-card,
+.site-public-shell .contact-social-link {
+    min-height: 100% !important;
+    padding: 1.15rem !important;
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+.site-public-shell .contact-icon,
+.site-public-shell .contact-social-icon {
+    display: grid !important;
+    place-items: center !important;
+    width: 42px !important;
+    height: 42px !important;
+    margin-bottom: 0.8rem !important;
+    border-radius: 8px !important;
+    background: rgba(124, 204, 224, 0.12) !important;
+    color: var(--public-accent) !important;
+}
+
+.site-public-shell .contact-icon svg,
+.site-public-shell .contact-social-icon svg {
+    width: 22px !important;
+    height: 22px !important;
+    fill: currentColor !important;
+}
+
+.site-public-shell .contact-card-link,
+.site-public-shell .contact-social-handle,
+.site-public-shell .auth-links a {
+    color: #bfeefa !important;
+    text-decoration: none !important;
+}
+
+.site-public-shell .contact-hours-container,
+.site-public-shell .contact-social-container {
+    margin-top: 1rem !important;
+    padding: 1.15rem !important;
+}
+
+.site-public-shell .contact-hours-list,
+.site-public-shell .contact-social-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    gap: 0.75rem !important;
+}
+
+.site-public-shell .contact-hours-item {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 1rem !important;
+    padding: 0.75rem !important;
+    border: 1px solid var(--public-border) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.site-public-shell .about-main-container {
+    max-width: 1080px !important;
+}
+
+.site-public-shell .about-features-list {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 0.75rem !important;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+.site-public-shell .about-feature-item {
+    padding: 0.85rem !important;
+    border: 1px solid var(--public-border) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.045) !important;
+}
+
+.site-public-shell .about-feature-item::before {
+    display: none !important;
+}
+
+.site-public-shell .about-feature-item strong {
+    color: #ffffff !important;
+}
+
+.site-public-shell .auth-page-content {
+    min-height: calc(100svh - 80px) !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.site-public-shell .auth-shell,
+.site-public-shell .auth-shell-compact {
+    display: grid !important;
+    grid-template-columns: minmax(0, 520px) !important;
+    justify-content: center !important;
+    gap: 1rem !important;
+    max-width: 720px !important;
+    margin-inline: auto !important;
+}
+
+.site-public-shell .auth-card {
+    width: 100% !important;
+    padding: clamp(1.2rem, 3vw, 1.8rem) !important;
+}
+
+.site-public-shell .auth-card-wide {
+    max-width: 720px !important;
+}
+
+.site-public-shell .auth-form {
+    display: grid !important;
+    gap: 0.9rem !important;
+    margin-top: 1.2rem !important;
+}
+
+.site-public-shell .auth-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.site-public-shell .auth-form-full,
+.site-public-shell .auth-submit-btn {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+}
+
+.site-public-shell .form-label {
+    margin-bottom: 0.35rem !important;
+    color: #edf6fa !important;
+    font-weight: 800 !important;
+}
+
+.site-public-shell .form-control,
+.site-public-shell input,
+.site-public-shell select,
+.site-public-shell textarea {
+    min-height: 44px !important;
+    border: 1px solid var(--public-border) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.065) !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+.site-public-shell .form-control:focus,
+.site-public-shell input:focus,
+.site-public-shell select:focus,
+.site-public-shell textarea:focus {
+    border-color: rgba(124, 204, 224, 0.58) !important;
+    box-shadow: 0 0 0 3px rgba(124, 204, 224, 0.12) !important;
+}
+
+.site-public-shell .auth-password-field {
+    position: relative !important;
+}
+
+.site-public-shell .auth-password-toggle {
+    position: absolute !important;
+    inset-inline-end: 0.35rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: grid !important;
+    place-items: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: var(--public-muted) !important;
+}
+
+.site-public-shell .auth-eye-icon {
+    width: 20px !important;
+    height: 20px !important;
+    fill: currentColor !important;
+}
+
+.site-public-shell .auth-password-note,
+.site-public-shell .auth-links {
+    color: var(--public-muted) !important;
+}
+
+.site-public-shell .auth-links {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 0.75rem !important;
+    margin-top: 1rem !important;
+}
+
+.site-public-shell .site-footer {
+    border-top: 1px solid var(--public-border) !important;
+    background: #07101b !important;
+}
+
+.site-public-shell .site-footer strong,
+.site-public-shell .site-footer h3 {
+    color: #ffffff !important;
+    text-transform: none !important;
+}
+
+.site-public-shell .site-footer a,
+.site-public-shell .site-footer p,
+.site-public-shell .site-footer-info {
+    color: var(--public-muted) !important;
+}
+
+@media (max-width: 860px) {
+    .site-public-shell .service-hub-cta,
+    .site-public-shell .service-detail-layout,
+    .site-public-shell .auth-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .site-public-shell .index-hero-actions,
+    .site-public-shell .booking-ticket-actions {
+        align-items: stretch !important;
+        flex-direction: column !important;
+    }
+
+    .site-public-shell .btn {
+        width: 100% !important;
+    }
+
+    .site-public-shell .contact-hours-item {
+        flex-direction: column !important;
+        gap: 0.25rem !important;
+    }
+}
+
+/* Store filter direction and readability */
+.store-content > .container {
+    width: min(100%, 1240px) !important;
+}
+
+.store-filter-toolbar {
+    display: grid !important;
+    width: 100% !important;
+    margin: 0 auto 1.15rem !important;
+    padding: 1rem !important;
+    gap: 0.85rem !important;
+    border: 1px solid rgba(125, 227, 255, 0.16) !important;
+    border-radius: 10px !important;
+    background:
+        linear-gradient(145deg, rgba(12, 31, 49, 0.94), rgba(7, 18, 31, 0.98)),
+        rgba(255, 255, 255, 0.025) !important;
+}
+
+.store-filter-toolbar-only {
+    grid-template-columns: 1fr !important;
+}
+
+.store-filter-toolbar .store-filter-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    align-content: flex-start !important;
+    gap: 0.62rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+
+html[dir="ltr"] .store-filter-toolbar .store-filter-chips {
+    justify-content: flex-start !important;
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+html[dir="rtl"] .store-filter-toolbar .store-filter-chips {
+    justify-content: flex-start !important;
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+html[dir="ltr"] .store-filter-toolbar-only .store-filter-chips {
+    margin-right: auto !important;
+}
+
+html[dir="rtl"] .store-filter-toolbar-only .store-filter-chips {
+    margin-left: auto !important;
+}
+
+.store-filter-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 40px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    flex: 0 1 auto !important;
+    padding: 0.56rem 0.88rem !important;
+    overflow: visible !important;
+    border: 1px solid rgba(125, 227, 255, 0.2) !important;
+    border-radius: 8px !important;
+    background: rgba(4, 16, 31, 0.72) !important;
+    color: #eef8ff !important;
+    font-size: clamp(0.82rem, 1.15vw, 0.94rem) !important;
+    font-weight: 850 !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+}
+
+.store-filter-chip:hover,
+.store-filter-chip.active {
+    border-color: rgba(125, 227, 255, 0.55) !important;
+    background: rgba(125, 227, 255, 0.16) !important;
+    color: #ffffff !important;
+}
+
+.store-filter-summary {
+    min-width: 0 !important;
+}
+
+.store-filter-summary .store-auth-message,
+.store-auth-message {
+    width: 100% !important;
+    margin: 0 !important;
+    color: #c8f3ff !important;
+    line-height: 1.65 !important;
+    overflow-wrap: anywhere !important;
+}
+
+.store-product-card h3,
+.store-product-card p,
+.store-basket-card h3,
+.store-basket-empty p,
+.store-basket-note,
+.store-category-badge,
+.store-stock-badge,
+.store-stock-qty,
+.card-detail-title,
+.card-detail-description,
+.card-detail-type,
+.card-detail-meta-chip {
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+}
+
+.store-product-card h3,
+.store-basket-card h3,
+.card-detail-title {
+    color: #ffffff !important;
+    line-height: 1.25 !important;
+}
+
+.store-product-card p,
+.store-basket-empty p,
+.store-basket-note,
+.card-detail-description {
+    color: rgba(232, 244, 255, 0.76) !important;
+    line-height: 1.62 !important;
+}
+
+.store-product-meta,
+.store-product-footer,
+.store-basket-header,
+.store-basket-summary-item,
+.store-basket-item-price-row {
+    gap: 0.55rem !important;
+}
+
+html[dir="rtl"] .store-product-card,
+html[dir="rtl"] .store-basket-card,
+html[dir="rtl"] .card-detail-dialog {
+    text-align: right !important;
+}
+
+html[dir="ltr"] .store-product-card,
+html[dir="ltr"] .store-basket-card,
+html[dir="ltr"] .card-detail-dialog {
+    text-align: left !important;
+}
+
+html[dir="rtl"] .store-category-badge {
+    right: 0.75rem !important;
+    left: auto !important;
+}
+
+html[dir="ltr"] .store-category-badge {
+    left: 0.75rem !important;
+    right: auto !important;
+}
+
+@media (min-width: 992px) {
+    .store-filter-toolbar:not(.store-filter-toolbar-only) {
+        grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr) !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .store-filter-toolbar {
+        padding: 0.82rem !important;
+    }
+
+    .store-filter-chip {
+        flex: 1 1 calc(50% - 0.62rem) !important;
+        min-width: min(100%, 138px) !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .store-filter-chip {
+        flex-basis: 100% !important;
+    }
+}
+
+/* Contact page stays visually left-aligned in both languages. */
+.page-contact .contact-page-hero .container,
+html[dir="rtl"] .page-contact .contact-page-hero .container,
+html[dir="ltr"] .page-contact .contact-page-hero .container {
+    margin-left: clamp(1.25rem, 7vw, 6.5rem) !important;
+    margin-right: auto !important;
+    text-align: left !important;
+}
+
+.page-contact .contact-page-hero .ticket-label,
+.page-contact .contact-page-hero h1,
+.page-contact .contact-page-hero p,
+html[dir="rtl"] .page-contact .contact-page-hero .ticket-label,
+html[dir="rtl"] .page-contact .contact-page-hero h1,
+html[dir="rtl"] .page-contact .contact-page-hero p {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    text-align: left !important;
+}
+
+.page-contact .contact-page-content,
+.page-contact .contact-page-content .home-section-heading,
+.page-contact .contact-main-container,
+.page-contact .contact-info-card,
+.page-contact .contact-info-card-link,
+.page-contact .contact-hours-container,
+.page-contact .contact-social-container,
+.page-contact .contact-social-link,
+html[dir="rtl"] .page-contact .contact-page-content,
+html[dir="rtl"] .page-contact .contact-page-content .home-section-heading,
+html[dir="rtl"] .page-contact .contact-main-container,
+html[dir="rtl"] .page-contact .contact-info-card,
+html[dir="rtl"] .page-contact .contact-info-card-link,
+html[dir="rtl"] .page-contact .contact-hours-container,
+html[dir="rtl"] .page-contact .contact-social-container,
+html[dir="rtl"] .page-contact .contact-social-link {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+.page-contact .contact-info-card,
+.page-contact .contact-info-card-link,
+html[dir="rtl"] .page-contact .contact-info-card,
+html[dir="rtl"] .page-contact .contact-info-card-link {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+}
+
+.page-contact .contact-icon,
+html[dir="rtl"] .page-contact .contact-icon {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+.page-contact .contact-hours-item,
+html[dir="rtl"] .page-contact .contact-hours-item {
+    direction: ltr !important;
+    justify-content: space-between !important;
+    text-align: left !important;
+}
+
+@media (max-width: 860px) {
+    .page-contact .contact-page-hero .container,
+    html[dir="rtl"] .page-contact .contact-page-hero .container,
+    html[dir="ltr"] .page-contact .contact-page-hero .container {
+        width: min(90vw, 620px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        text-align: left !important;
+    }
+}
+
+/* About hero readability over busy imagery. */
+.page-about .about-page-hero,
+html[dir="rtl"] .page-about .about-page-hero,
+html[dir="ltr"] .page-about .about-page-hero {
+    background:
+        linear-gradient(90deg, rgba(4, 10, 18, 0.9) 0%, rgba(4, 10, 18, 0.74) 42%, rgba(4, 10, 18, 0.34) 100%),
+        var(--page-hero-image, url('../../images/about-gaming-arena-2026-optimized.jpg')) center / cover no-repeat,
+        #07111f !important;
+}
+
+html[dir="rtl"] .page-about .about-page-hero {
+    background:
+        linear-gradient(90deg, rgba(4, 10, 18, 0.9) 0%, rgba(4, 10, 18, 0.74) 42%, rgba(4, 10, 18, 0.34) 100%),
+        var(--page-hero-image, url('../../images/about-gaming-arena-2026-optimized.jpg')) center / cover no-repeat,
+        #07111f !important;
+}
+
+.page-about .about-page-hero .page-hero-visual {
+    opacity: 0.72 !important;
+    filter: saturate(0.88) brightness(0.72) !important;
+}
+
+.page-about .about-page-hero::after,
+html[dir="rtl"] .page-about .about-page-hero::after {
+    opacity: 1 !important;
+    background:
+        linear-gradient(90deg, rgba(4, 10, 18, 0.88) 0%, rgba(4, 10, 18, 0.68) 36%, rgba(4, 10, 18, 0.2) 70%, rgba(4, 10, 18, 0.08) 100%) !important;
+}
+
+.page-about .about-page-hero .container,
+html[dir="rtl"] .page-about .about-page-hero .container,
+html[dir="ltr"] .page-about .about-page-hero .container {
+    display: grid !important;
+    justify-items: start !important;
+    gap: 0.72rem !important;
+    width: min(90vw, 560px) !important;
+    max-width: 560px !important;
+    margin-left: clamp(1.25rem, 7vw, 6.5rem) !important;
+    margin-right: auto !important;
+    padding: clamp(1rem, 2.4vw, 1.35rem) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 10px !important;
+    background: rgba(5, 12, 22, 0.52) !important;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.3) !important;
+    text-align: left !important;
+}
+
+html[dir="rtl"] .page-about .about-page-hero .container {
+    justify-items: end !important;
+    margin-left: auto !important;
+    margin-right: clamp(1.25rem, 7vw, 6.5rem) !important;
+    text-align: right !important;
+}
+
+.page-about .about-page-hero .ticket-label,
+.page-about .about-page-hero h1,
+.page-about .about-page-hero p,
+html[dir="rtl"] .page-about .about-page-hero .ticket-label,
+html[dir="rtl"] .page-about .about-page-hero h1,
+html[dir="rtl"] .page-about .about-page-hero p {
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+html[dir="rtl"] .page-about .about-page-hero .ticket-label,
+html[dir="rtl"] .page-about .about-page-hero h1,
+html[dir="rtl"] .page-about .about-page-hero p {
+    text-align: right !important;
+}
+
+.page-about .about-page-hero h1,
+html[dir="rtl"] .page-about .about-page-hero h1 {
+    max-width: 11ch !important;
+    color: #ffffff !important;
+    font-size: clamp(2.25rem, 5vw, 4.35rem) !important;
+    font-weight: 900 !important;
+    line-height: 1.02 !important;
+    text-shadow: 0 14px 34px rgba(0, 0, 0, 0.82) !important;
+}
+
+.page-about .about-page-hero p,
+html[dir="rtl"] .page-about .about-page-hero p {
+    max-width: 42ch !important;
+    color: rgba(246, 250, 255, 0.92) !important;
+    font-size: clamp(1rem, 1.35vw, 1.16rem) !important;
+    font-weight: 700 !important;
+    line-height: 1.68 !important;
+    text-shadow: 0 8px 24px rgba(0, 0, 0, 0.76) !important;
+}
+
+@media (max-width: 860px) {
+    .page-about .about-page-hero .container,
+    html[dir="rtl"] .page-about .about-page-hero .container,
+    html[dir="ltr"] .page-about .about-page-hero .container {
+        width: min(90vw, 560px) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}

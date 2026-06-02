@@ -70,10 +70,10 @@ include dirname(__DIR__) . '/includes/header.php';
                 </div>
             <?php endif; ?>
             <div class="store-filter-chips" id="storeFilterChips">
-                <a href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>" class="store-filter-chip <?php echo $selected_category === '' ? 'active' : ''; ?>" data-store-filter="all"><?php echo t('store_all_products'); ?></a>
+                <a href="<?php echo htmlspecialchars(site_url('user/store.php?lang=' . urlencode(site_language())), ENT_QUOTES, 'UTF-8'); ?>" class="store-filter-chip <?php echo $selected_category === '' ? 'active' : ''; ?>" data-store-filter="all"><?php echo t('store_all_products'); ?></a>
                 <?php foreach ($allowed_categories as $category): ?>
                     <a
-                        href="<?php echo htmlspecialchars(site_url('user/store.php?category=' . urlencode($category)), ENT_QUOTES, 'UTF-8'); ?>"
+                        href="<?php echo htmlspecialchars(site_url('user/store.php?category=' . urlencode($category) . '&lang=' . urlencode(site_language())), ENT_QUOTES, 'UTF-8'); ?>"
                         class="store-filter-chip <?php echo $selected_category === $category ? 'active' : ''; ?>"
                         data-store-filter="<?php echo htmlspecialchars($category, ENT_QUOTES, 'UTF-8'); ?>"
                     >
