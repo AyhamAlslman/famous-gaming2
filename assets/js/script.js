@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
         okButton.focus();
     };
 
-    window.showSiteConfirm = function(message, onConfirm, title) {
+    window.showSiteConfirm = function(message, onConfirm, title, labels) {
         const modal = ensureSiteModal();
         const titleEl = modal.querySelector('#siteMessageModalTitle');
         const text = modal.querySelector('#siteMessageModalText');
@@ -103,7 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
         titleEl.textContent = title || modalTexts.confirmTitle;
         text.textContent = message || modalTexts.confirmTitle;
         noButton.hidden = false;
-        okButton.textContent = modalTexts.yes;
+        noButton.textContent = labels && labels.no ? labels.no : modalTexts.no;
+        okButton.textContent = labels && labels.ok ? labels.ok : modalTexts.yes;
         siteConfirmCallback = onConfirm;
         modal.hidden = false;
         document.body.classList.add('site-modal-open');

@@ -27,10 +27,10 @@ if ($site_user_logged_in && function_exists('generate_site_smart_notifications')
 }
 $site_user_notification_count = $site_user_logged_in ? count_unread_site_notifications($conn, $site_user_id) : 0;
 $site_user_initial = $site_user_name !== '' ? (function_exists('mb_substr') ? mb_substr($site_user_name, 0, 1, 'UTF-8') : substr($site_user_name, 0, 1)) : 'F';
-$is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_password.php'], true);
+$is_auth_page = in_array($current_page, ['login.php', 'register.php', 'forgot_password.php', 'reset_password.php'], true);
 $script_name = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $is_direct_group_page = preg_match('#/(general|user)/#', $script_name) === 1;
-$public_header_pages = ['index.php', 'about.php', 'contact.php', 'login.php', 'register.php', 'forgot_password.php'];
+$public_header_pages = ['index.php', 'about.php', 'contact.php', 'login.php', 'register.php', 'forgot_password.php', 'reset_password.php'];
 $site_header_is_user = $site_user_logged_in && !in_array($current_page, $public_header_pages, true);
 $page_body_class = 'page-' . preg_replace('/[^a-z0-9_-]+/i', '-', pathinfo($current_page, PATHINFO_FILENAME));
 ?>
@@ -49,7 +49,7 @@ $page_body_class = 'page-' . preg_replace('/[^a-z0-9_-]+/i', '-', pathinfo($curr
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=8.4">
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=4.1">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=4.2">
 
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">

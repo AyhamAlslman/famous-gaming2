@@ -955,6 +955,7 @@ function ensure_user_auth_schema($conn) {
         if ($profile_image_column && mysqli_num_rows($profile_image_column) === 0) {
             mysqli_query($conn, "ALTER TABLE site_users ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL AFTER phone");
         }
+        ensure_site_user_password_reset_schema($conn);
         return;
     }
 
@@ -977,6 +978,8 @@ function ensure_user_auth_schema($conn) {
     if ($profile_image_column && mysqli_num_rows($profile_image_column) === 0) {
         mysqli_query($conn, "ALTER TABLE site_users ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL AFTER phone");
     }
+
+    ensure_site_user_password_reset_schema($conn);
 
     ensure_core_project_schema($conn);
     ensure_loyalty_settings_schema($conn);
@@ -1775,6 +1778,362 @@ function site_asset_url($path, $fallback = '') {
     }
 
     return function_exists('site_url') ? site_url($target) : $target;
+}
+
+function site_absolute_url($path = '') {
+    $target = function_exists('site_url') ? site_url($path) : (string)$path;
+
+    if (preg_match('/^https?:\/\//i', $target)) {
+        return $target;
+    }
+
+    $is_https = (
+        (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+    );
+    $scheme = $is_https ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+    return $scheme . '://' . $host . $target;
+}
+
+function ensure_phpmailer_loaded() {
+    if (class_exists('\PHPMailer\PHPMailer\PHPMailer')) {
+        return true;
+    }
+
+    $phpmailer_src = __DIR__ . '/PHPMailer/src/';
+    $required_files = [
+        $phpmailer_src . 'Exception.php',
+        $phpmailer_src . 'PHPMailer.php',
+        $phpmailer_src . 'SMTP.php',
+    ];
+
+    foreach ($required_files as $required_file) {
+        if (!file_exists($required_file)) {
+            return false;
+        }
+    }
+
+    require_once $phpmailer_src . 'Exception.php';
+    require_once $phpmailer_src . 'PHPMailer.php';
+    require_once $phpmailer_src . 'SMTP.php';
+
+    return class_exists('\PHPMailer\PHPMailer\PHPMailer');
+}
+
+function site_password_reset_mailer_config() {
+    return [
+        // TODO: Replace with your real SMTP host, for example: smtp.gmail.com
+        'host' => 'smtp.example.com',
+        // TODO: Replace with your real SMTP port, for example: 587 for TLS or 465 for SSL
+        'port' => 587,
+        // TODO: Replace with the real sender email address used for SMTP authentication
+        'username' => 'your-email@example.com',
+        // TODO: Replace with the real app password or SMTP password for the sender email
+        'password' => 'your-app-password-here',
+        // TODO: Replace with the email address you want users to see as the sender
+        'from_email' => 'your-email@example.com',
+        // TODO: Replace with the sender name shown in the email inbox
+        'from_name' => 'FAMOUS GAMING Support',
+        // TODO: Use 'tls' for STARTTLS or 'ssl' for SMTPS based on your mail provider
+        'encryption' => 'tls',
+    ];
+}
+
+function site_password_reset_mailer_is_configured($config) {
+    return !empty($config['host'])
+        && !empty($config['port'])
+        && !empty($config['username'])
+        && !empty($config['password'])
+        && !empty($config['from_email'])
+        && !empty($config['from_name'])
+        && $config['host'] !== 'smtp.example.com'
+        && $config['username'] !== 'your-email@example.com'
+        && $config['password'] !== 'your-app-password-here'
+        && $config['from_email'] !== 'your-email@example.com';
+}
+
+function ensure_site_user_password_reset_schema($conn) {
+    $password_reset_token_column = mysqli_query($conn, "SHOW COLUMNS FROM site_users LIKE 'password_reset_token'");
+    if ($password_reset_token_column && mysqli_num_rows($password_reset_token_column) === 0) {
+        mysqli_query($conn, "ALTER TABLE site_users ADD COLUMN password_reset_token VARCHAR(128) DEFAULT NULL AFTER password");
+        mysqli_query($conn, "ALTER TABLE site_users ADD INDEX idx_site_users_password_reset_token (password_reset_token)");
+    }
+
+    $password_reset_expiry_column = mysqli_query($conn, "SHOW COLUMNS FROM site_users LIKE 'password_reset_expires_at'");
+    if ($password_reset_expiry_column && mysqli_num_rows($password_reset_expiry_column) === 0) {
+        mysqli_query($conn, "ALTER TABLE site_users ADD COLUMN password_reset_expires_at DATETIME DEFAULT NULL AFTER password_reset_token");
+    }
+}
+
+function clear_site_user_password_reset_token($conn, $user_id) {
+    $user_id = (int)$user_id;
+
+    if ($user_id <= 0) {
+        return false;
+    }
+
+    $stmt = mysqli_prepare($conn, "UPDATE site_users SET password_reset_token = NULL, password_reset_expires_at = NULL WHERE id = ?");
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    $success = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    return (bool)$success;
+}
+
+function send_site_password_reset_email($user, $reset_url, &$error_message = null) {
+    $error_message = null;
+
+    if (!ensure_phpmailer_loaded()) {
+        $error_message = 'PHPMailer source files are missing.';
+        error_log('Password reset email failed: ' . $error_message);
+        return false;
+    }
+
+    $config = site_password_reset_mailer_config();
+
+    if (!site_password_reset_mailer_is_configured($config)) {
+        $error_message = 'SMTP settings are not configured yet.';
+        error_log('Password reset email failed: ' . $error_message);
+        return false;
+    }
+
+    try {
+        $mailer = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mailer->isSMTP();
+        $mailer->Host = $config['host'];
+        $mailer->SMTPAuth = true;
+        $mailer->Username = $config['username'];
+        $mailer->Password = $config['password'];
+        $mailer->Port = (int)$config['port'];
+        $mailer->Timeout = 15;
+
+        if (($config['encryption'] ?? 'tls') === 'ssl') {
+            $mailer->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+        } else {
+            $mailer->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        }
+
+        $mailer->CharSet = 'UTF-8';
+        $mailer->setFrom($config['from_email'], $config['from_name']);
+        $mailer->addAddress((string)$user['email'], (string)$user['full_name']);
+        $mailer->isHTML(true);
+        $mailer->Subject = function_exists('t') ? t('auth_reset_email_subject') : 'Reset your password';
+
+        $user_name = trim((string)($user['full_name'] ?? ''));
+        if ($user_name === '') {
+            $user_name = (string)($user['email'] ?? 'Player');
+        }
+
+        $safe_name = htmlspecialchars($user_name, ENT_QUOTES, 'UTF-8');
+        $safe_url = htmlspecialchars($reset_url, ENT_QUOTES, 'UTF-8');
+
+        $mailer->Body = '
+            <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.7;">
+                <h2 style="margin: 0 0 16px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_subject') : 'Reset your password', ENT_QUOTES, 'UTF-8') . '</h2>
+                <p style="margin: 0 0 12px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_greeting', ['name' => $user_name], 'Hello ' . $user_name . ',') : ('Hello ' . $user_name . ','), ENT_QUOTES, 'UTF-8') . '</p>
+                <p style="margin: 0 0 12px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_intro') : 'We received a request to reset your password.', ENT_QUOTES, 'UTF-8') . '</p>
+                <p style="margin: 0 0 18px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_action') : 'Use the secure link below to choose a new password.', ENT_QUOTES, 'UTF-8') . '</p>
+                <p style="margin: 0 0 18px;">
+                    <a href="' . $safe_url . '" style="display: inline-block; padding: 12px 20px; background: #35d2f4; color: #07111f; text-decoration: none; border-radius: 10px; font-weight: 700;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_button') : 'Reset Password', ENT_QUOTES, 'UTF-8') . '</a>
+                </p>
+                <p style="margin: 0 0 8px;"><a href="' . $safe_url . '">' . $safe_url . '</a></p>
+                <p style="margin: 0 0 8px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_expiry') : 'This link expires in 1 hour.', ENT_QUOTES, 'UTF-8') . '</p>
+                <p style="margin: 0;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_ignore') : 'If you did not request this, you can ignore this email.', ENT_QUOTES, 'UTF-8') . '</p>
+            </div>';
+        $mailer->AltBody =
+            (function_exists('t') ? t('auth_reset_email_subject') : 'Reset your password') . "\n\n"
+            . (function_exists('t') ? t('auth_reset_email_intro') : 'We received a request to reset your password.') . "\n"
+            . (function_exists('t') ? t('auth_reset_email_action') : 'Use the secure link below to choose a new password.') . "\n"
+            . $reset_url . "\n\n"
+            . (function_exists('t') ? t('auth_reset_email_expiry') : 'This link expires in 1 hour.') . "\n"
+            . (function_exists('t') ? t('auth_reset_email_ignore') : 'If you did not request this, you can ignore this email.');
+
+        return $mailer->send();
+    } catch (\Throwable $exception) {
+        $error_message = $exception->getMessage();
+        error_log('Password reset email failed: ' . $error_message);
+        return false;
+    }
+}
+
+function request_site_user_password_reset($conn, $email) {
+    ensure_user_auth_schema($conn);
+    $email = strtolower(trim((string)$email));
+
+    if ($email === '' || !validate_email($email)) {
+        return [
+            'success' => false,
+            'email_sent' => false,
+            'code' => 'invalid_email',
+            'message' => function_exists('t') ? t('auth_email_invalid') : 'Invalid email address.',
+        ];
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT id, full_name, email, status FROM site_users WHERE email = ? LIMIT 1");
+    if (!$stmt) {
+        return [
+            'success' => false,
+            'email_sent' => false,
+            'code' => 'prepare_failed',
+            'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
+        ];
+    }
+
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = $result ? mysqli_fetch_assoc($result) : null;
+    mysqli_stmt_close($stmt);
+
+    if (!$user) {
+        return [
+            'success' => false,
+            'email_sent' => false,
+            'code' => 'email_not_found',
+            'message' => function_exists('t') ? t('auth_reset_email_not_found') : 'No account was found with that email address.',
+        ];
+    }
+
+    if (($user['status'] ?? 'Inactive') !== 'Active') {
+        return [
+            'success' => false,
+            'email_sent' => false,
+            'code' => 'inactive_account',
+            'message' => function_exists('t') ? t('auth_inactive') : 'This account is inactive.',
+        ];
+    }
+
+    if (!ensure_phpmailer_loaded()) {
+        return [
+            'success' => false,
+            'email_sent' => false,
+            'code' => 'phpmailer_missing',
+            'message' => function_exists('t') ? t('auth_reset_send_failed') : 'Password reset email could not be sent right now.',
+        ];
+    }
+
+    if (!site_password_reset_mailer_is_configured(site_password_reset_mailer_config())) {
+        return [
+            'success' => false,
+            'email_sent' => false,
+            'code' => 'smtp_not_configured',
+            'message' => function_exists('t') ? t('auth_reset_mail_not_configured') : 'SMTP settings are not configured yet.',
+        ];
+    }
+
+    $token = bin2hex(random_bytes(32));
+    $expires_at = date('Y-m-d H:i:s', time() + 3600);
+
+    $update_stmt = mysqli_prepare($conn, "UPDATE site_users SET password_reset_token = ?, password_reset_expires_at = ? WHERE id = ?");
+    if (!$update_stmt) {
+        return [
+            'success' => false,
+            'email_sent' => false,
+            'code' => 'update_prepare_failed',
+            'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
+        ];
+    }
+
+    mysqli_stmt_bind_param($update_stmt, "ssi", $token, $expires_at, $user['id']);
+    $updated = mysqli_stmt_execute($update_stmt);
+    mysqli_stmt_close($update_stmt);
+
+    if (!$updated) {
+        return [
+            'success' => false,
+            'email_sent' => false,
+            'code' => 'token_store_failed',
+            'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
+        ];
+    }
+
+    $language = function_exists('site_language') ? site_language() : 'en';
+    $reset_url = site_absolute_url('general/reset_password.php?token=' . rawurlencode($token) . '&lang=' . rawurlencode($language));
+    $send_error = null;
+
+    if (!send_site_password_reset_email($user, $reset_url, $send_error)) {
+        clear_site_user_password_reset_token($conn, (int)$user['id']);
+        error_log('Password reset email failed for ' . $email . ': ' . (string)$send_error);
+        return [
+            'success' => false,
+            'email_sent' => false,
+            'code' => 'send_failed',
+            'message' => function_exists('t') ? t('auth_reset_send_failed') : 'Password reset email could not be sent right now.',
+        ];
+    }
+
+    return [
+        'success' => true,
+        'email_sent' => true,
+        'code' => 'sent',
+        'message' => function_exists('t') ? t('auth_reset_success') : 'Password reset email sent successfully.',
+    ];
+}
+
+function get_site_user_by_password_reset_token($conn, $token) {
+    ensure_user_auth_schema($conn);
+    $token = trim((string)$token);
+
+    if ($token === '' || strlen($token) < 32 || !preg_match('/^[a-f0-9]+$/i', $token)) {
+        return null;
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT id, full_name, email, status, password_reset_expires_at FROM site_users WHERE password_reset_token = ? LIMIT 1");
+    if (!$stmt) {
+        return null;
+    }
+
+    mysqli_stmt_bind_param($stmt, "s", $token);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = $result ? mysqli_fetch_assoc($result) : null;
+    mysqli_stmt_close($stmt);
+
+    if (!$user || ($user['status'] ?? 'Inactive') !== 'Active') {
+        return null;
+    }
+
+    $expires_at = strtotime((string)($user['password_reset_expires_at'] ?? ''));
+    if ($expires_at === false || $expires_at < time()) {
+        clear_site_user_password_reset_token($conn, (int)$user['id']);
+        return null;
+    }
+
+    return $user;
+}
+
+function reset_site_user_password_by_token($conn, $token, $new_password) {
+    $user = get_site_user_by_password_reset_token($conn, $token);
+
+    if (!$user) {
+        return false;
+    }
+
+    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+    $stmt = mysqli_prepare($conn, "UPDATE site_users SET password = ?, password_reset_token = NULL, password_reset_expires_at = NULL WHERE id = ?");
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "si", $hashed_password, $user['id']);
+    $success = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    if ($success) {
+        clear_current_site_user_cache((int)$user['id']);
+
+        if ((int)($_SESSION['site_user_id'] ?? 0) === (int)$user['id']) {
+            unset($_SESSION['site_user_id'], $_SESSION['site_user_name'], $_SESSION['site_user_role'], $_SESSION['site_user_loyalty_points']);
+        }
+    }
+
+    return (bool)$success;
 }
 
 /**

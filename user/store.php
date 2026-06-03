@@ -485,7 +485,10 @@ include dirname(__DIR__) . '/includes/header.php';
                 if (typeof window.showSiteConfirm === 'function') {
                     window.showSiteConfirm(storeTexts.loginRequired, function () {
                         window.location.href = storeLoginUrl;
-                    }, <?php echo json_encode(t('modal_message_title'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>);
+                    }, <?php echo json_encode(t('modal_message_title'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>, {
+                        ok: <?php echo json_encode(t('common_yes'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>,
+                        no: <?php echo json_encode(t('common_not_now'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>
+                    });
                 } else {
                     window.location.href = storeLoginUrl;
                 }

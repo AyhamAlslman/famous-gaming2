@@ -29,8 +29,10 @@ include dirname(__DIR__) . '/includes/header.php';
                             <svg viewBox="0 0 24 24"><path d="M6.62 10.79a15.3 15.3 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24 11.4 11.4 0 0 0 3.58.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .57 3.58 1 1 0 0 1-.24 1.01l-2.21 2.2Z"/></svg>
                         </div>
                         <h3 class="contact-card-title"><?php echo t('contact_phone'); ?></h3>
-                        <a href="tel:+96261234567" class="contact-card-link">+962 6 123 4567</a>
-                        <a href="tel:+962798497188" class="contact-card-link">+962 79 849 7188</a>
+                        <div class="contact-card-body">
+                            <a href="tel:+96261234567" class="contact-card-link">+962 6 123 4567</a>
+                            <a href="tel:+962798497188" class="contact-card-link">+962 79 849 7188</a>
+                        </div>
                         <p class="contact-card-hint"><?php echo t('contact_phone_hours'); ?></p>
                     </div>
                 </div>
@@ -41,8 +43,10 @@ include dirname(__DIR__) . '/includes/header.php';
                             <svg viewBox="0 0 24 24"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm0 2v.25l8 5 8-5V7H4Zm16 10V9.6l-7.47 4.67a1 1 0 0 1-1.06 0L4 9.6V17h16Z"/></svg>
                         </div>
                         <h3 class="contact-card-title"><?php echo t('contact_email'); ?></h3>
-                        <a href="mailto:info@famousgaming.jo" class="contact-card-link">info@famousgaming.jo</a>
-                        <a href="mailto:bookings@famousgaming.jo" class="contact-card-link">bookings@famousgaming.jo</a>
+                        <div class="contact-card-body">
+                            <a href="mailto:info@famousgaming.jo" class="contact-card-link">info@famousgaming.jo</a>
+                            <a href="mailto:bookings@famousgaming.jo" class="contact-card-link">bookings@famousgaming.jo</a>
+                        </div>
                         <p class="contact-card-hint"><?php echo t('contact_email_reply'); ?></p>
                     </div>
                 </div>
@@ -53,9 +57,11 @@ include dirname(__DIR__) . '/includes/header.php';
                             <svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7Zm0 9.5A2.5 2.5 0 1 0 12 6a2.5 2.5 0 0 0 0 5.5Z"/></svg>
                         </div>
                         <h3 class="contact-card-title"><?php echo t('contact_location'); ?></h3>
-                        <p class="contact-card-text">Rainbow Street</p>
-                        <p class="contact-card-text">Jabal Amman</p>
-                        <p class="contact-card-text">Amman, Jordan</p>
+                        <div class="contact-card-body">
+                            <p class="contact-card-text">Rainbow Street</p>
+                            <p class="contact-card-text">Jabal Amman</p>
+                            <p class="contact-card-text">Amman, Jordan</p>
+                        </div>
                         <p class="contact-card-hint"><?php echo t('contact_location_hint'); ?></p>
                     </a>
                 </div>

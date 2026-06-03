@@ -4493,10 +4493,77 @@ html[dir="rtl"] .page-contact .contact-info-card-link {
     justify-content: flex-start !important;
 }
 
+.page-contact .contact-info-card,
+.page-contact .contact-info-card-link,
+html[dir="rtl"] .page-contact .contact-info-card,
+html[dir="rtl"] .page-contact .contact-info-card-link {
+    gap: 0 !important;
+    padding: 1.35rem !important;
+}
+
+.page-contact .contact-card-title,
+html[dir="rtl"] .page-contact .contact-card-title {
+    margin-bottom: 0.7rem !important;
+    line-height: 1.25 !important;
+}
+
+.page-contact .contact-card-body,
+html[dir="rtl"] .page-contact .contact-card-body {
+    display: grid !important;
+    gap: 0.45rem !important;
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    align-content: start !important;
+}
+
+.page-contact .contact-card-link,
+.page-contact .contact-card-text,
+html[dir="rtl"] .page-contact .contact-card-link,
+html[dir="rtl"] .page-contact .contact-card-text {
+    width: 100% !important;
+    margin: 0 !important;
+    font-size: 1rem !important;
+    line-height: 1.65 !important;
+}
+
+.page-contact .contact-card-text,
+html[dir="rtl"] .page-contact .contact-card-text {
+    color: rgba(232, 242, 250, 0.88) !important;
+}
+
+.page-contact .contact-card-hint,
+html[dir="rtl"] .page-contact .contact-card-hint {
+    width: 100% !important;
+    margin-top: 0.95rem !important;
+    padding-top: 0.95rem !important;
+    border-top: 1px solid rgba(150, 201, 223, 0.12) !important;
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+}
+
 .page-contact .contact-icon,
 html[dir="rtl"] .page-contact .contact-icon {
     margin-left: 0 !important;
     margin-right: auto !important;
+}
+
+.page-contact .contact-hours-container,
+html[dir="rtl"] .page-contact .contact-hours-container {
+    width: min(100%, 980px) !important;
+    margin: 0 auto 1rem !important;
+    padding: 1.45rem !important;
+}
+
+.page-contact .contact-hours-title,
+html[dir="rtl"] .page-contact .contact-hours-title {
+    margin-bottom: 1rem !important;
+}
+
+.page-contact .contact-hours-list,
+html[dir="rtl"] .page-contact .contact-hours-list {
+    max-width: none !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.8rem !important;
 }
 
 .page-contact .contact-hours-item,
@@ -4504,6 +4571,7 @@ html[dir="rtl"] .page-contact .contact-hours-item {
     direction: ltr !important;
     justify-content: space-between !important;
     text-align: left !important;
+    margin-bottom: 0 !important;
 }
 
 @media (max-width: 860px) {
@@ -4514,6 +4582,11 @@ html[dir="rtl"] .page-contact .contact-hours-item {
         margin-left: auto !important;
         margin-right: auto !important;
         text-align: left !important;
+    }
+
+    .page-contact .contact-hours-list,
+    html[dir="rtl"] .page-contact .contact-hours-list {
+        grid-template-columns: 1fr !important;
     }
 }
 

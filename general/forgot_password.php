@@ -17,7 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!validate_email($email)) {
         $error_msg = t('auth_email_invalid');
     } else {
-        $success_msg = t('auth_reset_success');
+        $reset_request = request_site_user_password_reset($conn, $email);
+
+        if (!empty($reset_request['success']) && !empty($reset_request['email_sent'])) {
+            $success_msg = $reset_request['message'] ?? t('auth_reset_success');
+        } else {
+            $error_msg = $reset_request['message'] ?? t('booking_submit_error');
+        }
     }
 }
 
@@ -59,7 +65,7 @@ include dirname(__DIR__) . '/includes/header.php';
             <aside class="auth-side-panel">
                 <span class="auth-side-kicker">FAMOUS GAMING</span>
                 <h2><?php echo t('auth_forgot_password'); ?></h2>
-                <p><?php echo t('auth_password_tip'); ?></p>
+                <p><?php echo t('auth_reset_hint'); ?></p>
                 <a class="auth-side-action" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
             </aside>
             </div>
