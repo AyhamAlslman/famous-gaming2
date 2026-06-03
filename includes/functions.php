@@ -1823,21 +1823,28 @@ function ensure_phpmailer_loaded() {
 }
 
 function site_password_reset_mailer_config() {
-    return [
-        // TODO: Replace with your real SMTP host, for example: smtp.gmail.com
-        'host' => 'smtp.example.com',
-        // TODO: Replace with your real SMTP port, for example: 587 for TLS or 465 for SSL
+    $direct_values = [
+        // Local XAMPP fallback values for testing:
+        // Replace these مباشرة if you want to test without environment variables.
+        'host' => 'smtp.gmail.com',
         'port' => 587,
-        // TODO: Replace with the real sender email address used for SMTP authentication
-        'username' => 'your-email@example.com',
-        // TODO: Replace with the real app password or SMTP password for the sender email
-        'password' => 'your-app-password-here',
-        // TODO: Replace with the email address you want users to see as the sender
-        'from_email' => 'your-email@example.com',
-        // TODO: Replace with the sender name shown in the email inbox
-        'from_name' => 'FAMOUS GAMING Support',
-        // TODO: Use 'tls' for STARTTLS or 'ssl' for SMTPS based on your mail provider
+        'username' => 'mahmoudalhassan637@gmail.com',
+        'password' => 'qwbtfoflksrduseg',
+        'from_email' => 'mahmoudalhassan637@gmail.com',
+        'from_name' => 'FAMOUS GAMING',
         'encryption' => 'tls',
+    ];
+
+    return [
+        // Environment variables are used first if available.
+        // Otherwise, the direct fallback values above are used for local testing.
+        'host' => getenv('FG_SMTP_HOST') ?: $direct_values['host'],
+        'port' => (int)(getenv('FG_SMTP_PORT') ?: $direct_values['port']),
+        'username' => getenv('FG_SMTP_USERNAME') ?: $direct_values['username'],
+        'password' => getenv('FG_SMTP_PASSWORD') ?: $direct_values['password'],
+        'from_email' => getenv('FG_SMTP_FROM_EMAIL') ?: $direct_values['from_email'],
+        'from_name' => getenv('FG_SMTP_FROM_NAME') ?: $direct_values['from_name'],
+        'encryption' => getenv('FG_SMTP_ENCRYPTION') ?: $direct_values['encryption'],
     ];
 }
 
@@ -1850,8 +1857,65 @@ function site_password_reset_mailer_is_configured($config) {
         && !empty($config['from_name'])
         && $config['host'] !== 'smtp.example.com'
         && $config['username'] !== 'your-email@example.com'
+        && $config['username'] !== 'your-email@gmail.com'
+        && $config['username'] !== 'your-gmail@gmail.com'
         && $config['password'] !== 'your-app-password-here'
-        && $config['from_email'] !== 'your-email@example.com';
+        && $config['password'] !== 'your-16-character-app-password'
+        && $config['from_email'] !== 'your-email@example.com'
+        && $config['from_email'] !== 'your-email@gmail.com'
+        && $config['from_email'] !== 'your-gmail@gmail.com';
+}
+
+function password_reset_mail_log_path() {
+    $root = defined('SITE_ROOT_PATH') ? SITE_ROOT_PATH : dirname(__DIR__);
+    return $root . '/logs/password-reset-mail.log';
+}
+
+function sanitize_password_reset_debug_line($line) {
+    $line = (string)$line;
+    $line = preg_replace('/334\s+[A-Za-z0-9+\/=]+/', '334 [REDACTED-CHALLENGE]', $line);
+    $line = preg_replace('/AUTH\s+(PLAIN|LOGIN)\s+[A-Za-z0-9+\/=]+/i', 'AUTH $1 [REDACTED]', $line);
+    $line = preg_replace('/\b[0-9A-Za-z._%+-]+@[0-9A-Za-z.-]+\.[A-Za-z]{2,}\b/', '[REDACTED-EMAIL]', $line);
+    return $line;
+}
+
+function write_password_reset_mail_log($heading, array $lines = []) {
+    $log_path = password_reset_mail_log_path();
+    $log_dir = dirname($log_path);
+
+    if (!is_dir($log_dir)) {
+        mkdir($log_dir, 0755, true);
+    }
+
+    $entry = '[' . date('Y-m-d H:i:s') . '] ' . $heading . PHP_EOL;
+
+    foreach ($lines as $line) {
+        $entry .= sanitize_password_reset_debug_line($line) . PHP_EOL;
+    }
+
+    $entry .= str_repeat('-', 80) . PHP_EOL;
+    file_put_contents($log_path, $entry, FILE_APPEND);
+}
+
+function extract_password_reset_mail_error($fallback_error, array $debug_lines = []) {
+    $candidates = [];
+
+    foreach ($debug_lines as $line) {
+        $sanitized = trim(sanitize_password_reset_debug_line($line));
+        if ($sanitized === '') {
+            continue;
+        }
+
+        if (stripos($sanitized, '535 ') !== false || stripos($sanitized, 'SMTP ERROR:') !== false) {
+            $candidates[] = $sanitized;
+        }
+    }
+
+    if (!empty($candidates)) {
+        return implode(' | ', array_slice($candidates, -2));
+    }
+
+    return trim((string)$fallback_error);
 }
 
 function ensure_site_user_password_reset_schema($conn) {
@@ -1888,10 +1952,12 @@ function clear_site_user_password_reset_token($conn, $user_id) {
 
 function send_site_password_reset_email($user, $reset_url, &$error_message = null) {
     $error_message = null;
+    $debug_lines = [];
 
     if (!ensure_phpmailer_loaded()) {
         $error_message = 'PHPMailer source files are missing.';
         error_log('Password reset email failed: ' . $error_message);
+        write_password_reset_mail_log('PHPMailer load failure', [$error_message]);
         return false;
     }
 
@@ -1900,6 +1966,7 @@ function send_site_password_reset_email($user, $reset_url, &$error_message = nul
     if (!site_password_reset_mailer_is_configured($config)) {
         $error_message = 'SMTP settings are not configured yet.';
         error_log('Password reset email failed: ' . $error_message);
+        write_password_reset_mail_log('SMTP configuration missing', [$error_message]);
         return false;
     }
 
@@ -1912,6 +1979,10 @@ function send_site_password_reset_email($user, $reset_url, &$error_message = nul
         $mailer->Password = $config['password'];
         $mailer->Port = (int)$config['port'];
         $mailer->Timeout = 15;
+        $mailer->SMTPDebug = 2;
+        $mailer->Debugoutput = function ($str, $level) use (&$debug_lines) {
+            $debug_lines[] = '[' . $level . '] ' . sanitize_password_reset_debug_line($str);
+        };
 
         if (($config['encryption'] ?? 'tls') === 'ssl') {
             $mailer->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
@@ -1954,10 +2025,13 @@ function send_site_password_reset_email($user, $reset_url, &$error_message = nul
             . (function_exists('t') ? t('auth_reset_email_expiry') : 'This link expires in 1 hour.') . "\n"
             . (function_exists('t') ? t('auth_reset_email_ignore') : 'If you did not request this, you can ignore this email.');
 
-        return $mailer->send();
+        $sent = $mailer->send();
+        write_password_reset_mail_log('Password reset email sent successfully', $debug_lines);
+        return $sent;
     } catch (\Throwable $exception) {
-        $error_message = $exception->getMessage();
+        $error_message = extract_password_reset_mail_error($mailer->ErrorInfo ?: $exception->getMessage(), $debug_lines);
         error_log('Password reset email failed: ' . $error_message);
+        write_password_reset_mail_log('Password reset email failed', array_merge([$error_message], $debug_lines));
         return false;
     }
 }
@@ -2064,7 +2138,7 @@ function request_site_user_password_reset($conn, $email) {
             'success' => false,
             'email_sent' => false,
             'code' => 'send_failed',
-            'message' => function_exists('t') ? t('auth_reset_send_failed') : 'Password reset email could not be sent right now.',
+            'message' => $send_error !== '' ? $send_error : (function_exists('t') ? t('auth_reset_send_failed') : 'Password reset email could not be sent right now.'),
         ];
     }
 

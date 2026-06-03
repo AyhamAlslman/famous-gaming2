@@ -13,6 +13,21 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     let siteConfirmCallback = null;
 
+    function setSiteModalSecondaryButton(button, visible, label) {
+        if (!button) {
+            return;
+        }
+
+        if (typeof label === 'string') {
+            button.textContent = label;
+        }
+
+        button.hidden = !visible;
+        button.toggleAttribute('hidden', !visible);
+        button.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        button.style.display = visible ? '' : 'none';
+    }
+
     document.querySelectorAll('[data-password-toggle]').forEach(function(button) {
         const input = document.querySelector(button.getAttribute('data-password-toggle'));
 
@@ -84,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.dataset.type = options && options.type ? options.type : 'info';
         title.textContent = (options && options.title) || modalTexts.messageTitle;
         text.textContent = (options && options.message) || '';
-        noButton.hidden = true;
+        setSiteModalSecondaryButton(noButton, false, modalTexts.no);
         okButton.textContent = modalTexts.ok;
         modal.hidden = false;
         document.body.classList.add('site-modal-open');
@@ -102,8 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.dataset.type = 'warning';
         titleEl.textContent = title || modalTexts.confirmTitle;
         text.textContent = message || modalTexts.confirmTitle;
-        noButton.hidden = false;
-        noButton.textContent = labels && labels.no ? labels.no : modalTexts.no;
+        setSiteModalSecondaryButton(noButton, true, labels && labels.no ? labels.no : modalTexts.no);
         okButton.textContent = labels && labels.ok ? labels.ok : modalTexts.yes;
         siteConfirmCallback = onConfirm;
         modal.hidden = false;

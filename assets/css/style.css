@@ -4873,6 +4873,11 @@ table th,
     margin-top: 1.1rem;
 }
 
+.site-modal-actions [hidden],
+.site-modal-actions [aria-hidden="true"] {
+    display: none !important;
+}
+
 body.site-modal-open {
     overflow: hidden;
 }
