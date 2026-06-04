@@ -37,6 +37,11 @@ if (!function_exists('site_url')) {
     }
 }
 
+// --- إعدادات البريد الإلكتروني (SMTP) باستخدام متغير البيئة ---
+// ملاحظة: تأكد من أن متغير البيئة 'FG_SMTP_PASSWORD' تم تعريفه في نظام التشغيل
+define('SMTP_PASSWORD', getenv('FG_SMTP_PASSWORD') ?: ''); 
+// -------------------------------------------------------------
+
 require_once __DIR__ . '/lang.php';
 
 $db_hosts = [

@@ -1828,9 +1828,9 @@ function site_password_reset_mailer_config() {
         // Replace these مباشرة if you want to test without environment variables.
         'host' => 'smtp.gmail.com',
         'port' => 587,
-        'username' => 'mahmoudalhassan637@gmail.com',
-        'password' => 'qwbtfoflksrduseg',
-        'from_email' => 'mahmoudalhassan637@gmail.com',
+        'username' => 'ayhamalslman367@gmail.com',
+        'password' => '',
+        'from_email' => 'ayhamalslman367@gmail.com',
         'from_name' => 'FAMOUS GAMING',
         'encryption' => 'tls',
     ];
@@ -1948,6 +1948,190 @@ function clear_site_user_password_reset_token($conn, $user_id) {
     mysqli_stmt_close($stmt);
 
     return (bool)$success;
+}
+
+function send_site_password_reset_otp_email($user, $otp_code, &$error_message = null) {
+    $error_message = null;
+    $debug_lines = [];
+    $mailer = null;
+
+    if (!ensure_phpmailer_loaded()) {
+        $error_message = function_exists('t') ? t('auth_reset_send_failed') : 'Password reset email could not be sent right now.';
+        return false;
+    }
+
+    $config = site_password_reset_mailer_config();
+    if (!site_password_reset_mailer_is_configured($config)) {
+        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'SMTP settings are not configured yet.';
+        return false;
+    }
+
+    try {
+        $mailer = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mailer->isSMTP();
+        $mailer->Host = $config['host'];
+        $mailer->SMTPAuth = true;
+        $mailer->Username = $config['username'];
+        $mailer->Password = $config['password'];
+        $mailer->Port = (int)$config['port'];
+        $mailer->Timeout = 15;
+        $mailer->SMTPDebug = 2;
+        $mailer->Debugoutput = function ($str, $level) use (&$debug_lines) {
+            $debug_lines[] = '[' . $level . '] ' . sanitize_password_reset_debug_line($str);
+        };
+        $mailer->SMTPSecure = (($config['encryption'] ?? 'tls') === 'ssl')
+            ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
+            : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+
+        $user_name = trim((string)($user['full_name'] ?? '')) ?: (string)($user['email'] ?? 'Player');
+        $safe_name = htmlspecialchars($user_name, ENT_QUOTES, 'UTF-8');
+        $safe_code = htmlspecialchars((string)$otp_code, ENT_QUOTES, 'UTF-8');
+
+        $mailer->CharSet = 'UTF-8';
+        $mailer->setFrom($config['from_email'], $config['from_name']);
+        $mailer->addAddress((string)$user['email'], $user_name);
+        $mailer->isHTML(true);
+        $mailer->Subject = function_exists('t') ? t('auth_otp_email_subject') : 'Your FAMOUS GAMING verification code';
+        $email_direction = function_exists('site_direction') ? site_direction() : 'ltr';
+        $email_align = $email_direction === 'rtl' ? 'right' : 'left';
+        $mailer->Body = '
+            <div dir="' . $email_direction . '" style="margin: 0; padding: 32px 14px; background: #f3f6fa; font-family: Arial, sans-serif; color: #172033;">
+                <div style="max-width: 560px; margin: 0 auto; overflow: hidden; border: 1px solid #dde5ee; border-radius: 8px; background: #ffffff;">
+                    <div style="padding: 22px 28px; background: #101827; color: #ffffff; text-align: center;">
+                        <div style="font-size: 21px; font-weight: 800;">FAMOUS GAMING</div>
+                        <div style="margin-top: 5px; color: #8cecff; font-size: 12px; text-transform: uppercase;">' . htmlspecialchars(function_exists('t') ? t('auth_otp_email_kicker') : 'Secure account verification', ENT_QUOTES, 'UTF-8') . '</div>
+                    </div>
+                    <div style="padding: 30px 28px; text-align: ' . $email_align . ';">
+                        <p style="margin: 0 0 12px; font-size: 16px; font-weight: 700;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_greeting', ['name' => $user_name], 'Hello ' . $user_name . ',') : ('Hello ' . $user_name . ','), ENT_QUOTES, 'UTF-8') . '</p>
+                        <p style="margin: 0 0 22px; color: #4b5870; line-height: 1.7;">' . htmlspecialchars(function_exists('t') ? t('auth_otp_email_intro') : 'Use this verification code to reset your password:', ENT_QUOTES, 'UTF-8') . '</p>
+                        <div style="padding: 22px; border: 1px solid #dbe6ef; border-radius: 8px; background: #f8fbfd; text-align: center;">
+                            <div style="margin-bottom: 8px; color: #68758a; font-size: 12px; font-weight: 700; text-transform: uppercase;">' . htmlspecialchars(function_exists('t') ? t('auth_otp_label') : 'Verification code', ENT_QUOTES, 'UTF-8') . '</div>
+                            <div style="direction: ltr; color: #101827; font-family: Consolas, monospace; font-size: 34px; font-weight: 800; letter-spacing: 10px;">' . $safe_code . '</div>
+                        </div>
+                        <p style="margin: 20px 0 8px; color: #4b5870; line-height: 1.7;">' . htmlspecialchars(function_exists('t') ? t('auth_otp_email_expiry') : 'This code expires in 10 minutes.', ENT_QUOTES, 'UTF-8') . '</p>
+                        <p style="margin: 0; color: #b42318; line-height: 1.7; font-weight: 700;">' . htmlspecialchars(function_exists('t') ? t('auth_otp_email_security') : 'Never share this code with anyone.', ENT_QUOTES, 'UTF-8') . '</p>
+                    </div>
+                    <div style="padding: 18px 28px; border-top: 1px solid #e7edf3; background: #f8fafc; color: #68758a; font-size: 12px; line-height: 1.6; text-align: ' . $email_align . ';">
+                        ' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_ignore') : 'If you did not request this, you can safely ignore this email.', ENT_QUOTES, 'UTF-8') . '
+                    </div>
+                </div>
+            </div>';
+        $mailer->AltBody =
+            (function_exists('t') ? t('auth_otp_email_intro') : 'Use this code to reset your password:') . "\n\n"
+            . $otp_code . "\n\n"
+            . (function_exists('t') ? t('auth_otp_email_expiry') : 'This code expires in 10 minutes.') . "\n"
+            . (function_exists('t') ? t('auth_otp_email_security') : 'Never share this code with anyone.');
+
+        $sent = $mailer->send();
+        write_password_reset_mail_log('Password reset OTP email sent successfully', $debug_lines);
+        return $sent;
+    } catch (\Throwable $exception) {
+        $mailer_error = $mailer instanceof \PHPMailer\PHPMailer\PHPMailer ? $mailer->ErrorInfo : '';
+        $error_message = extract_password_reset_mail_error($mailer_error ?: $exception->getMessage(), $debug_lines);
+        write_password_reset_mail_log('Password reset OTP email failed', array_merge([$error_message], $debug_lines));
+        return false;
+    }
+}
+
+function request_site_user_password_reset_otp($conn, $email) {
+    ensure_user_auth_schema($conn);
+    $email = strtolower(trim((string)$email));
+
+    if ($email === '' || !validate_email($email)) {
+        return ['success' => false, 'message' => function_exists('t') ? t('auth_email_invalid') : 'Invalid email address.'];
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT id, full_name, email, status FROM site_users WHERE email = ? LIMIT 1");
+    if (!$stmt) {
+        return ['success' => false, 'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request.'];
+    }
+
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = $result ? mysqli_fetch_assoc($result) : null;
+    mysqli_stmt_close($stmt);
+
+    if (!$user) {
+        return ['success' => false, 'message' => function_exists('t') ? t('auth_reset_email_not_found') : 'No account was found with that email address.'];
+    }
+
+    if (($user['status'] ?? 'Inactive') !== 'Active') {
+        return ['success' => false, 'message' => function_exists('t') ? t('auth_inactive') : 'This account is inactive.'];
+    }
+
+    $otp_code = (string)random_int(100000, 999999);
+    $otp_hash = password_hash($otp_code, PASSWORD_DEFAULT);
+    $expires_at = date('Y-m-d H:i:s', time() + 600);
+    $update_stmt = mysqli_prepare($conn, "UPDATE site_users SET password_reset_token = ?, password_reset_expires_at = ? WHERE id = ?");
+
+    if (!$update_stmt) {
+        return ['success' => false, 'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request.'];
+    }
+
+    mysqli_stmt_bind_param($update_stmt, "ssi", $otp_hash, $expires_at, $user['id']);
+    $updated = mysqli_stmt_execute($update_stmt);
+    mysqli_stmt_close($update_stmt);
+
+    if (!$updated) {
+        return ['success' => false, 'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request.'];
+    }
+
+    $send_error = null;
+    if (!send_site_password_reset_otp_email($user, $otp_code, $send_error)) {
+        clear_site_user_password_reset_token($conn, (int)$user['id']);
+        return ['success' => false, 'message' => $send_error ?: (function_exists('t') ? t('auth_reset_send_failed') : 'Unable to send the code.')];
+    }
+
+    return ['success' => true, 'user_id' => (int)$user['id'], 'email' => $email, 'message' => function_exists('t') ? t('auth_otp_sent') : 'Verification code sent.'];
+}
+
+function verify_site_user_password_reset_otp($conn, $user_id, $email, $otp_code) {
+    $user_id = (int)$user_id;
+    $email = strtolower(trim((string)$email));
+    $otp_code = trim((string)$otp_code);
+
+    if ($user_id <= 0 || !preg_match('/^\d{6}$/', $otp_code)) {
+        return false;
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT password_reset_token, password_reset_expires_at FROM site_users WHERE id = ? AND email = ? AND status = 'Active' LIMIT 1");
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "is", $user_id, $email);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = $result ? mysqli_fetch_assoc($result) : null;
+    mysqli_stmt_close($stmt);
+
+    $expires_at = $user ? strtotime((string)$user['password_reset_expires_at']) : false;
+    return $user
+        && $expires_at !== false
+        && $expires_at >= time()
+        && password_verify($otp_code, (string)$user['password_reset_token']);
+}
+
+function reset_site_user_password_after_otp($conn, $user_id, $email, $new_password) {
+    $user_id = (int)$user_id;
+    $email = strtolower(trim((string)$email));
+    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+    $stmt = mysqli_prepare($conn, "UPDATE site_users SET password = ?, password_reset_token = NULL, password_reset_expires_at = NULL WHERE id = ? AND email = ? AND status = 'Active'");
+
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "sis", $hashed_password, $user_id, $email);
+    $success = mysqli_stmt_execute($stmt) && mysqli_stmt_affected_rows($stmt) === 1;
+    mysqli_stmt_close($stmt);
+
+    if ($success) {
+        clear_current_site_user_cache($user_id);
+    }
+
+    return $success;
 }
 
 function send_site_password_reset_email($user, $reset_url, &$error_message = null) {
