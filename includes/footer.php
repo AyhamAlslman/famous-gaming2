@@ -65,15 +65,20 @@
             'error' => 'The assistant is unavailable right now. Please try again.',
         ];
     ?>
-    <div class="support-chatbot" data-support-chatbot hidden>
-        <button type="button" class="support-chatbot-toggle" data-support-chatbot-toggle aria-expanded="false">
-            <?php echo htmlspecialchars($support_chatbot_texts['open'], ENT_QUOTES, 'UTF-8'); ?>
+    <?php $support_chatbot_avatar = site_url('assets/images/support-controller.png'); ?>
+    <div class="support-chatbot" id="support-chatbot" data-support-chatbot hidden>
+        <button type="button" class="support-chatbot-toggle" data-support-chatbot-toggle aria-expanded="false" aria-label="<?php echo htmlspecialchars($support_chatbot_texts['open'], ENT_QUOTES, 'UTF-8'); ?>">
+            <img src="<?php echo htmlspecialchars($support_chatbot_avatar, ENT_QUOTES, 'UTF-8'); ?>" alt="" aria-hidden="true">
+            <span><?php echo htmlspecialchars($support_chatbot_texts['open'], ENT_QUOTES, 'UTF-8'); ?></span>
         </button>
         <section class="support-chatbot-panel" data-support-chatbot-panel hidden>
             <header class="support-chatbot-header">
-                <div>
-                    <span><?php echo htmlspecialchars($support_chatbot_texts['subtitle'], ENT_QUOTES, 'UTF-8'); ?></span>
-                    <h2><?php echo htmlspecialchars($support_chatbot_texts['title'], ENT_QUOTES, 'UTF-8'); ?></h2>
+                <div class="support-chatbot-identity">
+                    <img src="<?php echo htmlspecialchars($support_chatbot_avatar, ENT_QUOTES, 'UTF-8'); ?>" alt="" aria-hidden="true">
+                    <div>
+                        <h2><?php echo htmlspecialchars($support_chatbot_texts['title'], ENT_QUOTES, 'UTF-8'); ?></h2>
+                        <span><?php echo htmlspecialchars($support_chatbot_texts['subtitle'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    </div>
                 </div>
                 <button type="button" data-support-chatbot-close aria-label="<?php echo htmlspecialchars(t('common_close'), ENT_QUOTES, 'UTF-8'); ?>">X</button>
             </header>
@@ -112,6 +117,6 @@
             'dir' => site_direction(),
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
     </script>
-    <script src="<?php echo htmlspecialchars(site_url('assets/js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=3.1"></script>
+    <script src="<?php echo htmlspecialchars(site_url('assets/js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=3.2"></script>
 </body>
 </html>

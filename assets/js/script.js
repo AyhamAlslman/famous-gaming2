@@ -550,6 +550,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
+        document.querySelectorAll('[data-support-chatbot-open]').forEach(function(openLink) {
+            openLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                setChatbotOpen(true);
+            });
+        });
+
         if (closeButton) {
             closeButton.addEventListener('click', function() {
                 setChatbotOpen(false);

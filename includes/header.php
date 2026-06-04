@@ -49,7 +49,7 @@ $page_body_class = 'page-' . preg_replace('/[^a-z0-9_-]+/i', '-', pathinfo($curr
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/style.css'), ENT_QUOTES, 'UTF-8'); ?>?v=8.4">
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=4.2">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('assets/css/final-overrides.css'), ENT_QUOTES, 'UTF-8'); ?>?v=4.4">
 
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars(site_url('images/logo-mark.svg'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -98,6 +98,7 @@ $page_body_class = 'page-' . preg_replace('/[^a-z0-9_-]+/i', '-', pathinfo($curr
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'store.php' || $current_page === 'store_checkout.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/store.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_store'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'menu.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/menu.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('booking_step_menu'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'my_bookings.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('user/my_bookings.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_my_bookings'); ?></a></li>
+                        <li class="nav-item"><a class="nav-link nav-chatbot-link" href="#support-chatbot" data-support-chatbot-open><?php echo t('nav_smart_assistant'); ?></a></li>
                     <?php else: ?>
                         <li class="nav-item"><a class="nav-link <?php echo $current_page === 'index.php' ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_home'); ?></a></li>
                         <li class="nav-item"><a class="nav-link <?php echo in_array($current_page, ['services.php', 'service_gaming.php', 'service_hospitality.php', 'service_events.php'], true) ? 'active' : ''; ?>" href="<?php echo htmlspecialchars(site_url('general/services.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_services'); ?></a></li>
