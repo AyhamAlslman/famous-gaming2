@@ -1823,6 +1823,12 @@ function ensure_phpmailer_loaded() {
 }
 
 function site_password_reset_mailer_config() {
+    $smtp_password = getenv('FG_SMTP_PASSWORD');
+    if ($smtp_password !== false) {
+        // Google displays app passwords in groups; SMTP requires the 16 characters without spaces.
+        $smtp_password = preg_replace('/\s+/', '', $smtp_password);
+    }
+
     $direct_values = [
         // Local XAMPP fallback values for testing:
         // Replace these مباشرة if you want to test without environment variables.
@@ -1841,7 +1847,7 @@ function site_password_reset_mailer_config() {
         'host' => getenv('FG_SMTP_HOST') ?: $direct_values['host'],
         'port' => (int)(getenv('FG_SMTP_PORT') ?: $direct_values['port']),
         'username' => getenv('FG_SMTP_USERNAME') ?: $direct_values['username'],
-        'password' => getenv('FG_SMTP_PASSWORD') ?: $direct_values['password'],
+        'password' => $smtp_password ?: $direct_values['password'],
         'from_email' => getenv('FG_SMTP_FROM_EMAIL') ?: $direct_values['from_email'],
         'from_name' => getenv('FG_SMTP_FROM_NAME') ?: $direct_values['from_name'],
         'encryption' => getenv('FG_SMTP_ENCRYPTION') ?: $direct_values['encryption'],
@@ -1875,6 +1881,7 @@ function sanitize_password_reset_debug_line($line) {
     $line = (string)$line;
     $line = preg_replace('/334\s+[A-Za-z0-9+\/=]+/', '334 [REDACTED-CHALLENGE]', $line);
     $line = preg_replace('/AUTH\s+(PLAIN|LOGIN)\s+[A-Za-z0-9+\/=]+/i', 'AUTH $1 [REDACTED]', $line);
+    $line = preg_replace('/([?&]token=)[a-f0-9]{32,}/i', '$1[REDACTED-TOKEN]', $line);
     $line = preg_replace('/\b[0-9A-Za-z._%+-]+@[0-9A-Za-z.-]+\.[A-Za-z]{2,}\b/', '[REDACTED-EMAIL]', $line);
     return $line;
 }
@@ -1919,6 +1926,17 @@ function extract_password_reset_mail_error($fallback_error, array $debug_lines =
 }
 
 function ensure_site_user_password_reset_schema($conn) {
+    mysqli_query($conn, "CREATE TABLE IF NOT EXISTS password_resets (
+        id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NOT NULL,
+        email VARCHAR(150) NOT NULL,
+        token_hash CHAR(64) NOT NULL UNIQUE,
+        expires_at DATETIME NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_password_resets_email (email),
+        INDEX idx_password_resets_expires_at (expires_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
     $password_reset_token_column = mysqli_query($conn, "SHOW COLUMNS FROM site_users LIKE 'password_reset_token'");
     if ($password_reset_token_column && mysqli_num_rows($password_reset_token_column) === 0) {
         mysqli_query($conn, "ALTER TABLE site_users ADD COLUMN password_reset_token VARCHAR(128) DEFAULT NULL AFTER password");
@@ -2187,26 +2205,47 @@ function send_site_password_reset_email($user, $reset_url, &$error_message = nul
 
         $safe_name = htmlspecialchars($user_name, ENT_QUOTES, 'UTF-8');
         $safe_url = htmlspecialchars($reset_url, ENT_QUOTES, 'UTF-8');
+        $email_direction = function_exists('site_direction') ? site_direction() : 'ltr';
+        $email_align = $email_direction === 'rtl' ? 'right' : 'left';
+        $safe_subject = htmlspecialchars(function_exists('t') ? t('auth_reset_email_subject') : 'Reset your password', ENT_QUOTES, 'UTF-8');
+        $safe_greeting = htmlspecialchars(function_exists('t') ? t('auth_reset_email_greeting', ['name' => $user_name], 'Hello ' . $user_name . ',') : ('Hello ' . $user_name . ','), ENT_QUOTES, 'UTF-8');
+        $safe_intro = htmlspecialchars(function_exists('t') ? t('auth_reset_email_intro') : 'We received a request to reset your password.', ENT_QUOTES, 'UTF-8');
+        $safe_action = htmlspecialchars(function_exists('t') ? t('auth_reset_email_action') : 'Use the secure button below to choose a new password.', ENT_QUOTES, 'UTF-8');
+        $safe_button = htmlspecialchars(function_exists('t') ? t('auth_reset_email_button') : 'Reset Password', ENT_QUOTES, 'UTF-8');
+        $safe_expiry = htmlspecialchars(function_exists('t') ? t('auth_reset_email_expiry') : 'This link expires in 15 minutes.', ENT_QUOTES, 'UTF-8');
+        $safe_ignore = htmlspecialchars(function_exists('t') ? t('auth_reset_email_ignore') : 'If you did not request this, you can safely ignore this email.', ENT_QUOTES, 'UTF-8');
 
         $mailer->Body = '
-            <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.7;">
-                <h2 style="margin: 0 0 16px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_subject') : 'Reset your password', ENT_QUOTES, 'UTF-8') . '</h2>
-                <p style="margin: 0 0 12px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_greeting', ['name' => $user_name], 'Hello ' . $user_name . ',') : ('Hello ' . $user_name . ','), ENT_QUOTES, 'UTF-8') . '</p>
-                <p style="margin: 0 0 12px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_intro') : 'We received a request to reset your password.', ENT_QUOTES, 'UTF-8') . '</p>
-                <p style="margin: 0 0 18px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_action') : 'Use the secure link below to choose a new password.', ENT_QUOTES, 'UTF-8') . '</p>
-                <p style="margin: 0 0 18px;">
-                    <a href="' . $safe_url . '" style="display: inline-block; padding: 12px 20px; background: #35d2f4; color: #07111f; text-decoration: none; border-radius: 10px; font-weight: 700;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_button') : 'Reset Password', ENT_QUOTES, 'UTF-8') . '</a>
-                </p>
-                <p style="margin: 0 0 8px;"><a href="' . $safe_url . '">' . $safe_url . '</a></p>
-                <p style="margin: 0 0 8px;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_expiry') : 'This link expires in 1 hour.', ENT_QUOTES, 'UTF-8') . '</p>
-                <p style="margin: 0;">' . htmlspecialchars(function_exists('t') ? t('auth_reset_email_ignore') : 'If you did not request this, you can ignore this email.', ENT_QUOTES, 'UTF-8') . '</p>
+            <div dir="' . $email_direction . '" style="margin:0; padding:32px 12px; background:#f1f5f9; font-family:Arial,Tahoma,sans-serif; color:#172033;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px; margin:0 auto; border-collapse:separate; background:#ffffff; border:1px solid #dbe5ee; border-radius:8px; overflow:hidden;">
+                    <tr>
+                        <td style="padding:24px 30px; background:#0b1728; text-align:center;">
+                            <div style="color:#ffffff; font-size:23px; font-weight:800; line-height:1.3;">FAMOUS GAMING</div>
+                            <div style="margin-top:6px; color:#72d7ed; font-size:12px; font-weight:700;">' . $safe_subject . '</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:32px 30px; text-align:' . $email_align . ';">
+                            <p style="margin:0 0 18px; color:#172033; font-size:17px; font-weight:700; line-height:1.7;">' . $safe_greeting . '</p>
+                            <p style="margin:0 0 12px; color:#475569; font-size:15px; line-height:1.8;">' . $safe_intro . '</p>
+                            <p style="margin:0 0 26px; color:#475569; font-size:15px; line-height:1.8;">' . $safe_action . '</p>
+                            <div style="margin:0 0 26px; text-align:center;">
+                                <a href="' . $safe_url . '" style="display:inline-block; padding:14px 28px; background:#23bfe2; color:#071827; text-decoration:none; border-radius:6px; font-size:15px; font-weight:800; line-height:1.4;">' . $safe_button . '</a>
+                            </div>
+                            <div style="padding:14px 16px; border:1px solid #cfe7ee; border-radius:6px; background:#f3fbfd; color:#245367; font-size:13px; font-weight:700; line-height:1.7;">' . $safe_expiry . '</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:20px 30px; border-top:1px solid #e5edf3; background:#f8fafc; color:#64748b; text-align:' . $email_align . '; font-size:12px; line-height:1.7;">' . $safe_ignore . '</td>
+                    </tr>
+                </table>
             </div>';
         $mailer->AltBody =
             (function_exists('t') ? t('auth_reset_email_subject') : 'Reset your password') . "\n\n"
             . (function_exists('t') ? t('auth_reset_email_intro') : 'We received a request to reset your password.') . "\n"
             . (function_exists('t') ? t('auth_reset_email_action') : 'Use the secure link below to choose a new password.') . "\n"
             . $reset_url . "\n\n"
-            . (function_exists('t') ? t('auth_reset_email_expiry') : 'This link expires in 1 hour.') . "\n"
+            . (function_exists('t') ? t('auth_reset_email_expiry') : 'This link expires in 15 minutes.') . "\n"
             . (function_exists('t') ? t('auth_reset_email_ignore') : 'If you did not request this, you can ignore this email.');
 
         $sent = $mailer->send();
@@ -2286,23 +2325,33 @@ function request_site_user_password_reset($conn, $email) {
     }
 
     $token = bin2hex(random_bytes(32));
-    $expires_at = date('Y-m-d H:i:s', time() + 3600);
+    $token_hash = hash('sha256', $token);
+    $expires_at = date('Y-m-d H:i:s', time() + 900);
 
-    $update_stmt = mysqli_prepare($conn, "UPDATE site_users SET password_reset_token = ?, password_reset_expires_at = ? WHERE id = ?");
-    if (!$update_stmt) {
+    mysqli_query($conn, "DELETE FROM password_resets WHERE expires_at < NOW()");
+
+    $delete_stmt = mysqli_prepare($conn, "DELETE FROM password_resets WHERE user_id = ? OR email = ?");
+    if ($delete_stmt) {
+        mysqli_stmt_bind_param($delete_stmt, "is", $user['id'], $email);
+        mysqli_stmt_execute($delete_stmt);
+        mysqli_stmt_close($delete_stmt);
+    }
+
+    $insert_stmt = mysqli_prepare($conn, "INSERT INTO password_resets (user_id, email, token_hash, expires_at) VALUES (?, ?, ?, ?)");
+    if (!$insert_stmt) {
         return [
             'success' => false,
             'email_sent' => false,
-            'code' => 'update_prepare_failed',
+            'code' => 'insert_prepare_failed',
             'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
         ];
     }
 
-    mysqli_stmt_bind_param($update_stmt, "ssi", $token, $expires_at, $user['id']);
-    $updated = mysqli_stmt_execute($update_stmt);
-    mysqli_stmt_close($update_stmt);
+    mysqli_stmt_bind_param($insert_stmt, "isss", $user['id'], $email, $token_hash, $expires_at);
+    $stored = mysqli_stmt_execute($insert_stmt);
+    mysqli_stmt_close($insert_stmt);
 
-    if (!$updated) {
+    if (!$stored) {
         return [
             'success' => false,
             'email_sent' => false,
@@ -2316,7 +2365,12 @@ function request_site_user_password_reset($conn, $email) {
     $send_error = null;
 
     if (!send_site_password_reset_email($user, $reset_url, $send_error)) {
-        clear_site_user_password_reset_token($conn, (int)$user['id']);
+        $cleanup_stmt = mysqli_prepare($conn, "DELETE FROM password_resets WHERE token_hash = ?");
+        if ($cleanup_stmt) {
+            mysqli_stmt_bind_param($cleanup_stmt, "s", $token_hash);
+            mysqli_stmt_execute($cleanup_stmt);
+            mysqli_stmt_close($cleanup_stmt);
+        }
         error_log('Password reset email failed for ' . $email . ': ' . (string)$send_error);
         return [
             'success' => false,
@@ -2342,12 +2396,17 @@ function get_site_user_by_password_reset_token($conn, $token) {
         return null;
     }
 
-    $stmt = mysqli_prepare($conn, "SELECT id, full_name, email, status, password_reset_expires_at FROM site_users WHERE password_reset_token = ? LIMIT 1");
+    $token_hash = hash('sha256', $token);
+    $stmt = mysqli_prepare($conn, "SELECT u.id, u.full_name, u.email, u.status, pr.expires_at AS password_reset_expires_at
+        FROM password_resets pr
+        INNER JOIN site_users u ON u.id = pr.user_id AND u.email = pr.email
+        WHERE pr.token_hash = ?
+        LIMIT 1");
     if (!$stmt) {
         return null;
     }
 
-    mysqli_stmt_bind_param($stmt, "s", $token);
+    mysqli_stmt_bind_param($stmt, "s", $token_hash);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     $user = $result ? mysqli_fetch_assoc($result) : null;
@@ -2359,7 +2418,12 @@ function get_site_user_by_password_reset_token($conn, $token) {
 
     $expires_at = strtotime((string)($user['password_reset_expires_at'] ?? ''));
     if ($expires_at === false || $expires_at < time()) {
-        clear_site_user_password_reset_token($conn, (int)$user['id']);
+        $cleanup_stmt = mysqli_prepare($conn, "DELETE FROM password_resets WHERE token_hash = ?");
+        if ($cleanup_stmt) {
+            mysqli_stmt_bind_param($cleanup_stmt, "s", $token_hash);
+            mysqli_stmt_execute($cleanup_stmt);
+            mysqli_stmt_close($cleanup_stmt);
+        }
         return null;
     }
 
@@ -2374,7 +2438,7 @@ function reset_site_user_password_by_token($conn, $token, $new_password) {
     }
 
     $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-    $stmt = mysqli_prepare($conn, "UPDATE site_users SET password = ?, password_reset_token = NULL, password_reset_expires_at = NULL WHERE id = ?");
+    $stmt = mysqli_prepare($conn, "UPDATE site_users SET password = ? WHERE id = ?");
     if (!$stmt) {
         return false;
     }
@@ -2384,6 +2448,13 @@ function reset_site_user_password_by_token($conn, $token, $new_password) {
     mysqli_stmt_close($stmt);
 
     if ($success) {
+        $delete_stmt = mysqli_prepare($conn, "DELETE FROM password_resets WHERE user_id = ?");
+        if ($delete_stmt) {
+            mysqli_stmt_bind_param($delete_stmt, "i", $user['id']);
+            mysqli_stmt_execute($delete_stmt);
+            mysqli_stmt_close($delete_stmt);
+        }
+
         clear_current_site_user_cache((int)$user['id']);
 
         if ((int)($_SESSION['site_user_id'] ?? 0) === (int)$user['id']) {
