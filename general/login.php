@@ -139,7 +139,7 @@ include dirname(__DIR__) . '/includes/header.php';
                 </div>
             </div>
 
-            </div>
+        </div>
     </div>
 </section>
 

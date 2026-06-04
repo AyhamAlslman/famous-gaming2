@@ -513,8 +513,8 @@ include dirname(__DIR__) . '/includes/header.php';
                         </div>
 
                         <div class="visa-fields cliq-fields" id="cliq-fields" <?php echo $selected_method === 'CliQ' ? '' : 'hidden'; ?>>
-                            <strong class="cliq-fields-title">CliQ Transfer Number</strong>
-                            <p class="cliq-fields-text">Transfer the payment amount to this CliQ number before confirming:</p>
+                            <strong class="cliq-fields-title"><?php echo t('payment_cliq_number_title'); ?></strong>
+                            <p class="cliq-fields-text"><?php echo t('payment_cliq_transfer_instructions'); ?></p>
                             <div class="cliq-number-badge"><?php echo htmlspecialchars($cliq_transfer_number, ENT_QUOTES, 'UTF-8'); ?></div>
                         </div>
 

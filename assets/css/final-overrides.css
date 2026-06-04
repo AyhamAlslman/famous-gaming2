@@ -627,18 +627,24 @@ html[dir="rtl"] .about-page-hero p {
 .site-modal-dialog h3 {
     color: #ffffff !important;
     letter-spacing: 0 !important;
+    text-align: start !important;
 }
 
 .site-modal-dialog p,
 #siteMessageModalText {
     color: #d4e5f4 !important;
     line-height: 1.7 !important;
+    text-align: start !important;
 }
 
 .site-modal-close {
     border-color: rgba(93, 214, 255, 0.18) !important;
     background: rgba(255, 255, 255, 0.055) !important;
     color: #eaf7ff !important;
+}
+
+.site-modal-actions {
+    justify-content: flex-end !important;
 }
 
 .site-modal[data-type="success"] .site-modal-dialog {
@@ -5049,5 +5055,231 @@ html[dir="rtl"] .support-chatbot-message.is-user {
 @media (max-width: 760px) {
     .site-user-shell .smart-notification-summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Authentication pages */
+.page-login .auth-page-content .container,
+.page-register .auth-page-content .container,
+.page-forgot_password .auth-page-content .container {
+    width: min(100%, 1160px) !important;
+    max-width: 1160px !important;
+}
+
+.page-login .auth-shell,
+.page-register .auth-shell,
+.page-forgot_password .auth-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr) !important;
+    align-items: stretch !important;
+    gap: clamp(1rem, 2.5vw, 1.5rem) !important;
+    max-width: 1080px !important;
+}
+
+.page-register .auth-shell {
+    grid-template-columns: minmax(0, 1.55fr) minmax(270px, 0.65fr) !important;
+    max-width: 1160px !important;
+}
+
+.page-login .auth-shell {
+    grid-template-columns: minmax(0, 560px) !important;
+    justify-content: center !important;
+    max-width: 720px !important;
+}
+
+.page-register .auth-shell {
+    grid-template-columns: minmax(0, 820px) !important;
+    justify-content: center !important;
+    max-width: 920px !important;
+}
+
+.page-login .auth-card,
+.page-register .auth-card,
+.page-forgot_password .auth-card {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: clamp(1.35rem, 3vw, 2rem) !important;
+}
+
+.page-login .auth-card,
+.page-register .auth-card,
+.page-forgot_password .auth-card,
+.page-login .auth-side-panel,
+.page-register .auth-side-panel,
+.page-forgot_password .auth-side-panel {
+    min-height: 100% !important;
+}
+
+.page-login .auth-side-panel,
+.page-register .auth-side-panel,
+.page-forgot_password .auth-side-panel {
+    position: relative !important;
+    isolation: isolate !important;
+    overflow: hidden !important;
+    padding: clamp(1.4rem, 3vw, 2.2rem) !important;
+    border: 1px solid rgba(93, 214, 255, 0.2) !important;
+    border-radius: 8px !important;
+    background:
+        linear-gradient(155deg, rgba(14, 40, 61, 0.9), rgba(7, 18, 32, 0.97)),
+        radial-gradient(circle at top, rgba(93, 214, 255, 0.2), transparent 55%) !important;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3) !important;
+}
+
+.page-login .auth-side-panel::before,
+.page-register .auth-side-panel::before,
+.page-forgot_password .auth-side-panel::before {
+    content: "" !important;
+    position: absolute !important;
+    z-index: -1 !important;
+    inset: 1rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.055) !important;
+    border-radius: 8px !important;
+    pointer-events: none !important;
+}
+
+.page-login .auth-side-panel h2,
+.page-register .auth-side-panel h2,
+.page-forgot_password .auth-side-panel h2,
+.page-login .auth-side-panel p,
+.page-register .auth-side-panel p,
+.page-forgot_password .auth-side-panel p {
+    text-align: start !important;
+}
+
+.page-login .auth-form .form-group,
+.page-register .auth-form .form-group,
+.page-forgot_password .auth-form .form-group {
+    min-width: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.page-register .auth-register-name {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+}
+
+.page-register .auth-register-phone {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+}
+
+.page-register .auth-register-email {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+}
+
+.page-register .auth-register-password {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+}
+
+.page-register .auth-register-confirm {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+}
+
+.page-login .auth-links,
+.page-register .auth-links,
+.page-forgot_password .auth-links,
+html[dir="rtl"] .page-login .auth-links,
+html[dir="rtl"] .page-register .auth-links,
+html[dir="rtl"] .page-forgot_password .auth-links {
+    justify-content: flex-start !important;
+}
+
+.password-reset-modal {
+    overflow-y: auto !important;
+}
+
+.password-reset-backdrop {
+    display: block !important;
+}
+
+.password-reset-dialog {
+    width: min(100%, 540px) !important;
+    max-height: calc(100svh - 2rem) !important;
+    overflow-y: auto !important;
+    padding: clamp(1.25rem, 4vw, 1.8rem) !important;
+}
+
+.password-reset-dialog .auth-form {
+    margin-top: 1rem !important;
+}
+
+.password-reset-close {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 1.65rem !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+}
+
+.password-reset-close:hover,
+.password-reset-close:focus-visible {
+    border-color: rgba(93, 214, 255, 0.5) !important;
+    background: rgba(93, 214, 255, 0.14) !important;
+    color: #ffffff !important;
+}
+
+@media (max-width: 900px) {
+    .page-login .auth-shell,
+    .page-register .auth-shell,
+    .page-forgot_password .auth-shell {
+        grid-template-columns: minmax(0, 1fr) !important;
+        max-width: 680px !important;
+    }
+
+    .page-login .auth-side-panel,
+    .page-register .auth-side-panel,
+    .page-forgot_password .auth-side-panel {
+        min-height: 210px !important;
+    }
+}
+
+@media (max-width: 860px) {
+    .page-register .auth-register-name,
+    .page-register .auth-register-phone,
+    .page-register .auth-register-email,
+    .page-register .auth-register-password,
+    .page-register .auth-register-confirm {
+        grid-column: auto !important;
+        grid-row: auto !important;
+    }
+}
+
+@media (max-width: 575px) {
+    .page-login .auth-page-content,
+    .page-register .auth-page-content,
+    .page-forgot_password .auth-page-content {
+        align-items: flex-start !important;
+        padding-top: 5.25rem !important;
+    }
+
+    .page-login .auth-card,
+    .page-register .auth-card,
+    .page-forgot_password .auth-card,
+    .page-login .auth-side-panel,
+    .page-register .auth-side-panel,
+    .page-forgot_password .auth-side-panel {
+        padding: 1rem !important;
+    }
+
+    .page-login .auth-side-panel,
+    .page-register .auth-side-panel,
+    .page-forgot_password .auth-side-panel {
+        min-height: 180px !important;
+    }
+
+    .password-reset-modal {
+        align-items: flex-start !important;
+        padding: 0.65rem !important;
+    }
+
+    .password-reset-dialog {
+        margin-block: auto !important;
+        max-height: calc(100svh - 1.3rem) !important;
     }
 }

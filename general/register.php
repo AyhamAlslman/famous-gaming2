@@ -94,22 +94,22 @@ include dirname(__DIR__) . '/includes/header.php';
 
                 <form method="POST" action="<?php echo htmlspecialchars(site_url('general/register.php'), ENT_QUOTES, 'UTF-8'); ?>" class="auth-form auth-form-grid">
                     <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($auth_redirect, ENT_QUOTES, 'UTF-8'); ?>">
-                    <div class="form-group">
+                    <div class="form-group auth-register-name">
                         <label class="form-label"><?php echo t('auth_full_name'); ?></label>
                         <input type="text" name="full_name" class="form-control" value="<?php echo htmlspecialchars($full_name); ?>" required autofocus>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group auth-register-email">
                         <label class="form-label"><?php echo t('auth_email'); ?></label>
                         <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($email); ?>" required>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group auth-register-phone">
                         <label class="form-label"><?php echo t('common_phone'); ?></label>
                         <input type="tel" name="phone" class="form-control" value="<?php echo htmlspecialchars($phone); ?>" placeholder="07XXXXXXXX">
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group auth-register-password">
                         <label class="form-label"><?php echo t('auth_password'); ?></label>
                         <div class="auth-password-field">
                             <input id="register-password" type="password" name="password" class="form-control" required>
@@ -125,7 +125,7 @@ include dirname(__DIR__) . '/includes/header.php';
                         <small class="auth-password-note"><?php echo t('auth_password_tip'); ?></small>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group auth-register-confirm">
                         <label class="form-label"><?php echo t('auth_confirm_password'); ?></label>
                         <div class="auth-password-field">
                             <input id="register-confirm-password" type="password" name="confirm_password" class="form-control" required>
@@ -147,7 +147,8 @@ include dirname(__DIR__) . '/includes/header.php';
                     <a href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>?redirect=<?php echo urlencode($auth_redirect); ?>"><?php echo t('auth_have_account'); ?></a>
                 </div>
             </div>
-            </div>
+
+        </div>
     </div>
 </section>
 

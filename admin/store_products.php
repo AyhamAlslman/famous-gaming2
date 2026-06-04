@@ -225,8 +225,8 @@ include 'includes/header.php';
 
         <?php if (!$store_ready): ?>
             <div class="card admin-store-empty">
-                <h2>Store table is missing</h2>
-                <p>Run the updated database setup so the new <code>store_products</code> table is created before managing products here.</p>
+                <h2><?php echo t('admin_store_table_missing_title'); ?></h2>
+                <p><?php echo t('admin_store_table_missing_text'); ?></p>
             </div>
         <?php else: ?>
             <div class="dashboard-stats admin-store-stats">

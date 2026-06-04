@@ -793,6 +793,7 @@ table tr:hover {
 
 .modal-content h2 {
     margin-bottom: 1.3rem;
+    padding-inline-end: 2.25rem;
     color: var(--admin-text);
     font-family: 'Orbitron', sans-serif;
     font-size: 1.35rem;
@@ -800,10 +801,11 @@ table tr:hover {
 
 .admin-close,
 .close {
-    float: right;
+    float: inline-end;
     color: var(--admin-text-muted);
     font-size: 28px;
     font-weight: 700;
+    line-height: 1;
     cursor: pointer;
 }
 
@@ -1657,6 +1659,7 @@ table th {
 
 .admin-confirm-dialog p {
     color: var(--admin-text-soft);
+    line-height: 1.7;
 }
 
 .admin-confirm-actions {

@@ -41,20 +41,27 @@ include dirname(__DIR__) . '/includes/header.php';
                     <a class="btn auth-submit-btn" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
                 <?php endif; ?>
             </div>
+
+            <aside class="auth-side-panel">
+                <span class="auth-side-kicker">FAMOUS GAMING</span>
+                <h2><?php echo t('auth_forgot_title'); ?></h2>
+                <p><?php echo t('auth_reset_hint'); ?></p>
+                <a class="auth-side-action" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
+            </aside>
         </div>
     </div>
 </section>
 
 <?php if ($step !== 'complete'): ?>
-<div class="site-modal otp-modal" id="passwordResetModal">
-    <div class="site-modal-backdrop"></div>
-    <div class="site-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="passwordResetTitle">
-        <a class="site-modal-close" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('common_close'), ENT_QUOTES, 'UTF-8'); ?>">X</a>
+<div class="site-modal otp-modal password-reset-modal" id="passwordResetModal">
+    <a class="site-modal-backdrop password-reset-backdrop" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('common_close'), ENT_QUOTES, 'UTF-8'); ?>"></a>
+    <div class="site-modal-dialog password-reset-dialog" role="dialog" aria-modal="true" aria-labelledby="passwordResetTitle">
+        <a class="site-modal-close password-reset-close" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(t('common_close'), ENT_QUOTES, 'UTF-8'); ?>">&times;</a>
 
         <?php if ($step === 'email'): ?>
             <h3 id="passwordResetTitle"><?php echo t('auth_forgot_title'); ?></h3>
             <p><?php echo t('auth_reset_hint'); ?></p>
-            <form method="POST" class="auth-form">
+            <form method="POST" action="<?php echo htmlspecialchars(site_url('general/forgot_password.php'), ENT_QUOTES, 'UTF-8'); ?>" class="auth-form">
                 <input type="hidden" name="action" value="request_reset">
                 <div class="form-group">
                     <label class="form-label"><?php echo t('auth_email'); ?></label>
