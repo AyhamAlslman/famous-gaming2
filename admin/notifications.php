@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth_check.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -77,15 +77,15 @@ include 'includes/header.php';
                 <strong><?php echo (int)$notification_summary['unread']; ?></strong>
             </div>
             <div class="admin-notification-summary-card">
-                <span><?php echo site_language() === 'ar' ? 'الحجوزات' : 'Bookings'; ?></span>
+                <span><?php echo t('admin_nav_bookings'); ?></span>
                 <strong><?php echo (int)$notification_summary['booking']; ?></strong>
             </div>
             <div class="admin-notification-summary-card">
-                <span><?php echo site_language() === 'ar' ? 'المتجر' : 'Store'; ?></span>
+                <span><?php echo t('nav_store'); ?></span>
                 <strong><?php echo (int)$notification_summary['store']; ?></strong>
             </div>
             <div class="admin-notification-summary-card">
-                <span><?php echo site_language() === 'ar' ? 'الدعم' : 'Support'; ?></span>
+                <span><?php echo t('footer_support'); ?></span>
                 <strong><?php echo (int)$notification_summary['support']; ?></strong>
             </div>
         </div>
@@ -98,19 +98,20 @@ include 'includes/header.php';
                 </div>
             <?php else: ?>
                 <?php foreach ($notifications as $notification): ?>
+                    <?php $notification = localize_notification_for_display($notification); ?>
                     <?php $notification_meta = get_notification_type_meta($notification['notification_type'] ?? ''); ?>
                     <article class="admin-notification-page-card <?php echo (int)$notification['is_read'] === 0 ? 'is-unread' : 'is-read'; ?>">
                         <div class="admin-notification-page-body">
                             <span class="admin-notification-type <?php echo htmlspecialchars($notification_meta['class'], ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php echo htmlspecialchars($notification_meta['label'], ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlspecialchars(str_replace('_', ' ', $notification['notification_type'])); ?>
+                                <?php echo htmlspecialchars($notification_meta['label'], ENT_QUOTES, 'UTF-8'); ?> Â· <?php echo htmlspecialchars(str_replace('_', ' ', $notification['notification_type'])); ?>
                             </span>
                             <div class="admin-notification-page-head">
-                                <h2><?php echo htmlspecialchars($notification['title']); ?></h2>
+                                <h2><?php echo htmlspecialchars($notification['display_title']); ?></h2>
                                 <?php if ((int)$notification['is_read'] === 0): ?>
                                     <span class="admin-notification-dot"></span>
                                 <?php endif; ?>
                             </div>
-                            <p><?php echo htmlspecialchars($notification['message']); ?></p>
+                            <p><?php echo htmlspecialchars($notification['display_message']); ?></p>
                             <span class="admin-notification-time"><?php echo date('M d, Y h:i A', strtotime($notification['created_at'])); ?></span>
                         </div>
                         <div class="admin-notification-page-actions">

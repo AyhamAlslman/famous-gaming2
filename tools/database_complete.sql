@@ -19,6 +19,7 @@ DROP TABLE IF EXISTS `smart_notification_events`;
 DROP TABLE IF EXISTS `chatbot_messages`;
 DROP TABLE IF EXISTS `chatbot_sessions`;
 DROP TABLE IF EXISTS `smart_report_snapshots`;
+DROP TABLE IF EXISTS `complaint_messages`;
 DROP TABLE IF EXISTS `complaints`;
 DROP TABLE IF EXISTS `booking_items`;
 DROP TABLE IF EXISTS `bookings`;
@@ -116,9 +117,15 @@ CREATE TABLE `chatbot_sessions` (
     `session_token` VARCHAR(64) NOT NULL,
     `language` VARCHAR(5) NOT NULL DEFAULT 'en',
     `page_url` VARCHAR(255) DEFAULT NULL,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'Open',
+    `closed_for_user` TINYINT(1) NOT NULL DEFAULT 0,
+    `last_user_message_at` TIMESTAMP NULL DEFAULT NULL,
+    `last_admin_message_at` TIMESTAMP NULL DEFAULT NULL,
+    `closed_at` TIMESTAMP NULL DEFAULT NULL,
     `started_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `site_users`(`id`) ON DELETE SET NULL,
+    INDEX `idx_chatbot_sessions_status` (`status`, `closed_for_user`, `updated_at`),
     INDEX `idx_chatbot_sessions_user_started` (`user_id`, `started_at`),
     INDEX `idx_chatbot_sessions_token` (`session_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -211,13 +218,42 @@ CREATE TABLE `store_products` (
 -- Table: complaints
 CREATE TABLE `complaints` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
+    `complaint_code` VARCHAR(40) NULL UNIQUE,
     `user_id` INT NULL,
+    `customer_session_token` VARCHAR(64) NULL,
     `customer_name` VARCHAR(100) NOT NULL,
+    `customer_email` VARCHAR(150) DEFAULT NULL,
     `phone` VARCHAR(20) DEFAULT NULL,
     `message` TEXT NOT NULL,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'Open',
+    `admin_reply` TEXT NULL,
+    `replied_by_admin_id` INT NULL,
+    `replied_at` TIMESTAMP NULL DEFAULT NULL,
+    `closed_for_customer_at` TIMESTAMP NULL DEFAULT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `site_users`(`id`) ON DELETE SET NULL,
+    FOREIGN KEY (`replied_by_admin_id`) REFERENCES `admins`(`id`) ON DELETE SET NULL,
+    INDEX `idx_complaints_code` (`complaint_code`),
+    INDEX `idx_complaints_session_created` (`customer_session_token`, `created_at`),
     INDEX `idx_complaints_user_created` (`user_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table: complaint_messages
+CREATE TABLE `complaint_messages` (
+    `id` INT PRIMARY KEY AUTO_INCREMENT,
+    `complaint_id` INT NOT NULL,
+    `sender_type` VARCHAR(20) NOT NULL,
+    `sender_user_id` INT NULL,
+    `sender_admin_id` INT NULL,
+    `message_text` TEXT NOT NULL,
+    `emailed_at` TIMESTAMP NULL DEFAULT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`complaint_id`) REFERENCES `complaints`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`sender_user_id`) REFERENCES `site_users`(`id`) ON DELETE SET NULL,
+    FOREIGN KEY (`sender_admin_id`) REFERENCES `admins`(`id`) ON DELETE SET NULL,
+    INDEX `idx_complaint_messages_complaint_created` (`complaint_id`, `created_at`),
+    INDEX `idx_complaint_messages_sender` (`sender_type`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table: store_orders

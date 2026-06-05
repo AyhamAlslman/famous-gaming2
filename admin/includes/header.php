@@ -77,7 +77,7 @@ $admin_nav_items[] = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?><?php echo t('admin_panel_title'); ?></title>
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=3.9">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(site_url('admin/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>?v=4.1">
     <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars(site_url('images/favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
 <body class="admin-body <?php echo site_is_rtl() ? 'admin-rtl' : 'admin-ltr'; ?>">
@@ -157,15 +157,16 @@ $admin_nav_items[] = [
                                     <?php else: ?>
                                         <div class="admin-notification-list">
                                             <?php foreach ($admin_notifications as $notification): ?>
+                                                <?php $notification = localize_notification_for_display($notification); ?>
                                                 <div class="admin-notification-card <?php echo (int)$notification['is_read'] === 0 ? 'is-unread' : 'is-read'; ?>">
                                                     <div class="admin-notification-card-body">
                                                         <div class="admin-notification-card-head">
-                                                            <strong><?php echo htmlspecialchars($notification['title'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                                                            <strong><?php echo htmlspecialchars($notification['display_title'], ENT_QUOTES, 'UTF-8'); ?></strong>
                                                             <?php if ((int)$notification['is_read'] === 0): ?>
                                                                 <span class="admin-notification-dot"></span>
                                                             <?php endif; ?>
                                                         </div>
-                                                        <p><?php echo htmlspecialchars($notification['message'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                                        <p><?php echo htmlspecialchars($notification['display_message'], ENT_QUOTES, 'UTF-8'); ?></p>
                                                         <span class="admin-notification-time"><?php echo date('M d, Y h:i A', strtotime($notification['created_at'])); ?></span>
                                                     </div>
                                                     <div class="admin-notification-actions">

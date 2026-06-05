@@ -183,6 +183,29 @@
         const notificationToggle = document.querySelector('[data-admin-notification-toggle]');
         const notificationMenu = document.getElementById('adminNotificationMenu');
         if (notificationToggle && notificationMenu) {
+            function positionNotifications() {
+                if (notificationMenu.hidden) {
+                    return;
+                }
+
+                const viewportPadding = 12;
+                const triggerRect = notificationToggle.getBoundingClientRect();
+                const menuWidth = Math.min(390, window.innerWidth - (viewportPadding * 2));
+                const menuLeft = Math.max(
+                    viewportPadding,
+                    Math.min(triggerRect.left, window.innerWidth - menuWidth - viewportPadding)
+                );
+                const menuTop = Math.min(
+                    triggerRect.bottom + 10,
+                    Math.max(viewportPadding, window.innerHeight - 120)
+                );
+
+                notificationMenu.style.setProperty('width', menuWidth + 'px', 'important');
+                notificationMenu.style.setProperty('left', menuLeft + 'px', 'important');
+                notificationMenu.style.setProperty('right', 'auto', 'important');
+                notificationMenu.style.setProperty('top', menuTop + 'px', 'important');
+            }
+
             function closeNotifications() {
                 notificationMenu.hidden = true;
                 notificationToggle.setAttribute('aria-expanded', 'false');
@@ -195,6 +218,7 @@
                 notificationMenu.hidden = !shouldOpen;
                 notificationToggle.setAttribute('aria-expanded', String(shouldOpen));
                 notificationToggle.closest('.admin-notification-dropdown')?.classList.toggle('is-open', shouldOpen);
+                positionNotifications();
             });
 
             notificationMenu.addEventListener('click', function(event) {
@@ -207,6 +231,8 @@
                     closeNotifications();
                 }
             });
+            window.addEventListener('resize', positionNotifications);
+            window.addEventListener('scroll', positionNotifications, true);
         }
     })();
     </script>

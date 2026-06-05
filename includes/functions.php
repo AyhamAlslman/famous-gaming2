@@ -674,11 +674,22 @@ function ensure_store_orders_schema($conn) {
 function ensure_complaints_schema($conn) {
     mysqli_query($conn, "CREATE TABLE IF NOT EXISTS complaints (
         id INT PRIMARY KEY AUTO_INCREMENT,
+        complaint_code VARCHAR(40) NULL UNIQUE,
         user_id INT NULL,
+        customer_session_token VARCHAR(64) NULL,
         customer_name VARCHAR(100) NOT NULL,
+        customer_email VARCHAR(150) DEFAULT NULL,
         phone VARCHAR(20) DEFAULT NULL,
         message TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'Open',
+        admin_reply TEXT NULL,
+        replied_by_admin_id INT NULL,
+        replied_at TIMESTAMP NULL DEFAULT NULL,
+        closed_for_customer_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_complaints_code (complaint_code),
+        INDEX idx_complaints_session_created (customer_session_token, created_at),
         INDEX idx_complaints_user_created (user_id, created_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
@@ -695,6 +706,145 @@ function ensure_complaints_schema($conn) {
         mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN user_id INT NULL AFTER id");
         mysqli_query($conn, "ALTER TABLE complaints ADD INDEX idx_complaints_user_created (user_id, created_at)");
     }
+
+    if (!isset($columns['complaint_code'])) {
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN complaint_code VARCHAR(40) NULL UNIQUE AFTER id");
+        mysqli_query($conn, "ALTER TABLE complaints ADD INDEX idx_complaints_code (complaint_code)");
+    }
+
+    if (!isset($columns['customer_session_token'])) {
+        $after_column = isset($columns['user_id']) ? 'user_id' : 'id';
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN customer_session_token VARCHAR(64) NULL AFTER " . $after_column);
+        mysqli_query($conn, "ALTER TABLE complaints ADD INDEX idx_complaints_session_created (customer_session_token, created_at)");
+    }
+
+    if (!isset($columns['customer_email'])) {
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN customer_email VARCHAR(150) DEFAULT NULL AFTER customer_name");
+    }
+
+    if (!isset($columns['status'])) {
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'Open' AFTER message");
+    }
+
+    if (!isset($columns['admin_reply'])) {
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN admin_reply TEXT NULL AFTER status");
+    }
+
+    if (!isset($columns['replied_by_admin_id'])) {
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN replied_by_admin_id INT NULL AFTER admin_reply");
+    }
+
+    if (!isset($columns['replied_at'])) {
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN replied_at TIMESTAMP NULL DEFAULT NULL AFTER replied_by_admin_id");
+    }
+
+    if (!isset($columns['closed_for_customer_at'])) {
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN closed_for_customer_at TIMESTAMP NULL DEFAULT NULL AFTER replied_at");
+    }
+
+    if (!isset($columns['updated_at'])) {
+        mysqli_query($conn, "ALTER TABLE complaints ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at");
+    }
+
+    ensure_complaint_messages_schema($conn);
+}
+
+function ensure_complaint_messages_schema($conn) {
+    mysqli_query($conn, "CREATE TABLE IF NOT EXISTS complaint_messages (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        complaint_id INT NOT NULL,
+        sender_type VARCHAR(20) NOT NULL,
+        sender_user_id INT NULL,
+        sender_admin_id INT NULL,
+        message_text TEXT NOT NULL,
+        emailed_at TIMESTAMP NULL DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_complaint_messages_complaint_created (complaint_id, created_at),
+        INDEX idx_complaint_messages_sender (sender_type, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+function add_complaint_message($conn, $complaint_id, $sender_type, $message_text, $sender_user_id = null, $sender_admin_id = null) {
+    ensure_complaint_messages_schema($conn);
+    $complaint_id = (int)$complaint_id;
+    $message_text = trim((string)$message_text);
+
+    if ($complaint_id <= 0 || $message_text === '') {
+        return false;
+    }
+
+    $sender_user_id = $sender_user_id !== null ? (int)$sender_user_id : null;
+    $sender_admin_id = $sender_admin_id !== null ? (int)$sender_admin_id : null;
+    $stmt = mysqli_prepare(
+        $conn,
+        "INSERT INTO complaint_messages (complaint_id, sender_type, sender_user_id, sender_admin_id, message_text)
+         VALUES (?, ?, ?, ?, ?)"
+    );
+
+    if (!$stmt) {
+        return false;
+    }
+
+    mysqli_stmt_bind_param($stmt, "isiis", $complaint_id, $sender_type, $sender_user_id, $sender_admin_id, $message_text);
+    $saved = mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+
+    return $saved;
+}
+
+function get_complaint_messages($conn, $complaint_id) {
+    ensure_complaint_messages_schema($conn);
+    $complaint_id = (int)$complaint_id;
+    $messages = [];
+
+    if ($complaint_id <= 0) {
+        return $messages;
+    }
+
+    $stmt = mysqli_prepare(
+        $conn,
+        "SELECT cm.*, su.full_name AS site_user_name, a.full_name AS admin_name
+         FROM complaint_messages cm
+         LEFT JOIN site_users su ON cm.sender_user_id = su.id
+         LEFT JOIN admins a ON cm.sender_admin_id = a.id
+         WHERE cm.complaint_id = ?
+         ORDER BY cm.created_at ASC, cm.id ASC"
+    );
+
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "i", $complaint_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        if ($result) {
+            $messages = mysqli_fetch_all($result, MYSQLI_ASSOC);
+        }
+        mysqli_stmt_close($stmt);
+    }
+
+    return $messages;
+}
+
+function close_stale_customer_support_threads($conn) {
+    ensure_complaints_schema($conn);
+
+    mysqli_query(
+        $conn,
+        "UPDATE complaints c
+         JOIN (
+            SELECT cm.complaint_id, cm.sender_type, cm.created_at
+            FROM complaint_messages cm
+            JOIN (
+                SELECT complaint_id, MAX(id) AS last_message_id
+                FROM complaint_messages
+                GROUP BY complaint_id
+            ) last_message ON last_message.last_message_id = cm.id
+         ) latest ON latest.complaint_id = c.id
+         SET c.status = 'Closed',
+             c.closed_for_customer_at = NOW()
+         WHERE c.closed_for_customer_at IS NULL
+           AND latest.sender_type = 'admin'
+           AND latest.created_at <= DATE_SUB(NOW(), INTERVAL 5 MINUTE)"
+    );
 }
 
 /**
@@ -2483,6 +2633,101 @@ function generate_booking_code() {
     return 'FG-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
 }
 
+function send_guest_support_reply_email($ticket, $reply, &$error_message = null) {
+    $error_message = null;
+    $debug_lines = [];
+
+    if (!ensure_phpmailer_loaded()) {
+        $error_message = 'PHPMailer source files are missing.';
+        return false;
+    }
+
+    $config = site_password_reset_mailer_config();
+    if (!site_password_reset_mailer_is_configured($config)) {
+        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'SMTP settings are not configured yet.';
+        return false;
+    }
+
+    $email = trim((string)($ticket['customer_email'] ?? ''));
+    if ($email === '' || !validate_email($email)) {
+        $error_message = function_exists('t') ? t('auth_email_invalid') : 'Invalid email address.';
+        return false;
+    }
+
+    try {
+        $mailer = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mailer->isSMTP();
+        $mailer->Host = $config['host'];
+        $mailer->SMTPAuth = true;
+        $mailer->Username = $config['username'];
+        $mailer->Password = $config['password'];
+        $mailer->Port = (int)$config['port'];
+        $mailer->Timeout = 15;
+        $mailer->SMTPDebug = 2;
+        $mailer->Debugoutput = function ($str, $level) use (&$debug_lines) {
+            $debug_lines[] = '[' . $level . '] ' . sanitize_password_reset_debug_line($str);
+        };
+        $mailer->SMTPSecure = (($config['encryption'] ?? 'tls') === 'ssl')
+            ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
+            : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+
+        $ticket_code = (string)($ticket['complaint_code'] ?? ('#' . ($ticket['id'] ?? '')));
+        $customer_name = trim((string)($ticket['customer_name'] ?? 'Customer')) ?: 'Customer';
+        $safe_name = htmlspecialchars($customer_name, ENT_QUOTES, 'UTF-8');
+        $safe_code = htmlspecialchars($ticket_code, ENT_QUOTES, 'UTF-8');
+        $safe_message = nl2br(htmlspecialchars((string)($ticket['message'] ?? ''), ENT_QUOTES, 'UTF-8'));
+        $safe_reply = nl2br(htmlspecialchars((string)$reply, ENT_QUOTES, 'UTF-8'));
+        $email_direction = function_exists('site_direction') ? site_direction() : 'ltr';
+        $email_align = $email_direction === 'rtl' ? 'right' : 'left';
+
+        $mailer->CharSet = 'UTF-8';
+        $mailer->setFrom($config['from_email'], $config['from_name']);
+        $mailer->addAddress($email, $customer_name);
+        $mailer->isHTML(true);
+        $mailer->Subject = 'FAMOUS GAMING Support Reply - ' . $ticket_code;
+        $mailer->Body = '
+            <div dir="' . $email_direction . '" style="margin:0; padding:30px 12px; background:#f1f5f9; font-family:Arial,Tahoma,sans-serif; color:#172033;">
+                <div style="max-width:620px; margin:0 auto; background:#ffffff; border:1px solid #dbe5ee; border-radius:8px; overflow:hidden;">
+                    <div style="padding:22px 28px; background:#0b1728; color:#ffffff; text-align:center;">
+                        <div style="font-size:22px; font-weight:800;">FAMOUS GAMING</div>
+                        <div style="margin-top:6px; color:#72d7ed; font-size:12px; font-weight:700;">Support Reply ' . $safe_code . '</div>
+                    </div>
+                    <div style="padding:28px; text-align:' . $email_align . '; line-height:1.8;">
+                        <p style="margin:0 0 16px; font-weight:700;">Hello ' . $safe_name . ',</p>
+                        <p style="margin:0 0 18px; color:#475569;">The admin team replied to your support request.</p>
+                        <div style="margin:0 0 18px; padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+                            <strong style="display:block; margin-bottom:8px;">Your message</strong>
+                            <div style="color:#475569;">' . $safe_message . '</div>
+                        </div>
+                        <div style="padding:16px; background:#ecfeff; border:1px solid #a5f3fc; border-radius:8px;">
+                            <strong style="display:block; margin-bottom:8px;">Admin reply</strong>
+                            <div>' . $safe_reply . '</div>
+                        </div>
+                    </div>
+                </div>
+            </div>';
+        $mailer->AltBody = "FAMOUS GAMING Support Reply - " . $ticket_code . "\n\n"
+            . "Your message:\n" . (string)($ticket['message'] ?? '') . "\n\n"
+            . "Admin reply:\n" . (string)$reply;
+
+        $sent = $mailer->send();
+        write_password_reset_mail_log('Guest support reply email sent', $debug_lines);
+        return $sent;
+    } catch (\Throwable $exception) {
+        $mailer_error = isset($mailer) && $mailer instanceof \PHPMailer\PHPMailer\PHPMailer ? $mailer->ErrorInfo : '';
+        $error_message = extract_password_reset_mail_error($mailer_error ?: $exception->getMessage(), $debug_lines);
+        write_password_reset_mail_log('Guest support reply email failed', array_merge([$error_message], $debug_lines));
+        return false;
+    }
+}
+
+/**
+ * Generate a short support ticket code.
+ */
+function generate_support_ticket_code() {
+    return 'SUP-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+}
+
 /**
  * Render a simple visual barcode from the stored booking code.
  */
@@ -2563,6 +2808,12 @@ function clear_admin_notification_cache() {
  */
 function create_admin_notification($conn, $type, $title, $message, $related_table = null, $related_id = null, $action_url = null) {
     ensure_admin_notifications_table($conn);
+    if (is_array($title)) {
+        $title = notification_bilingual_text($title['en'] ?? '', $title['ar'] ?? '');
+    }
+    if (is_array($message)) {
+        $message = notification_bilingual_text($message['en'] ?? '', $message['ar'] ?? '');
+    }
 
     $stmt = mysqli_prepare(
         $conn,
@@ -2824,6 +3075,141 @@ function get_notification_type_meta($type) {
     ];
 }
 
+function notification_localized_value($value, $fallback = '') {
+    $value = trim((string)$value);
+    if ($value === '') {
+        return $fallback;
+    }
+
+    $decoded = json_decode($value, true);
+    if (is_array($decoded)) {
+        $language = function_exists('site_language') ? site_language() : SITE_DEFAULT_LANGUAGE;
+        if (!empty($decoded[$language])) {
+            return (string)$decoded[$language];
+        }
+        if (!empty($decoded['en'])) {
+            return (string)$decoded['en'];
+        }
+        if (!empty($decoded['ar'])) {
+            return (string)$decoded['ar'];
+        }
+    }
+
+    return $value;
+}
+
+function notification_bilingual_text($en, $ar) {
+    return json_encode(
+        ['en' => (string)$en, 'ar' => (string)$ar],
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+    );
+}
+
+function localize_notification_for_display($notification) {
+    $notification = is_array($notification) ? $notification : [];
+    $type = (string)($notification['notification_type'] ?? '');
+    $title = notification_localized_value($notification['title'] ?? '');
+    $message = notification_localized_value($notification['message'] ?? '');
+    $related_id = (int)($notification['related_id'] ?? 0);
+    $action_url = (string)($notification['action_url'] ?? '');
+
+    $code = '';
+    if ($related_id > 0) {
+        $code = '#' . $related_id;
+    } elseif (preg_match('/(?:booking_id|order_id|ticket_id|id)=([0-9]+)/', $action_url, $match)) {
+        $code = '#' . $match[1];
+    }
+
+    $known = [
+        'booking_created' => [
+            'title' => ['Booking update', 'تحديث الحجز'],
+            'message' => ['A booking was created or updated' . ($code ? ' ' . $code : '') . '.', 'تم إنشاء أو تحديث حجز' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'booking_updated' => [
+            'title' => ['Booking updated', 'تم تحديث الحجز'],
+            'message' => ['Booking details were updated' . ($code ? ' ' . $code : '') . '.', 'تم تحديث تفاصيل الحجز' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'booking_cancelled' => [
+            'title' => ['Booking cancelled', 'تم إلغاء الحجز'],
+            'message' => ['Booking was cancelled' . ($code ? ' ' . $code : '') . '.', 'تم إلغاء الحجز' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'booking_reminder' => [
+            'title' => ['Booking reminder', 'تذكير بالحجز'],
+            'message' => ['A booking is coming up soon' . ($code ? ' ' . $code : '') . '.', 'يوجد حجز قريب' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'booking_available' => [
+            'title' => ['Rooms available today', 'غرف متاحة اليوم'],
+            'message' => ['There is room availability today.', 'توجد غرف متاحة اليوم.'],
+        ],
+        'payment_pending' => [
+            'title' => ['Payment pending', 'الدفع بانتظار التأكيد'],
+            'message' => ['Payment is waiting for confirmation' . ($code ? ' ' . $code : '') . '.', 'الدفع بانتظار التأكيد' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'payment_updated' => [
+            'title' => ['Payment updated', 'تم تحديث الدفع'],
+            'message' => ['Payment details were updated' . ($code ? ' ' . $code : '') . '.', 'تم تحديث تفاصيل الدفع' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'payment_received' => [
+            'title' => ['Payment received', 'تم استلام الدفع'],
+            'message' => ['Payment was received' . ($code ? ' ' . $code : '') . '.', 'تم استلام الدفع' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'store_order_created' => [
+            'title' => ['Store order update', 'تحديث طلب المتجر'],
+            'message' => ['A store order was created' . ($code ? ' ' . $code : '') . '.', 'تم إنشاء طلب متجر' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'store_order_updated' => [
+            'title' => ['Store order updated', 'تم تحديث طلب المتجر'],
+            'message' => ['Store order details were updated' . ($code ? ' ' . $code : '') . '.', 'تم تحديث تفاصيل طلب المتجر' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'store_activity' => [
+            'title' => ['Store activity', 'نشاط المتجر'],
+            'message' => ['Store activity needs review.', 'يوجد نشاط متجر يحتاج متابعة.'],
+        ],
+        'low_stock' => [
+            'title' => ['Low stock alert', 'تنبيه مخزون منخفض'],
+            'message' => ['Some products are low in stock.', 'بعض المنتجات مخزونها منخفض.'],
+        ],
+        'support_created' => [
+            'title' => ['New support conversation', 'محادثة دعم جديدة'],
+            'message' => ['A customer opened a support conversation' . ($code ? ' ' . $code : '') . '.', 'فتح عميل محادثة دعم' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'support_reply' => [
+            'title' => ['Support conversation updated', 'تم تحديث محادثة الدعم'],
+            'message' => ['A customer replied to a support conversation' . ($code ? ' ' . $code : '') . '.', 'رد عميل على محادثة دعم' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'support_replied' => [
+            'title' => ['Admin replied', 'ردت الإدارة'],
+            'message' => ['Your support conversation has a new admin reply' . ($code ? ' ' . $code : '') . '.', 'يوجد رد جديد من الإدارة على محادثة الدعم' . ($code ? ' ' . $code : '') . '.'],
+        ],
+        'support_sent' => [
+            'title' => ['Support message sent', 'تم إرسال رسالة الدعم'],
+            'message' => ['Your support message was sent to the admin team.', 'تم إرسال رسالة الدعم لفريق الإدارة.'],
+        ],
+        'feedback_created' => [
+            'title' => ['New feedback submitted', 'ملاحظة جديدة'],
+            'message' => ['New customer feedback was submitted.', 'تم إرسال ملاحظة جديدة من عميل.'],
+        ],
+        'complaint_created' => [
+            'title' => ['New complaint submitted', 'شكوى جديدة'],
+            'message' => ['A new complaint was submitted.', 'تم إرسال شكوى جديدة.'],
+        ],
+        'welcome' => [
+            'title' => ['Welcome to FAMOUS GAMING', 'أهلاً بك في فيمس جيمينج'],
+            'message' => ['Your account is ready. Start by choosing a room or checking the gaming store.', 'حسابك جاهز. ابدأ باختيار غرفة أو تصفح متجر الألعاب.'],
+        ],
+    ];
+
+    if (isset($known[$type])) {
+        $title = smart_notification_text($known[$type]['title'][0], $known[$type]['title'][1]);
+        $message = smart_notification_text($known[$type]['message'][0], $known[$type]['message'][1]);
+    }
+
+    $notification['display_title'] = $title;
+    $notification['display_message'] = $message;
+
+    return $notification;
+}
+
 function record_smart_notification_event($conn, $event_key, $audience_type, $audience_id = null, $notification_table = null, $notification_id = null) {
     ensure_smart_notification_events_table($conn);
 
@@ -3072,6 +3458,12 @@ function generate_admin_smart_notifications($conn) {
 function create_site_notification($conn, $user_id, $type, $title, $message, $action_url = null) {
     ensure_site_notifications_table($conn);
     $user_id = (int)$user_id;
+    if (is_array($title)) {
+        $title = notification_bilingual_text($title['en'] ?? '', $title['ar'] ?? '');
+    }
+    if (is_array($message)) {
+        $message = notification_bilingual_text($message['en'] ?? '', $message['ar'] ?? '');
+    }
 
     if ($user_id <= 0) {
         return false;
@@ -3604,8 +3996,14 @@ function ensure_smart_support_tables($conn) {
         session_token VARCHAR(64) NOT NULL,
         language VARCHAR(5) NOT NULL DEFAULT 'en',
         page_url VARCHAR(255) DEFAULT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'Open',
+        closed_for_user TINYINT(1) NOT NULL DEFAULT 0,
+        last_user_message_at TIMESTAMP NULL DEFAULT NULL,
+        last_admin_message_at TIMESTAMP NULL DEFAULT NULL,
+        closed_at TIMESTAMP NULL DEFAULT NULL,
         started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_chatbot_sessions_status (status, closed_for_user, updated_at),
         INDEX idx_chatbot_sessions_user_started (user_id, started_at),
         INDEX idx_chatbot_sessions_token (session_token)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
@@ -3633,13 +4031,61 @@ function ensure_smart_support_tables($conn) {
         INDEX idx_smart_report_type_created (report_type, created_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
-    return mysqli_query($conn, $session_table)
+    $created = mysqli_query($conn, $session_table)
         && mysqli_query($conn, $message_table)
         && mysqli_query($conn, $report_table);
+
+    $columns = [];
+    $result = mysqli_query($conn, "SHOW COLUMNS FROM chatbot_sessions");
+    if ($result) {
+        while ($column = mysqli_fetch_assoc($result)) {
+            $columns[$column['Field']] = true;
+        }
+    }
+
+    if (!isset($columns['status'])) {
+        mysqli_query($conn, "ALTER TABLE chatbot_sessions ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'Open' AFTER page_url");
+    }
+    if (!isset($columns['closed_for_user'])) {
+        mysqli_query($conn, "ALTER TABLE chatbot_sessions ADD COLUMN closed_for_user TINYINT(1) NOT NULL DEFAULT 0 AFTER status");
+    }
+    if (!isset($columns['last_user_message_at'])) {
+        mysqli_query($conn, "ALTER TABLE chatbot_sessions ADD COLUMN last_user_message_at TIMESTAMP NULL DEFAULT NULL AFTER closed_for_user");
+    }
+    if (!isset($columns['last_admin_message_at'])) {
+        mysqli_query($conn, "ALTER TABLE chatbot_sessions ADD COLUMN last_admin_message_at TIMESTAMP NULL DEFAULT NULL AFTER last_user_message_at");
+    }
+    if (!isset($columns['closed_at'])) {
+        mysqli_query($conn, "ALTER TABLE chatbot_sessions ADD COLUMN closed_at TIMESTAMP NULL DEFAULT NULL AFTER last_admin_message_at");
+    }
+
+    return $created;
+}
+
+function close_inactive_user_support_chats($conn, $user_id = 0) {
+    ensure_smart_support_tables($conn);
+
+    $where_user = '';
+    if ((int)$user_id > 0) {
+        $where_user = ' AND user_id = ' . (int)$user_id;
+    }
+
+    return mysqli_query(
+        $conn,
+        "UPDATE chatbot_sessions
+         SET status = 'Closed', closed_for_user = 1, closed_at = NOW()
+         WHERE status = 'Open'
+           AND user_id IS NOT NULL
+           AND last_admin_message_at IS NOT NULL
+           AND last_admin_message_at <= DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+           AND (last_user_message_at IS NULL OR last_user_message_at < last_admin_message_at)"
+           . $where_user
+    );
 }
 
 function get_support_chatbot_session_id($conn, $user_id = 0) {
     ensure_smart_support_tables($conn);
+    close_inactive_user_support_chats($conn, (int)$user_id);
 
     if (empty($_SESSION['support_chatbot_token'])) {
         $_SESSION['support_chatbot_token'] = bin2hex(random_bytes(16));
@@ -3650,9 +4096,18 @@ function get_support_chatbot_session_id($conn, $user_id = 0) {
     $page_url = $_SERVER['HTTP_REFERER'] ?? ($_SERVER['REQUEST_URI'] ?? null);
     $user_id = $user_id > 0 ? (int)$user_id : null;
 
-    $stmt = mysqli_prepare($conn, "SELECT id FROM chatbot_sessions WHERE session_token = ? ORDER BY id DESC LIMIT 1");
+    if ($user_id !== null) {
+        $stmt = mysqli_prepare($conn, "SELECT id FROM chatbot_sessions WHERE user_id = ? AND status = 'Open' AND closed_for_user = 0 ORDER BY id DESC LIMIT 1");
+    } else {
+        $stmt = mysqli_prepare($conn, "SELECT id FROM chatbot_sessions WHERE session_token = ? AND status = 'Open' AND closed_for_user = 0 ORDER BY id DESC LIMIT 1");
+    }
+
     if ($stmt) {
-        mysqli_stmt_bind_param($stmt, "s", $session_token);
+        if ($user_id !== null) {
+            mysqli_stmt_bind_param($stmt, "i", $user_id);
+        } else {
+            mysqli_stmt_bind_param($stmt, "s", $session_token);
+        }
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $row = $result ? mysqli_fetch_assoc($result) : null;
@@ -3663,7 +4118,7 @@ function get_support_chatbot_session_id($conn, $user_id = 0) {
     }
 
     if ($user_id === null) {
-        $stmt = mysqli_prepare($conn, "INSERT INTO chatbot_sessions (user_id, session_token, language, page_url) VALUES (NULL, ?, ?, ?)");
+        $stmt = mysqli_prepare($conn, "INSERT INTO chatbot_sessions (user_id, session_token, language, page_url, status) VALUES (NULL, ?, ?, ?, 'Open')");
         if (!$stmt) {
             return 0;
         }
@@ -3676,7 +4131,7 @@ function get_support_chatbot_session_id($conn, $user_id = 0) {
         return $session_id;
     }
 
-    $stmt = mysqli_prepare($conn, "INSERT INTO chatbot_sessions (user_id, session_token, language, page_url) VALUES (?, ?, ?, ?)");
+    $stmt = mysqli_prepare($conn, "INSERT INTO chatbot_sessions (user_id, session_token, language, page_url, status) VALUES (?, ?, ?, ?, 'Open')");
     if (!$stmt) {
         return 0;
     }
@@ -3737,6 +4192,14 @@ function log_support_chatbot_message($conn, $session_id, $sender, $message_text,
     mysqli_stmt_bind_param($stmt, "issss", $session_id, $sender, $message_text, $intent, $payload_text);
     $saved = mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
+
+    if ($saved) {
+        if ($sender === 'admin') {
+            mysqli_query($conn, "UPDATE chatbot_sessions SET last_admin_message_at = NOW(), status = 'Open' WHERE id = " . $session_id);
+        } elseif ($sender === 'user') {
+            mysqli_query($conn, "UPDATE chatbot_sessions SET last_user_message_at = NOW(), closed_for_user = 0, status = 'Open' WHERE id = " . $session_id);
+        }
+    }
 
     return $saved;
 }

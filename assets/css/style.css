@@ -8736,6 +8736,53 @@ body {
     }
 }
 
+.support-thread-messages {
+    display: grid;
+    gap: 0.75rem;
+    max-height: 430px;
+    margin: 1rem 0;
+    padding: 0.75rem;
+    overflow-y: auto;
+    border: 1px solid rgba(126, 231, 255, 0.16);
+    border-radius: 8px;
+    background: rgba(5, 12, 24, 0.36);
+}
+
+.support-thread-message {
+    width: min(88%, 620px);
+    padding: 0.78rem 0.9rem;
+    border: 1px solid rgba(126, 231, 255, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.support-thread-message.is-admin {
+    justify-self: start;
+    border-color: rgba(94, 255, 207, 0.24);
+    background: rgba(94, 255, 207, 0.1);
+}
+
+.support-thread-message.is-customer {
+    justify-self: end;
+    border-color: rgba(126, 231, 255, 0.22);
+    background: rgba(78, 223, 255, 0.1);
+}
+
+.support-thread-message strong,
+.support-thread-message span {
+    display: block;
+}
+
+.support-thread-message p {
+    margin: 0.35rem 0;
+    line-height: 1.7;
+}
+
+.support-thread-message span {
+    color: rgba(224, 241, 255, 0.62);
+    font-size: 0.78rem;
+}
+
 /* Index cards: keep previews readable and actions public */
 .index-page-shell .home-service-card-large .index-service-card-copy {
     position: absolute;

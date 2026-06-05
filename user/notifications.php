@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 
@@ -101,19 +101,19 @@ include dirname(__DIR__) . '/includes/header.php';
         <div class="notifications-shell">
             <div class="smart-notification-summary">
                 <div class="smart-notification-summary-card">
-                    <span><?php echo site_language() === 'ar' ? 'كل الإشعارات' : 'All'; ?></span>
+                    <span><?php echo t('notifications_all'); ?></span>
                     <strong><?php echo (int)$notification_summary['total']; ?></strong>
                 </div>
                 <div class="smart-notification-summary-card">
-                    <span><?php echo site_language() === 'ar' ? 'غير مقروء' : 'Unread'; ?></span>
+                    <span><?php echo t('admin_unread', ['count' => $unread_count]); ?></span>
                     <strong><?php echo (int)$notification_summary['unread']; ?></strong>
                 </div>
                 <div class="smart-notification-summary-card">
-                    <span><?php echo site_language() === 'ar' ? 'الحجوزات' : 'Bookings'; ?></span>
+                    <span><?php echo t('admin_nav_bookings'); ?></span>
                     <strong><?php echo (int)$notification_summary['booking']; ?></strong>
                 </div>
                 <div class="smart-notification-summary-card">
-                    <span><?php echo site_language() === 'ar' ? 'المتجر' : 'Store'; ?></span>
+                    <span><?php echo t('nav_store'); ?></span>
                     <strong><?php echo (int)$notification_summary['store']; ?></strong>
                 </div>
             </div>
@@ -143,6 +143,7 @@ include dirname(__DIR__) . '/includes/header.php';
             <?php else: ?>
                 <div class="notifications-list">
                     <?php foreach ($notifications as $notification): ?>
+                        <?php $notification = localize_notification_for_display($notification); ?>
                         <?php $notification_meta = get_notification_type_meta($notification['notification_type'] ?? ''); ?>
                         <article class="notification-card <?php echo (int)$notification['is_read'] === 0 ? 'is-unread' : 'is-read'; ?>">
                             <div class="notification-card-main">
@@ -150,12 +151,12 @@ include dirname(__DIR__) . '/includes/header.php';
                                     <?php echo htmlspecialchars($notification_meta['label'], ENT_QUOTES, 'UTF-8'); ?>
                                 </span>
                                 <div class="notification-card-head">
-                                    <h3><?php echo htmlspecialchars($notification['title']); ?></h3>
+                                    <h3><?php echo htmlspecialchars($notification['display_title']); ?></h3>
                                     <?php if ((int)$notification['is_read'] === 0): ?>
                                         <span class="notification-dot"></span>
                                     <?php endif; ?>
                                 </div>
-                                <p><?php echo htmlspecialchars($notification['message']); ?></p>
+                                <p><?php echo htmlspecialchars($notification['display_message']); ?></p>
                                 <span class="notification-time"><?php echo date('M d, Y h:i A', strtotime($notification['created_at'])); ?></span>
                             </div>
                             <div class="notification-card-actions">
