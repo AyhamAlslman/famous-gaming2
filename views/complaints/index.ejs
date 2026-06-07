@@ -1,0 +1,23 @@
+<section class="hero"><div class="container"><h1>Support</h1><p>Send complaints or suggestions.</p></div></section>
+<section class="content">
+  <div class="container">
+    <div class="form-container">
+      <form method="POST" action="/complaints">
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Name</label><input class="form-control" name="customer_name" value="<%= currentUser ? currentUser.full_name : '' %>" required></div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-control" name="customer_email" value="<%= currentUser ? currentUser.email : '' %>"></div>
+          <div class="form-group"><label class="form-label">Phone</label><input class="form-control" name="phone" value="<%= currentUser ? (currentUser.phone || '') : '' %>"></div>
+          <div class="form-group"><label class="form-label">Message</label><textarea class="form-control" name="message" rows="5" required></textarea></div>
+        </div>
+        <button class="btn" type="submit">Send</button>
+      </form>
+    </div>
+    <% if (complaints.length) { %>
+      <div class="store-order-history-list">
+        <% complaints.forEach(function(complaint) { %>
+          <article class="store-order-card"><div class="store-order-card-head"><h3><%= complaint.complaint_code || ('CP-' + complaint.id) %></h3><span><%= complaint.status %></span></div><p><%= complaint.message %></p></article>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</section>

@@ -1,0 +1,40 @@
+<main class="user-dashboard-v2" id="dashboard-home">
+  <section class="user-dashboard-stage">
+    <div class="user-dashboard-inner">
+      <section class="user-dashboard-v2-hero">
+        <div class="user-dashboard-v2-avatar"><%= currentUser.full_name.charAt(0).toUpperCase() %></div>
+        <div>
+          <span>Account</span>
+          <h1>Welcome, <%= currentUser.full_name %></h1>
+          <p>Book rooms, track tickets, shop, and contact support.</p>
+        </div>
+      </section>
+      <div class="user-dashboard-v2-layout web-dashboard-container">
+        <div class="user-dashboard-v2-main">
+          <section class="dashboard-v2-card dashboard-v2-rooms" id="dashboard-rooms">
+            <div class="dashboard-v2-card-head">
+              <div><span>Rooms</span><h2>Pick a room</h2><p>Choose a PlayStation room and book a session.</p></div>
+            </div>
+            <div class="dashboard-v2-room-grid">
+              <% rooms.forEach(function(room) { %>
+                <article class="dashboard-v2-room-card">
+                  <img src="/<%= room.image_path || 'images/home-hero-background-optimized.jpg' %>" alt="<%= room.room_name %>">
+                  <div>
+                    <h3><%= room.room_name %></h3>
+                    <span><%= room.room_type %></span>
+                    <strong><%= format.money(room.price_per_hour) %>/hr</strong>
+                  </div>
+                  <a class="btn btn-small" href="/booking?room_id=<%= room.id %>#booking-form">Book</a>
+                </article>
+              <% }) %>
+            </div>
+          </section>
+        </div>
+        <aside class="user-dashboard-v2-side">
+          <div class="dashboard-v2-card"><h2>Loyalty Points</h2><strong><%= currentUser.loyalty_points || 0 %></strong></div>
+          <div class="dashboard-v2-card"><a class="btn" href="/profile">Edit Profile</a><a class="btn payment-secondary-btn" href="/notifications">Notifications</a></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+</main>

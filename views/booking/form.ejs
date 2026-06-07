@@ -1,0 +1,69 @@
+<section class="hero booking-hero">
+  <div class="container"><h1>Book Your Gaming Session</h1><p>Reserve a room, add snacks, and choose payment.</p></div>
+</section>
+<section class="content" id="booking-form">
+  <div class="container">
+    <div class="form-container booking-flow-panel">
+      <form method="POST" action="/booking">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Your Name *</label>
+            <input type="text" name="customer_name" class="form-control" value="<%= currentUser.full_name %>" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number *</label>
+            <input type="text" name="phone" class="form-control" value="<%= currentUser.phone || '' %>" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Select Room *</label>
+            <select name="room_id" class="form-control" required>
+              <% rooms.forEach(function(room) { %>
+                <option value="<%= room.id %>" <%= preselectedRoomId === room.id ? 'selected' : '' %>><%= room.room_name %> - <%= room.room_type %> (<%= format.money(room.price_per_hour) %>/hr)</option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Booking Date *</label>
+            <input type="date" name="booking_date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Start Time *</label>
+            <input type="time" name="start_time" class="form-control" step="3600" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Number of Hours *</label>
+            <input type="number" name="hours" class="form-control" min="<%= settings.minBookingHours %>" max="<%= settings.maxBookingHours %>" value="1" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payment Method</label>
+            <select name="payment_method" class="form-control">
+              <option>Cash</option>
+              <option>Visa</option>
+              <option>CliQ</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea name="notes" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <% if (menuItems.length) { %>
+          <div class="booking-addons-section">
+            <h3>Add snacks and drinks</h3>
+            <div class="menu-grid">
+              <% menuItems.forEach(function(item) { %>
+                <article class="menu-card">
+                  <span><%= item.item_category %></span>
+                  <h3><%= item.item_name %></h3>
+                  <p><%= format.money(item.item_price) %></p>
+                  <input type="number" name="menu_items[<%= item.id %>]" min="0" max="20" value="0" class="form-control">
+                </article>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+        <button type="submit" class="btn">Confirm Booking</button>
+      </form>
+    </div>
+  </div>
+</section>

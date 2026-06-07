@@ -1,0 +1,263 @@
+<section class="hero store-hero" style="--page-hero-image: url('/images/store.jpg');">
+  <div class="container">
+    <div class="store-hero-shell">
+      <div class="store-hero-copy store-hero-copy-centered">
+        <span class="store-eyebrow">Store</span>
+        <h1>Gaming Store</h1>
+        <div class="store-hero-info">
+          <h2>PlayStation products and accessories</h2>
+          <p>Browse controllers, covers, games, consoles, and accessories.</p>
+          <p><%= canOrder ? 'Add products to your basket and complete checkout from this page.' : 'Log in to add products to your basket and complete an order.' %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content store-content">
+  <div class="container">
+    <div class="store-toolbar store-filter-toolbar <%= canOrder ? 'store-filter-toolbar-only' : '' %>">
+      <% if (!canOrder) { %>
+        <div class="store-filter-summary">
+          <div class="message info store-auth-message">Please log in or create an account to complete purchases from the store.</div>
+        </div>
+      <% } %>
+      <div class="store-filter-chips" id="storeFilterChips">
+        <a href="/store" class="store-filter-chip <%= selectedCategory === '' ? 'active' : '' %>" data-store-filter="all">All Products</a>
+        <% categories.forEach(function(category) { %>
+          <a href="/store?category=<%= encodeURIComponent(category) %>" class="store-filter-chip <%= selectedCategory === category ? 'active' : '' %>" data-store-filter="<%= category %>"><%= category %></a>
+        <% }) %>
+      </div>
+    </div>
+
+    <% if (!products.length) { %>
+      <div class="store-empty-state">
+        <h3>No products available</h3>
+        <p>No store products were found for this category.</p>
+      </div>
+    <% } else { %>
+      <div class="store-layout">
+        <div class="store-products-column">
+          <div class="row g-4 store-grid" id="storeProductsGrid">
+            <% products.forEach(function(product) { 
+              const stock = Number(product.stock_quantity || 0);
+              const inStock = stock > 0;
+              const stockLabel = !inStock ? 'Out of stock' : (stock <= 5 ? 'Limited stock' : 'In stock');
+              const stockClass = !inStock ? 'store-stock-out' : (stock <= 5 ? 'store-stock-limited' : 'store-stock-in');
+              const imagePath = product.image_path || 'images/store.jpg';
+            %>
+              <div class="col-12 col-md-6 col-xl-4" data-store-card data-store-category="<%= product.category %>">
+                <article
+                  class="store-product-card store-detail-card h-100"
+                  data-product-id="<%= product.id %>"
+                  data-product-name="<%= product.product_name %>"
+                  data-product-type="<%= product.category %>"
+                  data-product-description="<%= product.description || '' %>"
+                  data-product-price="<%= Number(product.price || 0).toFixed(2) %>"
+                  data-product-stock="<%= stock %>"
+                  data-product-image="/<%= imagePath %>"
+                >
+                  <div class="store-product-media">
+                    <img src="/<%= imagePath %>" alt="<%= product.product_name %>" class="img-fluid">
+                    <span class="store-category-badge"><%= product.category %></span>
+                  </div>
+
+                  <div class="store-product-body">
+                    <div class="store-product-meta">
+                      <span class="store-stock-badge <%= stockClass %>"><%= stockLabel %></span>
+                      <span class="store-stock-qty"><%= stock %> in stock</span>
+                    </div>
+                    <h3><%= product.product_name %></h3>
+                    <p><%= product.description || '' %></p>
+                    <div class="store-product-footer">
+                      <div class="store-price"><%= format.money(product.price) %></div>
+                      <% if (canOrder) { %>
+                        <button type="button" class="btn store-add-btn" data-store-add <%= !inStock ? 'disabled' : '' %>><%= inStock ? 'Add to Basket' : 'Unavailable' %></button>
+                      <% } else { %>
+                        <a href="/login?redirect=/store" class="btn store-add-btn">Login</a>
+                      <% } %>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            <% }) %>
+          </div>
+          <div class="store-empty-state store-empty-state-filtered" id="storeFilteredEmptyState" hidden>
+            <h3>No products available</h3>
+            <p>No store products were found for this category.</p>
+          </div>
+        </div>
+
+        <aside class="store-basket-sidebar" id="storeBasketSidebar">
+          <div class="store-basket-card">
+            <div class="store-basket-header">
+              <div>
+                <span class="store-basket-eyebrow">Basket</span>
+                <h3>Your store basket</h3>
+              </div>
+              <span class="store-basket-count" id="storeBasketCount">0 items</span>
+            </div>
+
+            <div class="store-basket-summary">
+              <div class="store-basket-summary-item">
+                <span>Items</span>
+                <strong id="storeBasketItemsCount">0</strong>
+              </div>
+              <div class="store-basket-summary-item">
+                <span>Subtotal</span>
+                <strong id="storeBasketSubtotal">0.00 JOD</strong>
+              </div>
+            </div>
+
+            <div class="store-basket-body" id="storeBasketItems">
+              <div class="store-basket-empty">
+                <h4>Your basket is empty</h4>
+                <p>Add store products before checkout.</p>
+              </div>
+            </div>
+
+            <div class="store-basket-footer">
+              <p class="store-basket-note">Orders are saved after checkout and visible in My Bookings.</p>
+              <div class="store-basket-actions">
+                <% if (canOrder) { %>
+                  <form method="POST" action="/store/checkout" id="storeCheckoutForm" class="store-checkout-form">
+                    <input type="hidden" name="checkout_action" value="review">
+                    <input type="hidden" name="cart_data" id="storeCheckoutCartData" value="">
+                    <button type="submit" class="btn store-checkout-btn" id="storeCheckoutButton" disabled>Continue to Checkout</button>
+                  </form>
+                <% } else { %>
+                  <div class="store-basket-auth-actions">
+                    <a href="/login?redirect=/store" class="btn store-checkout-btn">Login</a>
+                    <a href="/register?redirect=/store" class="btn store-basket-clear-btn">Sign Up</a>
+                  </div>
+                <% } %>
+                <button type="button" class="btn store-basket-clear-btn" id="storeBasketClearBtn">Clear</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<script>
+  (function () {
+    const canOrder = <%- JSON.stringify(canOrder) %>;
+    const cards = Array.from(document.querySelectorAll('[data-store-card]'));
+    const basketBody = document.getElementById('storeBasketItems');
+    const basketCount = document.getElementById('storeBasketCount');
+    const basketItemsCount = document.getElementById('storeBasketItemsCount');
+    const basketSubtotal = document.getElementById('storeBasketSubtotal');
+    const checkoutData = document.getElementById('storeCheckoutCartData');
+    const checkoutButton = document.getElementById('storeCheckoutButton');
+    const clearButton = document.getElementById('storeBasketClearBtn');
+    const basket = new Map();
+
+    function money(value) {
+      return Number(value || 0).toFixed(2) + ' JOD';
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function readProduct(card) {
+      const product = card.querySelector('.store-product-card');
+      return {
+        id: Number(product.dataset.productId),
+        name: product.dataset.productName,
+        category: product.dataset.productType,
+        description: product.dataset.productDescription,
+        price: Number(product.dataset.productPrice),
+        stock: Number(product.dataset.productStock),
+        image: product.dataset.productImage
+      };
+    }
+
+    function renderBasket() {
+      const items = Array.from(basket.values());
+      const quantityTotal = items.reduce((sum, item) => sum + item.quantity, 0);
+      const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+      basketCount.textContent = quantityTotal + (quantityTotal === 1 ? ' item' : ' items');
+      basketItemsCount.textContent = quantityTotal;
+      basketSubtotal.textContent = money(subtotal);
+      if (checkoutData) {
+        checkoutData.value = JSON.stringify(items.map((item) => ({ id: item.id, quantity: item.quantity })));
+      }
+      if (checkoutButton) checkoutButton.disabled = items.length === 0;
+      if (clearButton) clearButton.disabled = items.length === 0;
+
+      if (!items.length) {
+        basketBody.innerHTML = '<div class="store-basket-empty"><h4>Your basket is empty</h4><p>Add store products before checkout.</p></div>';
+        return;
+      }
+
+      basketBody.innerHTML = items.map((item) => `
+        <div class="store-basket-item" data-basket-id="${item.id}">
+          <div class="store-basket-item-media"><img src="${item.image}" alt=""></div>
+          <div class="store-basket-item-copy">
+            <span class="store-basket-item-type">${escapeHtml(item.category)}</span>
+            <h4>${escapeHtml(item.name)}</h4>
+            <div class="store-basket-item-price-row">
+              <span class="store-basket-item-price">${money(item.price * item.quantity)}</span>
+              <div class="store-basket-qty-controls">
+                <button class="store-basket-qty-btn" type="button" data-basket-dec>-</button>
+                <span class="store-basket-qty-value">${item.quantity}</span>
+                <button class="store-basket-qty-btn" type="button" data-basket-inc ${item.quantity >= item.stock ? 'disabled' : ''}>+</button>
+              </div>
+            </div>
+            <button class="store-basket-remove-btn" type="button" data-basket-remove>Remove</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    if (canOrder) {
+      cards.forEach((card) => {
+        const button = card.querySelector('[data-store-add]');
+        if (!button) return;
+        button.addEventListener('click', () => {
+          const product = readProduct(card);
+          const existing = basket.get(product.id);
+          const quantity = existing ? existing.quantity + 1 : 1;
+          if (quantity > product.stock) return;
+          basket.set(product.id, { ...product, quantity });
+          renderBasket();
+        });
+      });
+    }
+
+    basketBody?.addEventListener('click', (event) => {
+      const row = event.target.closest('[data-basket-id]');
+      if (!row) return;
+      const id = Number(row.dataset.basketId);
+      const item = basket.get(id);
+      if (!item) return;
+      if (event.target.matches('[data-basket-dec]')) {
+        item.quantity -= 1;
+        if (item.quantity <= 0) basket.delete(id);
+      }
+      if (event.target.matches('[data-basket-inc]') && item.quantity < item.stock) {
+        item.quantity += 1;
+      }
+      if (event.target.matches('[data-basket-remove]')) {
+        basket.delete(id);
+      }
+      renderBasket();
+    });
+
+    clearButton?.addEventListener('click', () => {
+      basket.clear();
+      renderBasket();
+    });
+
+    renderBasket();
+  }());
+</script>

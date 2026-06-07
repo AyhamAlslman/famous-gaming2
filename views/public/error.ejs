@@ -1,0 +1,10 @@
+<section class="content">
+  <div class="container">
+    <div class="empty-bookings">
+      <h2>Server error</h2>
+      <p>The Node app hit an error.</p>
+      <% if (error) { %><pre><%= error.stack || error.message %></pre><% } %>
+      <a class="btn" href="/">Back home</a>
+    </div>
+  </div>
+</section>

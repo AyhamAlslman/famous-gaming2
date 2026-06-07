@@ -1,0 +1,19 @@
+<section class="hero" style="--page-hero-image: url('/images/service-gaming-optimized.jpg');">
+  <div class="container">
+    <h1>Gaming Service</h1>
+    <p>Premium PlayStation rooms with bookable sessions.</p>
+  </div>
+</section>
+<section class="content">
+  <div class="container">
+    <div class="booking-room-compact-list">
+      <% rooms.forEach(function(room) { %>
+        <article class="live-room-row-item booking-room-row">
+          <div class="booking-room-row-media"><img src="/<%= room.image_path || 'images/home-hero-background-optimized.jpg' %>" alt="<%= room.room_name %>"></div>
+          <div class="booking-room-row-copy"><span><%= room.room_type %></span><h3><%= room.room_name %></h3><p><%= room.description || room.services || '' %></p></div>
+          <div class="booking-room-row-actions"><strong><%= format.money(room.price_per_hour) %>/hr</strong><a class="btn btn-small" href="/booking?room_id=<%= room.id %>#booking-form">Book</a></div>
+        </article>
+      <% }) %>
+    </div>
+  </div>
+</section>

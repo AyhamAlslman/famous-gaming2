@@ -1,0 +1,35 @@
+<section class="hero"><div class="container"><h1>Payment</h1><p>Confirm payment method for your reservation.</p></div></section>
+<section class="content"><div class="container">
+  <% if (!booking) { %>
+    <div class="booking-lookup-panel"><h2>Booking not available</h2><p>Open payment from My Bookings.</p><a class="btn" href="/my-bookings">My Bookings</a></div>
+  <% } else { %>
+    <div class="checkout-shell">
+      <div class="checkout-panel checkout-summary-panel">
+        <span class="ticket-label">Reservation</span>
+        <h2><%= booking.booking_code || format.bookingCode(booking.id) %></h2>
+        <div class="checkout-summary-grid">
+          <div><span>Customer</span><strong><%= booking.customer_name %></strong></div>
+          <div><span>Room</span><strong><%= booking.room_name %> - <%= booking.room_type %></strong></div>
+          <div><span>Date</span><strong><%= format.formatDate(booking.booking_date) %></strong></div>
+          <div><span>Time</span><strong><%= format.formatTime(booking.start_time) %> - <%= format.hoursLabel(booking.hours) %></strong></div>
+        </div>
+        <div class="checkout-total-card"><div class="checkout-total-row checkout-total-row-final"><span>Total</span><strong><%= format.money(booking.final_total || booking.total_price) %></strong></div></div>
+      </div>
+      <div class="checkout-panel checkout-form-panel">
+        <% if (booking.payment_status === 'Paid') { %>
+          <div class="payment-success-panel"><h3>Already paid</h3><p>This booking is paid.</p></div>
+        <% } else { %>
+          <form method="POST" action="/payment" class="checkout-form">
+            <input type="hidden" name="booking_id" value="<%= booking.id %>">
+            <div class="payment-method-grid">
+              <% ['Cash', 'Visa', 'CliQ'].forEach(function(method) { %>
+                <label class="payment-method-option"><input type="radio" name="payment_method" value="<%= method %>" <%= method === (booking.payment_method || 'Cash') ? 'checked' : '' %>><span class="payment-method-card"><strong><%= method %></strong><small><%= method === 'Visa' ? 'Marks paid in demo' : 'Admin confirmation needed' %></small></span></label>
+              <% }) %>
+            </div>
+            <button class="btn" type="submit">Complete Payment</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+</div></section>

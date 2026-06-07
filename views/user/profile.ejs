@@ -1,0 +1,25 @@
+<main class="user-profile-page">
+  <section class="profile-page-hero">
+    <div class="container profile-page-hero-inner">
+      <div class="profile-page-avatar"><%= currentUser.full_name.charAt(0).toUpperCase() %></div>
+      <div><span class="ticket-label">Profile</span><h1>Profile</h1><p>Edit your account details.</p></div>
+    </div>
+  </section>
+  <section class="content profile-page-content">
+    <div class="container profile-page-grid">
+      <form method="POST" action="/profile" class="form-container profile-card user-profile-form">
+        <div class="profile-form-grid">
+          <div class="form-group"><label class="form-label">Full Name</label><input class="form-control" name="full_name" value="<%= currentUser.full_name %>" required></div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-control" name="email" type="email" value="<%= currentUser.email %>" required></div>
+          <div class="form-group"><label class="form-label">Phone</label><input class="form-control" name="phone" value="<%= currentUser.phone || '' %>"></div>
+          <div class="form-group"><label class="form-label">New Password</label><input class="form-control" type="password" name="password"></div>
+          <div class="form-group"><label class="form-label">Confirm Password</label><input class="form-control" type="password" name="confirm_password"></div>
+          <div class="form-group profile-form-actions"><button class="btn" type="submit">Update Profile</button></div>
+        </div>
+      </form>
+      <aside class="profile-page-summary">
+        <div class="profile-side-card"><span>Loyalty Points</span><strong><%= currentUser.loyalty_points || 0 %></strong></div>
+      </aside>
+    </div>
+  </section>
+</main>

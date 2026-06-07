@@ -1,0 +1,174 @@
+<section class="hero store-checkout-hero">
+  <div class="container">
+    <h1>Store Checkout</h1>
+    <p>Review your basket and choose how you want to pay.</p>
+  </div>
+</section>
+
+<section class="content store-checkout-content">
+  <div class="container">
+    <% if (error) { %>
+      <div class="message error"><%= error %></div>
+    <% } %>
+
+    <% if (successOrder) { %>
+      <div class="checkout-shell store-checkout-success" data-store-order-success>
+        <div class="checkout-panel checkout-summary-panel">
+          <div class="checkout-panel-header">
+            <div>
+              <span class="ticket-label">Store order code</span>
+              <h2><%= successOrder.order_code %></h2>
+            </div>
+            <span class="checkout-status-pill status-<%= format.normalizeStatusClass(successOrder.payment_status) %>"><%= successOrder.payment_status %></span>
+          </div>
+
+          <div class="checkout-summary-grid">
+            <div><span>Customer</span><strong><%= successOrder.customer_name %></strong></div>
+            <div><span>Phone</span><strong><%= successOrder.phone || '-' %></strong></div>
+            <div><span>Payment</span><strong><%= successOrder.payment_method || '-' %></strong></div>
+            <div><span>Loyalty Points</span><strong><%= successOrder.loyalty_points_earned || 0 %></strong></div>
+          </div>
+
+          <div class="checkout-total-card">
+            <% successOrderItems.forEach(function(item) { %>
+              <div class="checkout-item-row">
+                <span><%= item.product_name %> x<%= item.quantity %></span>
+                <strong><%= format.money(item.item_total) %></strong>
+              </div>
+            <% }) %>
+            <div class="checkout-total-row checkout-total-row-final">
+              <span>Total due</span>
+              <strong><%= format.money(successOrder.total_amount) %></strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkout-panel checkout-form-panel">
+          <div class="payment-success-panel">
+            <h3>Your order is ready</h3>
+            <p><%= successOrder.payment_status === 'Paid' ? 'Your store order has been confirmed.' : 'Your order was saved and is waiting for admin confirmation.' %></p>
+            <div class="booking-ticket-actions">
+              <a href="/my-bookings" class="btn">View My Bookings</a>
+              <a href="/store" class="btn payment-secondary-btn">Back to Store</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% } else if (!checkoutItems.length) { %>
+      <div class="booking-lookup-panel">
+        <span class="ticket-label">Basket</span>
+        <h2>Your basket is empty</h2>
+        <p>Go back to the store and add products before checkout.</p>
+        <a href="/store" class="btn">Back to Store</a>
+      </div>
+    <% } else { %>
+      <div class="checkout-shell">
+        <div class="checkout-panel checkout-summary-panel">
+          <div class="checkout-panel-header">
+            <div>
+              <span class="ticket-label">Review</span>
+              <h2>Your store basket</h2>
+            </div>
+          </div>
+
+          <div class="checkout-total-card store-checkout-items">
+            <% checkoutItems.forEach(function(item) { %>
+              <div class="store-checkout-item-row">
+                <img src="/<%= item.image_path || 'images/store.jpg' %>" alt="<%= item.product_name %>">
+                <div>
+                  <span><%= item.category %></span>
+                  <strong><%= item.product_name %></strong>
+                  <small><%= format.money(item.price) %> x <%= item.quantity %></small>
+                </div>
+                <b><%= format.money(item.line_total) %></b>
+              </div>
+            <% }) %>
+            <div class="checkout-total-row checkout-total-row-final">
+              <span>Total due</span>
+              <strong><%= format.money(subtotal) %></strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkout-panel checkout-form-panel">
+          <div class="checkout-panel-header">
+            <div>
+              <span class="ticket-label">Payment method</span>
+              <h2>Choose how to pay</h2>
+            </div>
+          </div>
+
+          <p class="simulation-note">This demo saves your payment choice and updates order status.</p>
+
+          <form method="POST" action="/store/checkout" class="checkout-form">
+            <input type="hidden" name="checkout_action" value="confirm">
+            <input type="hidden" name="cart_data" value="<%= cartData %>">
+
+            <div class="payment-method-grid">
+              <% ['Cash', 'Visa', 'CliQ'].forEach(function(method) { %>
+                <label class="payment-method-option">
+                  <input type="radio" name="payment_method" value="<%= method %>" class="payment-method-input" <%= selectedMethod === method ? 'checked' : '' %>>
+                  <span class="payment-method-card">
+                    <strong><%= method %></strong>
+                    <small><%= method === 'Cash' ? 'Pay when you arrive.' : (method === 'Visa' ? 'Simulated online payment.' : 'Transfer using CliQ, then wait for admin confirmation.') %></small>
+                  </span>
+                </label>
+              <% }) %>
+            </div>
+
+            <div class="visa-fields" id="visa-fields" <%= selectedMethod === 'Visa' ? '' : 'hidden' %>>
+              <div class="row g-3">
+                <div class="col-12">
+                  <div class="form-group">
+                    <label class="form-label">Card number</label>
+                    <input type="text" name="card_number" id="card_number" class="form-control" maxlength="23" inputmode="numeric" placeholder="4242 4242 4242 4242">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="form-label">Expiry</label>
+                    <input type="text" name="expiry_date" id="expiry_date" class="form-control" maxlength="5" placeholder="MM/YY">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label class="form-label">CVV</label>
+                    <input type="password" name="cvv" id="cvv" class="form-control" maxlength="4" inputmode="numeric" placeholder="123">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="visa-fields cliq-fields" id="cliq-fields" <%= selectedMethod === 'CliQ' ? '' : 'hidden' %>>
+              <strong class="cliq-fields-title">CliQ transfer number</strong>
+              <p class="cliq-fields-text">Send the transfer to this number, then admin will confirm the order.</p>
+              <div class="cliq-number-badge"><%= cliqTransferNumber %></div>
+            </div>
+
+            <div class="booking-ticket-actions">
+              <button type="submit" class="btn">Confirm Order</button>
+              <a href="/store" class="btn payment-secondary-btn">Back to Store</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<script>
+  (function () {
+    const methodInputs = Array.from(document.querySelectorAll('.payment-method-input'));
+    const visaFields = document.getElementById('visa-fields');
+    const cliqFields = document.getElementById('cliq-fields');
+
+    function syncFields() {
+      const selected = methodInputs.find((input) => input.checked)?.value || 'Cash';
+      if (visaFields) visaFields.hidden = selected !== 'Visa';
+      if (cliqFields) cliqFields.hidden = selected !== 'CliQ';
+    }
+
+    methodInputs.forEach((input) => input.addEventListener('change', syncFields));
+    syncFields();
+  }());
+</script>

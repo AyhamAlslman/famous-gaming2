@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'FAMOUS GAMING' %></title>
+  <link rel="stylesheet" href="/assets/css/bootstrap.css">
+  <link rel="stylesheet" href="/assets/css/style.css?v=node">
+  <link rel="stylesheet" href="/assets/css/final-overrides.css?v=node">
+  <link rel="icon" type="image/svg+xml" href="/images/logo-mark.svg">
+</head>
+<body class="<%= currentUser ? 'site-user-shell' : 'site-public-shell' %> page-node">
+  <%- include('../partials/header') %>
+  <%- include('../partials/messages') %>
+  <%- body %>
+  <%- include('../partials/footer') %>
+  <script src="/assets/js/bootstrap.min.js"></script>
+  <script>
+    window.supportChatbotConfig = {
+      endpoint: '/support-chatbot',
+      error: 'The assistant is unavailable right now. Please try again.',
+      dir: 'ltr'
+    };
+  </script>
+  <script src="/assets/js/script.js?v=node"></script>
+</body>
+</html>

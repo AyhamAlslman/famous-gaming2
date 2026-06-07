@@ -1,0 +1,19 @@
+<section class="content admin-content">
+  <div class="container">
+    <div class="admin-page-heading"><div><span class="ticket-label">Booking</span><h1><%= booking.booking_code || format.bookingCode(booking.id) %></h1></div><a class="btn payment-secondary-btn" href="/admin/bookings">Back</a></div>
+    <div class="booking-ticket">
+      <div class="booking-ticket-header"><div><span class="ticket-label">Customer</span><h2><%= booking.customer_name %></h2><p><%= booking.phone %></p></div><span class="ticket-status"><%= booking.status %></span></div>
+      <div class="booking-ticket-grid">
+        <div><span>Room</span><strong><%= booking.room_name %> - <%= booking.room_type %></strong></div>
+        <div><span>Date</span><strong><%= format.formatDate(booking.booking_date) %></strong></div>
+        <div><span>Time</span><strong><%= format.formatTime(booking.start_time) %> - <%= format.hoursLabel(booking.hours) %></strong></div>
+        <div><span>Total</span><strong><%= format.money(booking.final_total || booking.total_price) %></strong></div>
+        <div><span>Payment</span><strong><%= booking.payment_status %> / <%= booking.payment_method || '' %></strong></div>
+        <div><span>Paid</span><strong><%= format.money(booking.paid_amount) %></strong></div>
+      </div>
+    </div>
+    <% if (items.length) { %>
+      <div class="responsive-table-wrapper"><table class="minimal-data-table"><thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead><tbody><% items.forEach(function(item) { %><tr><td><%= item.item_name %></td><td><%= item.quantity %></td><td><%= format.money(item.item_total) %></td></tr><% }) %></tbody></table></div>
+    <% } %>
+  </div>
+</section>

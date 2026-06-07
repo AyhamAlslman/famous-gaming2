@@ -1,0 +1,62 @@
+<section class="hero menu-hero" style="--page-hero-image: url('/images/shared-public-hero.jpg');">
+  <div class="container">
+    <div class="store-hero-shell">
+      <div class="store-hero-copy store-hero-copy-centered">
+        <span class="store-eyebrow">Menu</span>
+        <h1>Snacks and Drinks</h1>
+        <p>The menu is available for preview here. Ordering snacks and drinks is only available while booking a room.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content menu-content">
+  <div class="container">
+    <div class="store-toolbar menu-toolbar">
+      <div>
+        <h2 class="section-title store-section-title">Snacks and drinks menu</h2>
+        <p class="store-toolbar-text">A quick look at what you can add to your session after signing in.</p>
+        <div class="menu-category-summary">
+          <% categories.forEach(function(category) { %>
+            <span><strong><%= categoryCounts[category] || 0 %></strong> <%= category %></span>
+          <% }) %>
+        </div>
+      </div>
+      <div class="store-filter-chips">
+        <a href="/menu" class="store-filter-chip <%= selectedCategory === '' ? 'active' : '' %>">All Products</a>
+        <% categories.forEach(function(category) { %>
+          <a href="/menu?category=<%= encodeURIComponent(category) %>" class="store-filter-chip <%= selectedCategory === category ? 'active' : '' %>"><%= category %></a>
+        <% }) %>
+      </div>
+    </div>
+
+    <% if (!menuItems.length) { %>
+      <div class="store-empty-state">
+        <h3>No menu items available</h3>
+        <p>The menu is available for preview here. Ordering snacks and drinks is only available while booking a room.</p>
+      </div>
+    <% } else { %>
+      <div class="menu-preview-grid">
+        <% menuItems.forEach(function(item) { %>
+          <article class="menu-preview-card" data-menu-category="<%= item.item_category %>">
+            <div class="menu-preview-visual">
+              <img src="/images/service-food-optimized.jpg" alt="" loading="lazy" decoding="async">
+              <span class="menu-preview-icon"><%= String(item.item_category || '').charAt(0).toUpperCase() %></span>
+            </div>
+            <div class="menu-preview-copy">
+              <span><%= item.item_category %></span>
+              <h3><%= item.item_name %></h3>
+              <% if (item.item_description) { %>
+                <p><%= item.item_description %></p>
+              <% } %>
+            </div>
+            <strong><%= format.money(item.item_price) %></strong>
+          </article>
+        <% }) %>
+      </div>
+      <div class="menu-booking-cta">
+        <a href="/dashboard#dashboard-rooms" class="btn">Book Now</a>
+      </div>
+    <% } %>
+  </div>
+</section>

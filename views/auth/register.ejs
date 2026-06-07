@@ -1,0 +1,31 @@
+<section class="content auth-page-content">
+  <div class="container">
+    <div class="auth-shell">
+      <div class="auth-card">
+        <span class="auth-eyebrow">Account</span>
+        <h1>Create Account</h1>
+        <p class="auth-help-text">Register to book rooms and track tickets.</p>
+        <form method="POST" action="/register" class="auth-form auth-form-grid">
+          <input type="hidden" name="redirect" value="<%= redirect %>">
+          <div class="form-group">
+            <label class="form-label">Full name</label>
+            <input type="text" name="full_name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone" class="form-control" placeholder="07XXXXXXXX">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn auth-submit-btn">Sign Up</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

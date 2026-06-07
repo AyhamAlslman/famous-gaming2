@@ -1,0 +1,12 @@
+<section class="hero" style="--page-hero-image: url('/images/service-food-optimized.jpg');">
+  <div class="container"><h1>Hospitality</h1><p>Snacks and drinks for your session.</p></div>
+</section>
+<section class="content">
+  <div class="container">
+    <div class="menu-grid">
+      <% menuItems.forEach(function(item) { %>
+        <article class="menu-card"><span><%= item.item_category %></span><h3><%= item.item_name %></h3><p><%= item.item_description || '' %></p><strong><%= format.money(item.item_price) %></strong></article>
+      <% }) %>
+    </div>
+  </div>
+</section>

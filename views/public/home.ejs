@@ -1,0 +1,46 @@
+<main class="index-page-shell">
+  <section class="index-hero-redesign" style="--page-hero-image: url('<%= heroImage %>');">
+    <div class="container index-hero-layout">
+      <div class="index-hero-copy">
+        <span class="home-status-pill status-available">Open today</span>
+        <span class="index-hero-kicker">PS5 ARENA PLAY</span>
+        <h1>FAMOUS GAMING</h1>
+        <p>Book PlayStation rooms, add snacks, pay, and track your tickets from one place.</p>
+        <p class="index-hero-support">This is the Node.js MVC version connected to PostgreSQL.</p>
+        <div class="index-hero-actions">
+          <a href="<%= currentUser ? '/booking#booking-form' : '/login?redirect=/booking%23booking-form' %>" class="btn index-room-reveal-btn">Book Now</a>
+          <a href="/services" class="btn index-hero-secondary-btn">Services</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="index-experience-section">
+    <div class="container">
+      <div class="home-section-heading">
+        <span class="ticket-label">Rooms</span>
+        <h2>Available gaming sessions</h2>
+      </div>
+      <div class="rooms-grid index-rooms-grid">
+        <% rooms.forEach(function(room) { %>
+          <% const status = room.current_status || room.status; %>
+          <article class="room-card room-card-status-<%= status === 'Available' ? 'available' : 'busy' %>">
+            <div class="room-image">
+              <img src="/<%= room.image_path || 'images/home-hero-background-optimized.jpg' %>" alt="<%= room.room_name %>">
+            </div>
+            <h3><%= room.room_name %></h3>
+            <p class="room-type"><%= room.room_type %></p>
+            <p class="index-room-description"><%= room.description || room.services || 'PlayStation gaming room.' %></p>
+            <div class="room-card-actions">
+              <span class="ticket-status status-<%= format.normalizeStatusClass(status) %>"><%= status %></span>
+              <strong class="room-price"><%= format.money(room.price_per_hour) %>/hr</strong>
+              <% if (status === 'Available') { %>
+                <a href="<%= currentUser ? `/booking?room_id=${room.id}#booking-form` : `/login?redirect=${encodeURIComponent(`/booking?room_id=${room.id}#booking-form`)}` %>" class="btn btn-small room-book-btn">Book Room</a>
+              <% } %>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+</main>

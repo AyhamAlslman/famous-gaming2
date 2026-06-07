@@ -1,0 +1,46 @@
+<section class="hero my-bookings-hero"><div class="container"><h1>My Bookings</h1><p>Your bookings and store orders.</p></div></section>
+<section class="content my-bookings-content">
+  <div class="container">
+    <% if (!bookings.length && !storeOrders.length) { %>
+      <div class="empty-bookings"><h2>No bookings yet</h2><p>Create your first gaming session.</p><a class="btn" href="/booking#booking-form">Book Now</a></div>
+    <% } %>
+    <% if (bookings.length) { %>
+      <div class="responsive-table-wrapper my-bookings-table-wrapper">
+        <table class="minimal-data-table bookings-data-table">
+          <thead><tr><th>Code</th><th>Room</th><th>Date</th><th>Time</th><th>Total</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead>
+          <tbody>
+            <% bookings.forEach(function(booking) { %>
+              <tr>
+                <td><strong><%= booking.booking_code || bookingCode(booking.id) %></strong></td>
+                <td><%= booking.room_name %> - <%= booking.room_type %></td>
+                <td><%= format.formatDate(booking.booking_date) %></td>
+                <td><%= format.formatTime(booking.start_time) %> - <%= format.hoursLabel(booking.hours) %></td>
+                <td><%= format.money(booking.final_total || booking.total_price) %></td>
+                <td><span class="ticket-status status-<%= format.normalizeStatusClass(booking.status) %>"><%= booking.status %></span></td>
+                <td><%= booking.payment_status || 'Unpaid' %></td>
+                <td>
+                  <div class="table-action-group">
+                    <a class="btn btn-small payment-checkout-btn" href="/payment?booking_id=<%= booking.id %>">Pay</a>
+                    <% if (booking.status === 'Confirmed') { %>
+                      <form method="POST" action="/my-bookings/cancel">
+                        <input type="hidden" name="booking_id" value="<%= booking.id %>">
+                        <button class="btn btn-small ticket-cancel-btn" type="submit">Cancel</button>
+                      </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+    <% if (storeOrders.length) { %>
+      <div class="store-order-history-list">
+        <% storeOrders.forEach(function(order) { %>
+          <article class="store-order-card"><div class="store-order-card-head"><h3><%= order.order_code %></h3><span><%= order.payment_status %></span></div><strong><%= format.money(order.total_amount) %></strong></article>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</section>

@@ -8685,17 +8685,6 @@ body {
     grid-template-columns: minmax(240px, 1.2fr) repeat(4, minmax(140px, 0.8fr));
 }
 
-.site-footer-links a[href*="user/"],
-.site-footer-links a[href*="logout"] {
-    display: none;
-}
-
-.site-footer-links a.site-footer-support-link[href*="user/complaints.php"] {
-    display: block;
-    width: fit-content;
-    padding: 0.12rem 0;
-}
-
 .service-hub-card-featured {
     border-color: rgba(122, 230, 255, 0.52);
     box-shadow: 0 22px 56px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(89, 223, 166, 0.16);

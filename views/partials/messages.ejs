@@ -1,0 +1,18 @@
+<% if (successMessages && successMessages.length) { %>
+  <section class="content" style="padding-bottom:0">
+    <div class="container">
+      <% successMessages.forEach(function(message) { %>
+        <div class="message success"><%= message %></div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+<% if (errorMessages && errorMessages.length) { %>
+  <section class="content" style="padding-bottom:0">
+    <div class="container">
+      <% errorMessages.forEach(function(message) { %>
+        <div class="message error"><%= message %></div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>

@@ -1,0 +1,19 @@
+<section class="content admin-content">
+  <div class="container">
+    <div class="admin-page-heading"><div><span class="ticket-label">Admin</span><h1><%= heading %></h1></div><a class="btn payment-secondary-btn" href="/admin/dashboard">Dashboard</a></div>
+    <div class="responsive-table-wrapper">
+      <table class="minimal-data-table">
+        <thead><tr><% columns.forEach(function(column) { %><th><%= column.replace(/_/g, ' ') %></th><% }) %></tr></thead>
+        <tbody>
+          <% rows.forEach(function(row) { %>
+            <tr>
+              <% columns.forEach(function(column) { %>
+                <td><%= row[column] instanceof Date ? format.formatDate(row[column]) : (row[column] === null || row[column] === undefined ? '' : row[column]) %></td>
+              <% }) %>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
