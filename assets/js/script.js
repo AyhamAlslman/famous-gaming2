@@ -99,8 +99,8 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.dataset.type = options && options.type ? options.type : 'info';
         title.textContent = (options && options.title) || modalTexts.messageTitle;
         text.textContent = (options && options.message) || '';
-        setSiteModalSecondaryButton(noButton, false, modalTexts.no);
-        okButton.textContent = modalTexts.ok;
+        setSiteModalSecondaryButton(noButton, true, modalTexts.no);
+        okButton.textContent = modalTexts.yes;
         modal.hidden = false;
         document.body.classList.add('site-modal-open');
         okButton.focus();

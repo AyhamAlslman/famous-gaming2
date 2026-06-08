@@ -117,6 +117,6 @@
             'dir' => site_direction(),
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
     </script>
-    <script src="<?php echo htmlspecialchars(site_url('assets/js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=3.2"></script>
+    <script src="<?php echo htmlspecialchars(site_url('assets/js/script.js'), ENT_QUOTES, 'UTF-8'); ?>?v=3.3"></script>
 </body>
 </html>

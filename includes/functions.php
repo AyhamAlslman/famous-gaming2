@@ -1101,11 +1101,6 @@ function ensure_user_auth_schema($conn) {
     $request_bootstrapped = true;
 
     if (is_schema_bootstrap_ready($conn)) {
-        $profile_image_column = mysqli_query($conn, "SHOW COLUMNS FROM site_users LIKE 'profile_image'");
-        if ($profile_image_column && mysqli_num_rows($profile_image_column) === 0) {
-            mysqli_query($conn, "ALTER TABLE site_users ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL AFTER phone");
-        }
-        ensure_site_user_password_reset_schema($conn);
         return;
     }
 
@@ -1994,7 +1989,7 @@ function site_password_reset_mailer_config() {
     return [
         // Environment variables are used first if available.
         // Otherwise, the direct fallback values above are used for local testing.
-        'host' => getenv('FG_SMTP_HOST') ?: $direct_values['host'],
+        'host' => getenv('FG_SMTP_HOST') ?:     $direct_values['host'],
         'port' => (int)(getenv('FG_SMTP_PORT') ?: $direct_values['port']),
         'username' => getenv('FG_SMTP_USERNAME') ?: $direct_values['username'],
         'password' => $smtp_password ?: $direct_values['password'],
@@ -4154,6 +4149,146 @@ function support_chatbot_message_has_any($message, $keywords) {
     return false;
 }
 
+function support_chatbot_detect_language_v2($message) {
+    $message = (string)$message;
+
+    if ($message !== '' && preg_match('/[\x{0600}-\x{06FF}]/u', $message)) {
+        return 'ar';
+    }
+
+    if (function_exists('site_language') && site_language() === 'ar') {
+        return 'ar';
+    }
+
+    return 'en';
+}
+
+function support_chatbot_text_v2($key, $message = '') {
+    $language = support_chatbot_detect_language_v2($message);
+    $texts = [
+        'en' => [
+            'chat_default' => 'I can help with bookings, payments, complaints, store products, opening hours, and location. Ask me anything about the playroom.',
+            'chat_booking' => 'To book a room, choose the room, date, duration, and available start time. After that you can add snacks or drinks and continue to payment.',
+            'chat_payment' => 'Visa simulation marks the booking as paid immediately. Cash and CliQ stay under Pending Payment until the admin confirms them.',
+            'chat_complaint' => 'You can open the complaints page, write the issue or feedback clearly, and the admin team will receive it in the dashboard.',
+            'chat_store' => 'The store includes games, accessories, snacks, and drinks. I can also show recommended products from recent activity and available stock.',
+            'chat_recommendation' => 'Based on current demand and available stock, here are the best recommendations I can show you right now.',
+            'chat_location' => 'FAMOUS GAMING is in Rainbow Street, Jabal Amman, Amman, Jordan. You can also open the Contact page or Google Maps from the location card.',
+            'chat_hours' => 'Opening hours are 9:00 AM - 12:00 AM from Sunday to Thursday, and 9:00 AM - 1:00 AM on Friday and Saturday.',
+            'chat_contact' => 'You can contact us by phone at +962 79 849 7188 or by email at bookings@famousgaming.jo and info@famousgaming.jo.',
+            'chat_account' => 'You can log in or create an account to manage bookings, payments, support requests, store orders, and loyalty points.',
+            'action_book' => 'Book a room',
+            'action_complaint' => 'Send complaint',
+            'action_store' => 'Open store',
+            'action_contact' => 'Open contact page',
+            'action_login' => 'Login',
+            'action_bookings' => 'My bookings',
+            'recommended_rooms' => 'Recommended rooms',
+            'recommended_products' => 'Recommended products',
+            'popular_times' => 'Popular times',
+            'bookings_count' => 'bookings',
+            'room_rate_unit' => 'JOD/hr',
+            'product_rate_unit' => 'JOD',
+        ],
+        'ar' => [
+            'chat_default' => 'أقدر أساعدك بالحجوزات، الدفع، الشكاوى، منتجات المتجر، أوقات الدوام، والموقع. اسألني أي شيء يخص البلاي روم.',
+            'chat_booking' => 'للحجز اختر الغرفة والتاريخ والمدة ووقت البداية المتاح. وبعدها تقدر تضيف سناكات أو مشروبات وتكمل للدفع.',
+            'chat_payment' => 'دفع الفيزا التجريبي يعلّم الحجز مدفوع مباشرة. أما الكاش وCliQ فتبقى حالتهما بانتظار تأكيد الإدارة.',
+            'chat_complaint' => 'تقدر تفتح صفحة الشكاوى وتكتب المشكلة أو الملاحظة بشكل واضح، والإدارة ستستلمها مباشرة داخل لوحة التحكم.',
+            'chat_store' => 'المتجر فيه ألعاب وإكسسوارات وسناكات ومشروبات. وأقدر أيضًا أعرض لك منتجات مقترحة حسب النشاط الأخير والمخزون المتاح.',
+            'chat_recommendation' => 'حسب الطلب الحالي والمخزون المتوفر، هذه أفضل التوصيات التي أقدر أعرضها لك الآن.',
+            'chat_location' => 'فاموس جيمينج موجود في شارع الرينبو، جبل عمان، عمّان، الأردن. وتقدر أيضًا تفتح صفحة التواصل أو خرائط جوجل من بطاقة الموقع.',
+            'chat_hours' => 'أوقات الدوام من الأحد إلى الخميس من 9:00 صباحًا إلى 12:00 منتصف الليل، ويومي الجمعة والسبت من 9:00 صباحًا إلى 1:00 بعد منتصف الليل.',
+            'chat_contact' => 'تقدر تتواصل معنا على الرقم +962 79 849 7188 أو عبر الإيميل bookings@famousgaming.jo و info@famousgaming.jo.',
+            'chat_account' => 'تقدر تسجل دخول أو تنشئ حساب لإدارة الحجوزات، الدفعات، طلبات الدعم، طلبات المتجر، ونقاط الولاء.',
+            'action_book' => 'احجز غرفة',
+            'action_complaint' => 'إرسال شكوى',
+            'action_store' => 'افتح المتجر',
+            'action_contact' => 'صفحة التواصل',
+            'action_login' => 'تسجيل الدخول',
+            'action_bookings' => 'حجوزاتي',
+            'recommended_rooms' => 'غرف مقترحة',
+            'recommended_products' => 'منتجات مقترحة',
+            'popular_times' => 'أوقات مشهورة',
+            'bookings_count' => 'حجوزات',
+            'room_rate_unit' => 'د.أ/ساعة',
+            'product_rate_unit' => 'د.أ',
+        ],
+    ];
+
+    return $texts[$language][$key] ?? smart_i18n($key);
+}
+
+function detect_support_chatbot_intent_v2($message) {
+    $message = trim((string)$message);
+    $message = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
+
+    if (support_chatbot_message_has_any($message, [
+        'payment', 'pay', 'visa', 'cash', 'cliq', 'card', 'checkout', 'pending payment',
+        'دفع', 'ادفع', 'فيزا', 'كاش', 'كليك', 'بطاقة', 'بطاقه', 'cvv', 'رصيد'
+    ])) {
+        return 'payment';
+    }
+
+    if (support_chatbot_message_has_any($message, [
+        'complaint', 'support', 'help', 'issue', 'problem', 'feedback',
+        'شكوى', 'شكاوى', 'مشكلة', 'مشكله', 'دعم', 'مساعدة', 'ساعدني', 'ملاحظة', 'ملاحظه'
+    ])) {
+        return 'complaint';
+    }
+
+    if (support_chatbot_message_has_any($message, [
+        'location', 'address', 'map', 'where', 'place', 'branch',
+        'موقع', 'الموقع', 'عنوان', 'وين', 'وينكم', 'وين موقعكم', 'جبل عمان', 'جبل عمّان', 'الرينبو', 'rainbow'
+    ])) {
+        return 'location';
+    }
+
+    if (support_chatbot_message_has_any($message, [
+        'hours', 'open', 'close', 'opening', 'working hours', 'schedule',
+        'دوام', 'مواعيد', 'اوقات', 'أوقات', 'ساعات', 'تفتحوا', 'بتفتحوا', 'بتسكروا', 'متى', 'مفتوح', 'مغلق'
+    ])) {
+        return 'hours';
+    }
+
+    if (support_chatbot_message_has_any($message, [
+        'contact', 'phone', 'email', 'call', 'whatsapp',
+        'تواصل', 'اتصال', 'رقم', 'الهاتف', 'ايميل', 'إيميل', 'بريد', 'واتساب'
+    ])) {
+        return 'contact';
+    }
+
+    if (support_chatbot_message_has_any($message, [
+        'store', 'product', 'products', 'controller', 'game', 'accessory', 'snack', 'drink', 'menu', 'basket', 'order',
+        'متجر', 'منتج', 'منتجات', 'شراء', 'بلايستيشن', 'بلاي ستيشن', 'يد', 'لعبة', 'العاب', 'ألعاب', 'اكسسوار', 'إكسسوار', 'سناك', 'مشروب', 'مشروبات', 'منيو', 'سلة'
+    ])) {
+        return 'store';
+    }
+
+    if (support_chatbot_message_has_any($message, [
+        'recommend', 'suggest', 'best', 'popular', 'top',
+        'توصية', 'توصيه', 'اقترح', 'اقترحلي', 'اقتراح', 'رشح', 'انصح', 'أفضل', 'افضل', 'مشهور'
+    ])) {
+        return 'recommendation';
+    }
+
+    if (support_chatbot_message_has_any($message, [
+        'booking', 'book', 'room', 'rooms', 'reserve', 'reservation', 'available', 'availability', 'slot', 'time', 'date', 'price', 'cost',
+        'حجز', 'احجز', 'أحجز', 'حجوزات', 'غرفة', 'غرف', 'متاح', 'المتاح', 'توفر', 'وقت', 'موعد', 'تاريخ', 'ساعة', 'سعر', 'اسعار', 'أسعار'
+    ])) {
+        return 'booking';
+    }
+
+    if (support_chatbot_message_has_any($message, [
+        'login', 'register', 'signup', 'sign up', 'account', 'profile', 'password',
+        'تسجيل', 'دخول', 'حساب', 'بروفايل', 'ملف', 'كلمة المرور', 'باسورد', 'انشاء حساب', 'إنشاء حساب'
+    ])) {
+        return 'account';
+    }
+
+    return 'general';
+}
+
 function detect_support_chatbot_intent($message) {
     $message = trim((string)$message);
     $message = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
@@ -4207,60 +4342,107 @@ function log_support_chatbot_message($conn, $session_id, $sender, $message_text,
 function build_support_chatbot_response($conn, $message, $user_id = 0) {
     $message = trim((string)$message);
     $message = function_exists('mb_strtolower') ? mb_strtolower($message, 'UTF-8') : strtolower($message);
-    $rooms = get_smart_room_recommendations($conn, $user_id, 3);
-    $products = get_smart_store_recommendations($conn, $user_id, 3);
-    $times = get_popular_booking_times($conn, 3);
-    $intent = detect_support_chatbot_intent($message);
-    $intent = [
-        'booking' => 'booking',
-        'complaint' => 'complaint',
-        'store' => 'store',
-        'recommendation' => 'recommendation',
-    ][$intent] ?? 'general';
-    $answer_key = [
-        'booking' => 'chat_booking',
-        'complaint' => 'chat_complaint',
-        'store' => 'chat_store',
-        'recommendation' => 'chat_products',
-    ][$intent] ?? 'chat_default';
+    $intent = detect_support_chatbot_intent_v2($message);
+    $room_rate_unit = support_chatbot_text_v2('room_rate_unit', $message);
+    $product_rate_unit = support_chatbot_text_v2('product_rate_unit', $message);
+    $bookings_count_label = support_chatbot_text_v2('bookings_count', $message);
+
+    $build_room_section = static function ($rooms) use ($message, $room_rate_unit) {
+        return [
+            'title' => support_chatbot_text_v2('recommended_rooms', $message),
+            'items' => array_map(static function ($room) use ($room_rate_unit) {
+                return [
+                    'title' => $room['room_name'] ?? '',
+                    'meta' => trim(($room['room_type'] ?? '') . ' - ' . number_format((float)($room['price_per_hour'] ?? 0), 2) . ' ' . $room_rate_unit),
+                ];
+            }, $rooms),
+        ];
+    };
+
+    $build_product_section = static function ($products) use ($message, $product_rate_unit) {
+        return [
+            'title' => support_chatbot_text_v2('recommended_products', $message),
+            'items' => array_map(static function ($product) use ($product_rate_unit) {
+                return [
+                    'title' => $product['product_name'] ?? '',
+                    'meta' => trim(($product['category'] ?? '') . ' - ' . number_format((float)($product['price'] ?? 0), 2) . ' ' . $product_rate_unit),
+                ];
+            }, $products),
+        ];
+    };
+
+    $build_time_section = static function ($times) use ($message, $bookings_count_label) {
+        return [
+            'title' => support_chatbot_text_v2('popular_times', $message),
+            'items' => array_map(static function ($time) use ($bookings_count_label) {
+                return [
+                    'title' => $time['time'] ?? '',
+                    'meta' => trim((string)($time['count'] ?? 0) . ' ' . $bookings_count_label),
+                ];
+            }, $times),
+        ];
+    };
+
+    $actions = [
+        'book' => ['label' => support_chatbot_text_v2('action_book', $message), 'url' => site_url('user/room_booking.php#booking-form')],
+        'complaint' => ['label' => support_chatbot_text_v2('action_complaint', $message), 'url' => site_url('user/complaints.php')],
+        'store' => ['label' => support_chatbot_text_v2('action_store', $message), 'url' => site_url('user/store.php')],
+        'contact' => ['label' => support_chatbot_text_v2('action_contact', $message), 'url' => site_url('general/contact.php')],
+        'login' => ['label' => support_chatbot_text_v2('action_login', $message), 'url' => site_url('general/login.php')],
+        'bookings' => ['label' => support_chatbot_text_v2('action_bookings', $message), 'url' => site_url('user/my_bookings.php')],
+    ];
+
+    $answer = support_chatbot_text_v2('chat_default', $message);
+    $sections = [];
+    $response_actions = [$actions['book'], $actions['store'], $actions['contact']];
+
+    if ($intent === 'booking') {
+        $rooms = get_smart_room_recommendations($conn, $user_id, 3);
+        $times = get_popular_booking_times($conn, 3);
+        $answer = support_chatbot_text_v2('chat_booking', $message);
+        $sections = [$build_room_section($rooms), $build_time_section($times)];
+        $response_actions = [$actions['book'], $actions['bookings'], $actions['contact']];
+    } elseif ($intent === 'payment') {
+        $answer = support_chatbot_text_v2('chat_payment', $message);
+        $response_actions = [$actions['bookings'], $actions['book'], $actions['contact']];
+    } elseif ($intent === 'complaint') {
+        $answer = support_chatbot_text_v2('chat_complaint', $message);
+        $response_actions = [$actions['complaint'], $actions['contact']];
+    } elseif ($intent === 'store') {
+        $products = get_smart_store_recommendations($conn, $user_id, 3);
+        $answer = support_chatbot_text_v2('chat_store', $message);
+        $sections = [$build_product_section($products)];
+        $response_actions = [$actions['store'], $actions['contact']];
+    } elseif ($intent === 'recommendation') {
+        $rooms = get_smart_room_recommendations($conn, $user_id, 3);
+        $products = get_smart_store_recommendations($conn, $user_id, 3);
+        $times = get_popular_booking_times($conn, 3);
+        $answer = support_chatbot_text_v2('chat_recommendation', $message);
+        $sections = [$build_room_section($rooms), $build_product_section($products), $build_time_section($times)];
+        $response_actions = [$actions['book'], $actions['store'], $actions['bookings']];
+    } elseif ($intent === 'location') {
+        $answer = support_chatbot_text_v2('chat_location', $message);
+        $response_actions = [$actions['contact'], $actions['book']];
+    } elseif ($intent === 'hours') {
+        $times = get_popular_booking_times($conn, 3);
+        $answer = support_chatbot_text_v2('chat_hours', $message);
+        $sections = [$build_time_section($times)];
+        $response_actions = [$actions['book'], $actions['contact']];
+    } elseif ($intent === 'contact') {
+        $answer = support_chatbot_text_v2('chat_contact', $message);
+        $response_actions = [$actions['contact'], $actions['complaint']];
+    } elseif ($intent === 'account') {
+        $answer = support_chatbot_text_v2('chat_account', $message);
+        $response_actions = [$actions['login'], $actions['bookings']];
+    }
 
     return [
         'intent' => $intent,
-        'answer' => smart_i18n($answer_key),
-        'sections' => [
-            [
-                'title' => smart_i18n('recommended_rooms'),
-                'items' => array_map(static function ($room) {
-                    return [
-                        'title' => $room['room_name'] ?? '',
-                        'meta' => trim(($room['room_type'] ?? '') . ' - ' . number_format((float)($room['price_per_hour'] ?? 0), 2) . ' JOD/hr'),
-                    ];
-                }, $rooms),
-            ],
-            [
-                'title' => smart_i18n('recommended_products'),
-                'items' => array_map(static function ($product) {
-                    return [
-                        'title' => $product['product_name'] ?? '',
-                        'meta' => trim(($product['category'] ?? '') . ' - ' . number_format((float)($product['price'] ?? 0), 2) . ' JOD'),
-                    ];
-                }, $products),
-            ],
-            [
-                'title' => smart_i18n('popular_times'),
-                'items' => array_map(static function ($time) {
-                    return [
-                        'title' => $time['time'] ?? '',
-                        'meta' => (string)($time['count'] ?? 0),
-                    ];
-                }, $times),
-            ],
-        ],
-        'actions' => [
-            ['label' => smart_i18n('action_book'), 'url' => site_url('user/room_booking.php#booking-form')],
-            ['label' => smart_i18n('action_complaint'), 'url' => site_url('user/complaints.php')],
-            ['label' => smart_i18n('action_store'), 'url' => site_url('user/store.php')],
-        ],
+        'answer' => $answer,
+        'sections' => array_values(array_filter($sections, static function ($section) {
+            return !empty($section['items']);
+        })),
+        'actions' => $response_actions,
     ];
 }
 
