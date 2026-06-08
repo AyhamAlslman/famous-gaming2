@@ -45,10 +45,10 @@ define('SMTP_PASSWORD', getenv('FG_SMTP_PASSWORD') ?: '');
 require_once __DIR__ . '/lang.php';
 
 $db_hosts = [
-    ['host' => '127.0.0.1', 'port' => 3306],
-    ['host' => 'localhost', 'port' => 3306],
     ['host' => '127.0.0.1', 'port' => 3307],
     ['host' => 'localhost', 'port' => 3307],
+    ['host' => '127.0.0.1', 'port' => 3306],
+    ['host' => 'localhost', 'port' => 3306],
 ];
 $db_user = 'root';
 $db_pass = '';
@@ -60,7 +60,21 @@ $conn = false;
 $last_db_error = 'Unknown database connection error.';
 
 foreach ($db_hosts as $db_target) {
-    $conn = @mysqli_connect($db_target['host'], $db_user, $db_pass, $db_name, $db_target['port']);
+    $init = mysqli_init();
+
+    if ($init) {
+        mysqli_options($init, MYSQLI_OPT_CONNECT_TIMEOUT, 2);
+        $conn = @mysqli_real_connect(
+            $init,
+            $db_target['host'],
+            $db_user,
+            $db_pass,
+            $db_name,
+            $db_target['port']
+        ) ? $init : false;
+    } else {
+        $conn = @mysqli_connect($db_target['host'], $db_user, $db_pass, $db_name, $db_target['port']);
+    }
 
     if ($conn) {
         break;
