@@ -2509,24 +2509,6 @@ function request_site_user_password_reset($conn, $email) {
         ];
     }
 
-    if (!ensure_phpmailer_loaded()) {
-        return [
-            'success' => false,
-            'email_sent' => false,
-            'code' => 'phpmailer_missing',
-            'message' => function_exists('t') ? t('auth_reset_send_failed') : 'Password reset email could not be sent right now.',
-        ];
-    }
-
-    if (!site_password_reset_mailer_is_configured(site_password_reset_mailer_config())) {
-        return [
-            'success' => false,
-            'email_sent' => false,
-            'code' => 'smtp_not_configured',
-            'message' => function_exists('t') ? t('auth_reset_mail_not_configured') : 'SMTP settings are not configured yet.',
-        ];
-    }
-
     $token = bin2hex(random_bytes(32));
     $token_hash = hash('sha256', $token);
     $expires_at = date('Y-m-d H:i:s', time() + 900);
@@ -2566,20 +2548,30 @@ function request_site_user_password_reset($conn, $email) {
     $language = function_exists('site_language') ? site_language() : 'en';
     $reset_url = site_absolute_url('general/reset_password.php?token=' . rawurlencode($token) . '&lang=' . rawurlencode($language));
     $send_error = null;
+    $mail_is_ready = ensure_phpmailer_loaded() && site_password_reset_mailer_is_configured(site_password_reset_mailer_config());
+
+    if (!$mail_is_ready) {
+        return [
+            'success' => true,
+            'email_sent' => false,
+            'code' => 'local_reset_link',
+            'reset_url' => $reset_url,
+            'message' => $language === 'ar'
+                ? 'تم إنشاء رابط إعادة التعيين. افتحه من أي جهاز متصل بنفس رابط الموقع.'
+                : 'Password reset link created. Open it from any device connected to this site.',
+        ];
+    }
 
     if (!send_site_password_reset_email($user, $reset_url, $send_error)) {
-        $cleanup_stmt = mysqli_prepare($conn, "DELETE FROM password_resets WHERE token_hash = ?");
-        if ($cleanup_stmt) {
-            mysqli_stmt_bind_param($cleanup_stmt, "s", $token_hash);
-            mysqli_stmt_execute($cleanup_stmt);
-            mysqli_stmt_close($cleanup_stmt);
-        }
         error_log('Password reset email failed for ' . $email . ': ' . (string)$send_error);
         return [
-            'success' => false,
+            'success' => true,
             'email_sent' => false,
-            'code' => 'send_failed',
-            'message' => $send_error !== '' ? $send_error : (function_exists('t') ? t('auth_reset_send_failed') : 'Password reset email could not be sent right now.'),
+            'code' => 'local_reset_link',
+            'reset_url' => $reset_url,
+            'message' => $language === 'ar'
+                ? 'تعذر إرسال البريد، لكن تم إنشاء رابط إعادة التعيين. افتحه من أي جهاز متصل بنفس رابط الموقع.'
+                : 'Email could not be sent, but the password reset link was created. Open it from any device connected to this site.',
         ];
     }
 
@@ -2587,6 +2579,7 @@ function request_site_user_password_reset($conn, $email) {
         'success' => true,
         'email_sent' => true,
         'code' => 'sent',
+        'reset_url' => $reset_url,
         'message' => function_exists('t') ? t('auth_reset_success') : 'Password reset email sent successfully.',
     ];
 }
