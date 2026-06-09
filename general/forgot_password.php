@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'request_reset') {
         $email = strtolower(sanitize_input($_POST['email'] ?? ''));
-        $request = request_site_user_password_reset($conn, $email);
+        $request = create_site_user_password_reset_link($conn, $email);
         if (!empty($request['success'])) {
             $success_msg = $request['message'];
             $reset_link = (string)($request['reset_url'] ?? '');

@@ -2471,6 +2471,97 @@ function send_site_password_reset_email($user, $reset_url, &$error_message = nul
     }
 }
 
+function create_site_user_password_reset_link($conn, $email) {
+    ensure_user_auth_schema($conn);
+    $email = strtolower(trim((string)$email));
+
+    if ($email === '' || !validate_email($email)) {
+        return [
+            'success' => false,
+            'code' => 'invalid_email',
+            'message' => function_exists('t') ? t('auth_email_invalid') : 'Invalid email address.',
+        ];
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT id, full_name, email, status FROM site_users WHERE email = ? LIMIT 1");
+    if (!$stmt) {
+        return [
+            'success' => false,
+            'code' => 'prepare_failed',
+            'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
+        ];
+    }
+
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = $result ? mysqli_fetch_assoc($result) : null;
+    mysqli_stmt_close($stmt);
+
+    if (!$user) {
+        return [
+            'success' => false,
+            'code' => 'email_not_found',
+            'message' => function_exists('t') ? t('auth_reset_email_not_found') : 'No account was found with that email address.',
+        ];
+    }
+
+    if (($user['status'] ?? 'Inactive') !== 'Active') {
+        return [
+            'success' => false,
+            'code' => 'inactive_account',
+            'message' => function_exists('t') ? t('auth_inactive') : 'This account is inactive.',
+        ];
+    }
+
+    $token = bin2hex(random_bytes(32));
+    $token_hash = hash('sha256', $token);
+    $expires_at = date('Y-m-d H:i:s', time() + 900);
+
+    mysqli_query($conn, "DELETE FROM password_resets WHERE expires_at < NOW()");
+
+    $delete_stmt = mysqli_prepare($conn, "DELETE FROM password_resets WHERE user_id = ? OR email = ?");
+    if ($delete_stmt) {
+        mysqli_stmt_bind_param($delete_stmt, "is", $user['id'], $email);
+        mysqli_stmt_execute($delete_stmt);
+        mysqli_stmt_close($delete_stmt);
+    }
+
+    $insert_stmt = mysqli_prepare($conn, "INSERT INTO password_resets (user_id, email, token_hash, expires_at) VALUES (?, ?, ?, ?)");
+    if (!$insert_stmt) {
+        return [
+            'success' => false,
+            'code' => 'insert_prepare_failed',
+            'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
+        ];
+    }
+
+    mysqli_stmt_bind_param($insert_stmt, "isss", $user['id'], $email, $token_hash, $expires_at);
+    $stored = mysqli_stmt_execute($insert_stmt);
+    mysqli_stmt_close($insert_stmt);
+
+    if (!$stored) {
+        return [
+            'success' => false,
+            'code' => 'token_store_failed',
+            'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
+        ];
+    }
+
+    $language = function_exists('site_language') ? site_language() : 'en';
+    $reset_url = site_absolute_url('general/reset_password.php?token=' . rawurlencode($token) . '&lang=' . rawurlencode($language));
+
+    return [
+        'success' => true,
+        'email_sent' => false,
+        'code' => 'local_reset_link',
+        'reset_url' => $reset_url,
+        'message' => $language === 'ar'
+            ? 'تم إنشاء رابط إعادة التعيين. افتحه من أي جهاز متصل بنفس رابط الموقع.'
+            : 'Password reset link created. Open it from any device connected to this site.',
+    ];
+}
+
 function request_site_user_password_reset($conn, $email) {
     ensure_user_auth_schema($conn);
     $email = strtolower(trim((string)$email));
