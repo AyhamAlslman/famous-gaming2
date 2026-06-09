@@ -2183,7 +2183,7 @@ function send_site_password_reset_otp_email($user, $otp_code, &$error_message = 
 
     $config = site_password_reset_mailer_config();
     if (!site_password_reset_mailer_is_configured($config)) {
-        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'SMTP settings are not configured yet.';
+        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'Email delivery is not available right now. Use the reset link shown on this page.';
         return false;
     }
 
@@ -2300,11 +2300,20 @@ function request_site_user_password_reset_otp($conn, $email) {
 
     $send_error = null;
     if (!send_site_password_reset_otp_email($user, $otp_code, $send_error)) {
-        clear_site_user_password_reset_token($conn, (int)$user['id']);
-        return ['success' => false, 'message' => $send_error ?: (function_exists('t') ? t('auth_reset_send_failed') : 'Unable to send the code.')];
+        $language = function_exists('site_language') ? site_language() : 'en';
+        return [
+            'success' => true,
+            'email_sent' => false,
+            'user_id' => (int)$user['id'],
+            'email' => $email,
+            'otp_code' => $otp_code,
+            'message' => $language === 'ar'
+                ? 'تعذر إرسال البريد، لكن تم إنشاء رمز التحقق. استخدم الرمز الظاهر لإكمال إعادة التعيين.'
+                : 'Email could not be sent, but the verification code was created. Use the shown code to finish the reset.',
+        ];
     }
 
-    return ['success' => true, 'user_id' => (int)$user['id'], 'email' => $email, 'message' => function_exists('t') ? t('auth_otp_sent') : 'Verification code sent.'];
+    return ['success' => true, 'email_sent' => true, 'user_id' => (int)$user['id'], 'email' => $email, 'message' => function_exists('t') ? t('auth_otp_sent') : 'Verification code sent.'];
 }
 
 function verify_site_user_password_reset_otp($conn, $user_id, $email, $otp_code) {
@@ -2690,7 +2699,7 @@ function send_guest_support_reply_email($ticket, $reply, &$error_message = null)
 
     $config = site_password_reset_mailer_config();
     if (!site_password_reset_mailer_is_configured($config)) {
-        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'SMTP settings are not configured yet.';
+        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'Email delivery is not available right now. Use the reset link shown on this page.';
         return false;
     }
 
