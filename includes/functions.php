@@ -1925,11 +1925,25 @@ function site_asset_url($path, $fallback = '') {
     return function_exists('site_url') ? site_url($target) : $target;
 }
 
-function site_absolute_url($path = '') {
-    $target = function_exists('site_url') ? site_url($path) : (string)$path;
+function site_host_is_loopback($host) {
+    $host = strtolower(trim((string)$host));
+    $host = preg_replace('/^\[(.*)\]$/', '$1', $host);
 
-    if (preg_match('/^https?:\/\//i', $target)) {
-        return $target;
+    return $host === ''
+        || $host === 'localhost'
+        || $host === '::1'
+        || preg_match('/^127\./', $host);
+}
+
+function site_public_base_url() {
+    $configured_url = trim((string)(getenv('FG_PUBLIC_SITE_URL') ?: getenv('FG_SITE_URL') ?: ''));
+
+    if ($configured_url !== '') {
+        if (!preg_match('/^https?:\/\//i', $configured_url)) {
+            $configured_url = 'http://' . $configured_url;
+        }
+
+        return rtrim($configured_url, '/');
     }
 
     $is_https = (
@@ -1937,9 +1951,53 @@ function site_absolute_url($path = '') {
         || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
     );
     $scheme = $is_https ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $http_host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+    $port = '';
 
-    return $scheme . '://' . $host . $target;
+    if (preg_match('/^\[.*\]:(\d+)$/', $http_host, $matches) || preg_match('/^[^:]+:(\d+)$/', $http_host, $matches)) {
+        $port_number = (int)$matches[1];
+        if (($scheme === 'http' && $port_number !== 80) || ($scheme === 'https' && $port_number !== 443)) {
+            $port = ':' . $port_number;
+        }
+    }
+
+    $host = preg_replace('/:\d+$/', '', $http_host);
+    $host = trim($host, '[]');
+
+    if (site_host_is_loopback($host)) {
+        $server_addr = trim((string)($_SERVER['SERVER_ADDR'] ?? ''));
+        if (!site_host_is_loopback($server_addr)) {
+            $host = $server_addr;
+        } else {
+            $machine_addr = gethostbyname(gethostname());
+            if (!site_host_is_loopback($machine_addr) && filter_var($machine_addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                $host = $machine_addr;
+            }
+        }
+    }
+
+    if (strpos($host, ':') !== false && $host[0] !== '[') {
+        $host = '[' . $host . ']';
+    }
+
+    return $scheme . '://' . $host . $port;
+}
+
+function site_absolute_url($path = '') {
+    $target = function_exists('site_url') ? site_url($path) : (string)$path;
+
+    if (preg_match('/^https?:\/\//i', $target)) {
+        return $target;
+    }
+
+    $base_url = site_public_base_url();
+    $base_path = (string)parse_url($base_url, PHP_URL_PATH);
+
+    if ($base_path !== '' && $base_path !== '/' && strpos($target, $base_path . '/') === 0) {
+        $target = substr($target, strlen($base_path));
+    }
+
+    return rtrim($base_url, '/') . '/' . ltrim($target, '/');
 }
 
 function ensure_phpmailer_loaded() {
