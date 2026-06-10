@@ -42,9 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_close($admin_stmt);
 
         if ($admin) {
-            if (strtolower((string)$admin['role']) === 'employee') {
-                $error_msg = t('auth_login_invalid');
-            } elseif ($admin['status'] !== 'Active') {
+            if ($admin['status'] !== 'Active') {
                 $error_msg = t('auth_inactive');
             } else {
                 $admin_password_valid = password_verify($password, $admin['password']) || $admin['password'] === $password;
