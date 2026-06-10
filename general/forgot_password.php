@@ -16,12 +16,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'request_reset') {
         $email = strtolower(sanitize_input($_POST['email'] ?? ''));
-        $request = request_site_user_password_reset($conn, $email);
-        if (!empty($request['success'])) {
-            $success_msg = $request['message'];
-            $reset_link = (string)($request['reset_url'] ?? '');
-            $step = 'complete';
+
+        if ($email === '' || !validate_email($email)) {
+            $error_msg = t('auth_email_invalid');
         } else {
+            $request = request_site_user_password_reset($conn, $email);
+            $request_code = (string)($request['code'] ?? '');
+
+            if (!empty($request['success']) || in_array($request_code, ['email_not_found', 'inactive_account'], true)) {
+                $_SESSION['login_success_message'] = t('auth_reset_success');
+                mysqli_close($conn);
+                header('Location: ' . site_url('general/login.php'));
+                exit;
+            }
+
             $error_msg = $request['message'] ?? t('auth_reset_send_failed');
         }
     }

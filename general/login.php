@@ -19,7 +19,13 @@ if (!empty($_SESSION['site_user_id']) && !$is_admin_redirect) {
 
 $page_title = t('auth_login_page_title');
 $error_msg = '';
+$success_msg = '';
 $login_identifier = '';
+
+if (!empty($_SESSION['login_success_message'])) {
+    $success_msg = (string)$_SESSION['login_success_message'];
+    unset($_SESSION['login_success_message']);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login_identifier = sanitize_input($_POST['login_identifier'] ?? '');
@@ -106,6 +112,9 @@ include dirname(__DIR__) . '/includes/header.php';
 
                 <?php if ($error_msg): ?>
                     <div class="message error"><?php echo htmlspecialchars($error_msg); ?></div>
+                <?php endif; ?>
+                <?php if ($success_msg): ?>
+                    <div class="message success"><?php echo htmlspecialchars($success_msg); ?></div>
                 <?php endif; ?>
 
                 <form method="POST" action="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>" class="auth-form">
