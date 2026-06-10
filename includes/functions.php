@@ -2075,6 +2075,15 @@ function ensure_phpmailer_loaded() {
         return true;
     }
 
+    $autoload = dirname(__DIR__) . '/vendor/autoload.php';
+    if (file_exists($autoload)) {
+        require_once $autoload;
+
+        if (class_exists('\PHPMailer\PHPMailer\PHPMailer')) {
+            return true;
+        }
+    }
+
     $phpmailer_src = __DIR__ . '/PHPMailer/src/';
     $required_files = [
         $phpmailer_src . 'Exception.php',

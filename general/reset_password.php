@@ -7,7 +7,6 @@ ensure_user_auth_schema($conn);
 $page_title = t('auth_reset_page_title');
 $token = trim((string)($_GET['token'] ?? $_POST['token'] ?? ''));
 $error_msg = '';
-$success_msg = '';
 $password_reset_user = get_site_user_by_password_reset_token($conn, $token);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -23,8 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($new_password !== $confirm_password) {
         $error_msg = t('auth_password_mismatch');
     } elseif (reset_site_user_password_by_token($conn, $token, $new_password)) {
-        $success_msg = t('auth_reset_complete');
-        $password_reset_user = null;
+        $_SESSION['login_success_message'] = t('auth_reset_complete');
+        header('Location: ' . site_url('general/login.php'));
+        exit;
     } else {
         $error_msg = t('booking_submit_error');
     }
@@ -43,12 +43,8 @@ include dirname(__DIR__) . '/includes/header.php';
                     <?php echo $password_reset_user ? t('auth_reset_form_help') : t('auth_reset_invalid'); ?>
                 </p>
 
-                <?php if ($success_msg): ?>
-                    <div class="message success"><?php echo htmlspecialchars($success_msg); ?></div>
-                <?php endif; ?>
-
                 <?php if ($error_msg): ?>
-                    <div class="message error"><?php echo htmlspecialchars($error_msg); ?></div>
+                    <div class="message error"><?php echo htmlspecialchars($error_msg, ENT_QUOTES, 'UTF-8'); ?></div>
                 <?php endif; ?>
 
                 <?php if ($password_reset_user): ?>
@@ -88,21 +84,13 @@ include dirname(__DIR__) . '/includes/header.php';
 
                         <button type="submit" class="btn auth-submit-btn"><?php echo t('auth_reset_submit'); ?></button>
                     </form>
+                <?php else: ?>
+                    <div class="auth-links auth-links-stacked">
+                        <a href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
+                        <a href="<?php echo htmlspecialchars(site_url('general/forgot_password.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('auth_forgot_password'); ?></a>
+                    </div>
                 <?php endif; ?>
-
-                <div class="auth-links auth-links-stacked">
-                    <a href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('general/forgot_password.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('auth_forgot_password'); ?></a>
-                    <a href="<?php echo htmlspecialchars(site_url('general/index.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('auth_back_to_site'); ?></a>
-                </div>
             </div>
-
-            <aside class="auth-side-panel">
-                <span class="auth-side-kicker">FAMOUS GAMING</span>
-                <h2><?php echo t('auth_reset_title'); ?></h2>
-                <p><?php echo t('auth_reset_form_help'); ?></p>
-                <a class="auth-side-action" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
-            </aside>
         </div>
     </div>
 </section>
