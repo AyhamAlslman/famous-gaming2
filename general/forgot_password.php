@@ -8,6 +8,7 @@ $page_title = t('auth_forgot_page_title');
 $step = 'email';
 $error_msg = '';
 $success_msg = '';
+$reset_link = '';
 $email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,11 +16,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'request_reset') {
         $email = strtolower(sanitize_input($_POST['email'] ?? ''));
-        $request = request_site_user_password_reset($conn, $email);
-        if (!empty($request['success'])) {
-            $success_msg = $request['message'];
-            $step = 'complete';
+
+        if ($email === '' || !validate_email($email)) {
+            $error_msg = t('auth_email_invalid');
         } else {
+            $request = request_site_user_password_reset($conn, $email);
+            $request_code = (string)($request['code'] ?? '');
+
+            if (!empty($request['success']) || in_array($request_code, ['email_not_found', 'inactive_account'], true)) {
+                $_SESSION['login_success_message'] = t('auth_reset_success');
+                mysqli_close($conn);
+                header('Location: ' . site_url('general/login.php'));
+                exit;
+            }
+
             $error_msg = $request['message'] ?? t('auth_reset_send_failed');
         }
     }
@@ -37,6 +47,13 @@ include dirname(__DIR__) . '/includes/header.php';
                 <p class="auth-help-text"><?php echo t('auth_reset_hint'); ?></p>
                 <?php if ($success_msg): ?><div class="message success"><?php echo htmlspecialchars($success_msg); ?></div><?php endif; ?>
                 <?php if ($error_msg): ?><div class="message error"><?php echo htmlspecialchars($error_msg); ?></div><?php endif; ?>
+                <?php if ($reset_link): ?>
+                    <div class="form-group">
+                        <label class="form-label"><?php echo (function_exists('site_language') && site_language() === 'ar') ? 'رابط إعادة التعيين' : 'Reset link'; ?></label>
+                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($reset_link, ENT_QUOTES, 'UTF-8'); ?>" readonly onclick="this.select();">
+                    </div>
+                    <a class="btn auth-submit-btn" href="<?php echo htmlspecialchars($reset_link, ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('auth_reset_submit'); ?></a>
+                <?php endif; ?>
                 <?php if ($step === 'complete'): ?>
                     <a class="btn auth-submit-btn" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>"><?php echo t('nav_login'); ?></a>
                 <?php endif; ?>

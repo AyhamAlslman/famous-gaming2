@@ -1925,6 +1925,134 @@ function site_asset_url($path, $fallback = '') {
     return function_exists('site_url') ? site_url($target) : $target;
 }
 
+function site_host_is_loopback($host) {
+    $host = strtolower(trim((string)$host));
+    $host = preg_replace('/^\[(.*)\]$/', '$1', $host);
+
+    return $host === ''
+        || $host === 'localhost'
+        || $host === '::1'
+        || preg_match('/^127\./', $host);
+}
+
+function site_normalize_request_host($host) {
+    $host = trim((string)$host);
+
+    if (strpos($host, ',') !== false) {
+        $host = trim(explode(',', $host)[0]);
+    }
+
+    $host = preg_replace('/^https?:\/\//i', '', $host);
+    $host = preg_replace('/\/.*$/', '', $host);
+
+    return $host !== '' ? $host : 'localhost';
+}
+
+function site_host_without_port($host) {
+    $host = site_normalize_request_host($host);
+
+    if (preg_match('/^\[(.*)\](?::\d+)?$/', $host, $matches)) {
+        return $matches[1];
+    }
+
+    if (substr_count($host, ':') > 1) {
+        return $host;
+    }
+
+    return preg_replace('/:\d+$/', '', $host);
+}
+
+function site_host_port($host, $scheme) {
+    $host = site_normalize_request_host($host);
+
+    if (preg_match('/^\[.*\]:(\d+)$/', $host, $matches) || preg_match('/^[^:]+:(\d+)$/', $host, $matches)) {
+        $port_number = (int)$matches[1];
+        if (($scheme === 'http' && $port_number !== 80) || ($scheme === 'https' && $port_number !== 443)) {
+            return ':' . $port_number;
+        }
+    }
+
+    return '';
+}
+
+function site_detect_lan_ipv4() {
+    $candidates = [];
+
+    foreach (['SERVER_ADDR', 'LOCAL_ADDR'] as $server_key) {
+        if (!empty($_SERVER[$server_key])) {
+            $candidates[] = (string)$_SERVER[$server_key];
+        }
+    }
+
+    $hostname = gethostname();
+    if ($hostname) {
+        $host_addresses = gethostbynamel($hostname);
+        if (is_array($host_addresses)) {
+            $candidates = array_merge($candidates, $host_addresses);
+        }
+
+        $candidates[] = gethostbyname($hostname);
+    }
+
+    foreach ($candidates as $candidate) {
+        $candidate = trim((string)$candidate);
+        if (!site_host_is_loopback($candidate) && filter_var($candidate, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return $candidate;
+        }
+    }
+
+    return '';
+}
+
+function site_configured_public_url() {
+    $configured_url = trim((string)(getenv('FG_PUBLIC_SITE_URL') ?: getenv('FG_SITE_URL') ?: ''));
+
+    if ($configured_url === '') {
+        $url_file = (defined('SITE_ROOT_PATH') ? SITE_ROOT_PATH : dirname(__DIR__)) . '/.public-site-url';
+        if (is_readable($url_file)) {
+            $configured_url = trim((string)file_get_contents($url_file));
+        }
+    }
+
+    if ($configured_url !== '' && !preg_match('/^https?:\/\//i', $configured_url)) {
+        $configured_url = 'http://' . $configured_url;
+    }
+
+    return $configured_url !== '' ? rtrim($configured_url, '/') : '';
+}
+
+function site_public_base_url() {
+    $configured_url = site_configured_public_url();
+
+    if ($configured_url !== '') {
+        return $configured_url;
+    }
+
+    $is_https = (
+        (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower(trim(explode(',', (string)$_SERVER['HTTP_X_FORWARDED_PROTO'])[0])) === 'https')
+        ||
+        (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+    );
+    $scheme = $is_https ? 'https' : 'http';
+    $http_host = site_normalize_request_host($_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost');
+    $port = site_host_port($http_host, $scheme);
+    $host = trim(site_host_without_port($http_host), '[]');
+
+    if (site_host_is_loopback($host)) {
+        $lan_host = site_detect_lan_ipv4();
+        if ($lan_host !== '') {
+            $host = $lan_host;
+        }
+    }
+
+    if (strpos($host, ':') !== false && $host[0] !== '[') {
+        $host = '[' . $host . ']';
+    }
+
+    return $scheme . '://' . $host . $port;
+}
+
 function site_absolute_url($path = '') {
     $target = function_exists('site_url') ? site_url($path) : (string)$path;
 
@@ -1932,14 +2060,14 @@ function site_absolute_url($path = '') {
         return $target;
     }
 
-    $is_https = (
-        (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
-        || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
-    );
-    $scheme = $is_https ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $base_url = site_public_base_url();
+    $base_path = (string)parse_url($base_url, PHP_URL_PATH);
 
-    return $scheme . '://' . $host . $target;
+    if ($base_path !== '' && $base_path !== '/' && strpos($target, $base_path . '/') === 0) {
+        $target = substr($target, strlen($base_path));
+    }
+
+    return rtrim($base_url, '/') . '/' . ltrim($target, '/');
 }
 
 function ensure_phpmailer_loaded() {
@@ -2125,7 +2253,7 @@ function send_site_password_reset_otp_email($user, $otp_code, &$error_message = 
 
     $config = site_password_reset_mailer_config();
     if (!site_password_reset_mailer_is_configured($config)) {
-        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'SMTP settings are not configured yet.';
+        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'Email delivery is not available right now. Use the reset link shown on this page.';
         return false;
     }
 
@@ -2242,11 +2370,20 @@ function request_site_user_password_reset_otp($conn, $email) {
 
     $send_error = null;
     if (!send_site_password_reset_otp_email($user, $otp_code, $send_error)) {
-        clear_site_user_password_reset_token($conn, (int)$user['id']);
-        return ['success' => false, 'message' => $send_error ?: (function_exists('t') ? t('auth_reset_send_failed') : 'Unable to send the code.')];
+        $language = function_exists('site_language') ? site_language() : 'en';
+        return [
+            'success' => true,
+            'email_sent' => false,
+            'user_id' => (int)$user['id'],
+            'email' => $email,
+            'otp_code' => $otp_code,
+            'message' => $language === 'ar'
+                ? 'تعذر إرسال البريد، لكن تم إنشاء رمز التحقق. استخدم الرمز الظاهر لإكمال إعادة التعيين.'
+                : 'Email could not be sent, but the verification code was created. Use the shown code to finish the reset.',
+        ];
     }
 
-    return ['success' => true, 'user_id' => (int)$user['id'], 'email' => $email, 'message' => function_exists('t') ? t('auth_otp_sent') : 'Verification code sent.'];
+    return ['success' => true, 'email_sent' => true, 'user_id' => (int)$user['id'], 'email' => $email, 'message' => function_exists('t') ? t('auth_otp_sent') : 'Verification code sent.'];
 }
 
 function verify_site_user_password_reset_otp($conn, $user_id, $email, $otp_code) {
@@ -2404,6 +2541,97 @@ function send_site_password_reset_email($user, $reset_url, &$error_message = nul
     }
 }
 
+function create_site_user_password_reset_link($conn, $email) {
+    ensure_user_auth_schema($conn);
+    $email = strtolower(trim((string)$email));
+
+    if ($email === '' || !validate_email($email)) {
+        return [
+            'success' => false,
+            'code' => 'invalid_email',
+            'message' => function_exists('t') ? t('auth_email_invalid') : 'Invalid email address.',
+        ];
+    }
+
+    $stmt = mysqli_prepare($conn, "SELECT id, full_name, email, status FROM site_users WHERE email = ? LIMIT 1");
+    if (!$stmt) {
+        return [
+            'success' => false,
+            'code' => 'prepare_failed',
+            'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
+        ];
+    }
+
+    mysqli_stmt_bind_param($stmt, "s", $email);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = $result ? mysqli_fetch_assoc($result) : null;
+    mysqli_stmt_close($stmt);
+
+    if (!$user) {
+        return [
+            'success' => false,
+            'code' => 'email_not_found',
+            'message' => function_exists('t') ? t('auth_reset_email_not_found') : 'No account was found with that email address.',
+        ];
+    }
+
+    if (($user['status'] ?? 'Inactive') !== 'Active') {
+        return [
+            'success' => false,
+            'code' => 'inactive_account',
+            'message' => function_exists('t') ? t('auth_inactive') : 'This account is inactive.',
+        ];
+    }
+
+    $token = bin2hex(random_bytes(32));
+    $token_hash = hash('sha256', $token);
+    $expires_at = date('Y-m-d H:i:s', time() + 900);
+
+    mysqli_query($conn, "DELETE FROM password_resets WHERE expires_at < NOW()");
+
+    $delete_stmt = mysqli_prepare($conn, "DELETE FROM password_resets WHERE user_id = ? OR email = ?");
+    if ($delete_stmt) {
+        mysqli_stmt_bind_param($delete_stmt, "is", $user['id'], $email);
+        mysqli_stmt_execute($delete_stmt);
+        mysqli_stmt_close($delete_stmt);
+    }
+
+    $insert_stmt = mysqli_prepare($conn, "INSERT INTO password_resets (user_id, email, token_hash, expires_at) VALUES (?, ?, ?, ?)");
+    if (!$insert_stmt) {
+        return [
+            'success' => false,
+            'code' => 'insert_prepare_failed',
+            'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
+        ];
+    }
+
+    mysqli_stmt_bind_param($insert_stmt, "isss", $user['id'], $email, $token_hash, $expires_at);
+    $stored = mysqli_stmt_execute($insert_stmt);
+    mysqli_stmt_close($insert_stmt);
+
+    if (!$stored) {
+        return [
+            'success' => false,
+            'code' => 'token_store_failed',
+            'message' => function_exists('t') ? t('booking_submit_error') : 'Unable to process your request right now.',
+        ];
+    }
+
+    $language = function_exists('site_language') ? site_language() : 'en';
+    $reset_url = site_absolute_url('general/reset_password.php?token=' . rawurlencode($token) . '&lang=' . rawurlencode($language));
+
+    return [
+        'success' => true,
+        'email_sent' => false,
+        'code' => 'local_reset_link',
+        'reset_url' => $reset_url,
+        'message' => $language === 'ar'
+            ? 'تم إنشاء رابط إعادة التعيين. افتحه من أي جهاز متصل بنفس رابط الموقع.'
+            : 'Password reset link created. Open it from any device connected to this site.',
+    ];
+}
+
 function request_site_user_password_reset($conn, $email) {
     ensure_user_auth_schema($conn);
     $email = strtolower(trim((string)$email));
@@ -2451,24 +2679,6 @@ function request_site_user_password_reset($conn, $email) {
         ];
     }
 
-    if (!ensure_phpmailer_loaded()) {
-        return [
-            'success' => false,
-            'email_sent' => false,
-            'code' => 'phpmailer_missing',
-            'message' => function_exists('t') ? t('auth_reset_send_failed') : 'Password reset email could not be sent right now.',
-        ];
-    }
-
-    if (!site_password_reset_mailer_is_configured(site_password_reset_mailer_config())) {
-        return [
-            'success' => false,
-            'email_sent' => false,
-            'code' => 'smtp_not_configured',
-            'message' => function_exists('t') ? t('auth_reset_mail_not_configured') : 'SMTP settings are not configured yet.',
-        ];
-    }
-
     $token = bin2hex(random_bytes(32));
     $token_hash = hash('sha256', $token);
     $expires_at = date('Y-m-d H:i:s', time() + 900);
@@ -2508,20 +2718,30 @@ function request_site_user_password_reset($conn, $email) {
     $language = function_exists('site_language') ? site_language() : 'en';
     $reset_url = site_absolute_url('general/reset_password.php?token=' . rawurlencode($token) . '&lang=' . rawurlencode($language));
     $send_error = null;
+    $mail_is_ready = ensure_phpmailer_loaded() && site_password_reset_mailer_is_configured(site_password_reset_mailer_config());
+
+    if (!$mail_is_ready) {
+        return [
+            'success' => true,
+            'email_sent' => false,
+            'code' => 'local_reset_link',
+            'reset_url' => $reset_url,
+            'message' => $language === 'ar'
+                ? 'تم إنشاء رابط إعادة التعيين. افتحه من أي جهاز متصل بنفس رابط الموقع.'
+                : 'Password reset link created. Open it from any device connected to this site.',
+        ];
+    }
 
     if (!send_site_password_reset_email($user, $reset_url, $send_error)) {
-        $cleanup_stmt = mysqli_prepare($conn, "DELETE FROM password_resets WHERE token_hash = ?");
-        if ($cleanup_stmt) {
-            mysqli_stmt_bind_param($cleanup_stmt, "s", $token_hash);
-            mysqli_stmt_execute($cleanup_stmt);
-            mysqli_stmt_close($cleanup_stmt);
-        }
         error_log('Password reset email failed for ' . $email . ': ' . (string)$send_error);
         return [
-            'success' => false,
+            'success' => true,
             'email_sent' => false,
-            'code' => 'send_failed',
-            'message' => $send_error !== '' ? $send_error : (function_exists('t') ? t('auth_reset_send_failed') : 'Password reset email could not be sent right now.'),
+            'code' => 'local_reset_link',
+            'reset_url' => $reset_url,
+            'message' => $language === 'ar'
+                ? 'تعذر إرسال البريد، لكن تم إنشاء رابط إعادة التعيين. افتحه من أي جهاز متصل بنفس رابط الموقع.'
+                : 'Email could not be sent, but the password reset link was created. Open it from any device connected to this site.',
         ];
     }
 
@@ -2529,6 +2749,7 @@ function request_site_user_password_reset($conn, $email) {
         'success' => true,
         'email_sent' => true,
         'code' => 'sent',
+        'reset_url' => $reset_url,
         'message' => function_exists('t') ? t('auth_reset_success') : 'Password reset email sent successfully.',
     ];
 }
@@ -2639,7 +2860,7 @@ function send_guest_support_reply_email($ticket, $reply, &$error_message = null)
 
     $config = site_password_reset_mailer_config();
     if (!site_password_reset_mailer_is_configured($config)) {
-        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'SMTP settings are not configured yet.';
+        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'Email delivery is not available right now. Use the reset link shown on this page.';
         return false;
     }
 
