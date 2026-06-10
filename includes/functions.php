@@ -1935,44 +1935,114 @@ function site_host_is_loopback($host) {
         || preg_match('/^127\./', $host);
 }
 
-function site_public_base_url() {
-    $configured_url = trim((string)(getenv('FG_PUBLIC_SITE_URL') ?: getenv('FG_SITE_URL') ?: ''));
+function site_normalize_request_host($host) {
+    $host = trim((string)$host);
 
-    if ($configured_url !== '') {
-        if (!preg_match('/^https?:\/\//i', $configured_url)) {
-            $configured_url = 'http://' . $configured_url;
+    if (strpos($host, ',') !== false) {
+        $host = trim(explode(',', $host)[0]);
+    }
+
+    $host = preg_replace('/^https?:\/\//i', '', $host);
+    $host = preg_replace('/\/.*$/', '', $host);
+
+    return $host !== '' ? $host : 'localhost';
+}
+
+function site_host_without_port($host) {
+    $host = site_normalize_request_host($host);
+
+    if (preg_match('/^\[(.*)\](?::\d+)?$/', $host, $matches)) {
+        return $matches[1];
+    }
+
+    if (substr_count($host, ':') > 1) {
+        return $host;
+    }
+
+    return preg_replace('/:\d+$/', '', $host);
+}
+
+function site_host_port($host, $scheme) {
+    $host = site_normalize_request_host($host);
+
+    if (preg_match('/^\[.*\]:(\d+)$/', $host, $matches) || preg_match('/^[^:]+:(\d+)$/', $host, $matches)) {
+        $port_number = (int)$matches[1];
+        if (($scheme === 'http' && $port_number !== 80) || ($scheme === 'https' && $port_number !== 443)) {
+            return ':' . $port_number;
+        }
+    }
+
+    return '';
+}
+
+function site_detect_lan_ipv4() {
+    $candidates = [];
+
+    foreach (['SERVER_ADDR', 'LOCAL_ADDR'] as $server_key) {
+        if (!empty($_SERVER[$server_key])) {
+            $candidates[] = (string)$_SERVER[$server_key];
+        }
+    }
+
+    $hostname = gethostname();
+    if ($hostname) {
+        $host_addresses = gethostbynamel($hostname);
+        if (is_array($host_addresses)) {
+            $candidates = array_merge($candidates, $host_addresses);
         }
 
-        return rtrim($configured_url, '/');
+        $candidates[] = gethostbyname($hostname);
+    }
+
+    foreach ($candidates as $candidate) {
+        $candidate = trim((string)$candidate);
+        if (!site_host_is_loopback($candidate) && filter_var($candidate, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return $candidate;
+        }
+    }
+
+    return '';
+}
+
+function site_configured_public_url() {
+    $configured_url = trim((string)(getenv('FG_PUBLIC_SITE_URL') ?: getenv('FG_SITE_URL') ?: ''));
+
+    if ($configured_url === '') {
+        $url_file = (defined('SITE_ROOT_PATH') ? SITE_ROOT_PATH : dirname(__DIR__)) . '/.public-site-url';
+        if (is_readable($url_file)) {
+            $configured_url = trim((string)file_get_contents($url_file));
+        }
+    }
+
+    if ($configured_url !== '' && !preg_match('/^https?:\/\//i', $configured_url)) {
+        $configured_url = 'http://' . $configured_url;
+    }
+
+    return $configured_url !== '' ? rtrim($configured_url, '/') : '';
+}
+
+function site_public_base_url() {
+    $configured_url = site_configured_public_url();
+
+    if ($configured_url !== '') {
+        return $configured_url;
     }
 
     $is_https = (
+        (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower(trim(explode(',', (string)$_SERVER['HTTP_X_FORWARDED_PROTO'])[0])) === 'https')
+        ||
         (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
         || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
     );
     $scheme = $is_https ? 'https' : 'http';
-    $http_host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
-    $port = '';
-
-    if (preg_match('/^\[.*\]:(\d+)$/', $http_host, $matches) || preg_match('/^[^:]+:(\d+)$/', $http_host, $matches)) {
-        $port_number = (int)$matches[1];
-        if (($scheme === 'http' && $port_number !== 80) || ($scheme === 'https' && $port_number !== 443)) {
-            $port = ':' . $port_number;
-        }
-    }
-
-    $host = preg_replace('/:\d+$/', '', $http_host);
-    $host = trim($host, '[]');
+    $http_host = site_normalize_request_host($_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost');
+    $port = site_host_port($http_host, $scheme);
+    $host = trim(site_host_without_port($http_host), '[]');
 
     if (site_host_is_loopback($host)) {
-        $server_addr = trim((string)($_SERVER['SERVER_ADDR'] ?? ''));
-        if (!site_host_is_loopback($server_addr)) {
-            $host = $server_addr;
-        } else {
-            $machine_addr = gethostbyname(gethostname());
-            if (!site_host_is_loopback($machine_addr) && filter_var($machine_addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                $host = $machine_addr;
-            }
+        $lan_host = site_detect_lan_ipv4();
+        if ($lan_host !== '') {
+            $host = $lan_host;
         }
     }
 
