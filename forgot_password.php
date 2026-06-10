@@ -1,4 +1,7 @@
 <?php
-require_once __DIR__ . '/legacy_redirect.php';
-
-redirect_legacy_entry('general/forgot_password.php');
+// Redirect to the actual forgot password page
+header('Location: ' . (isset($_SERVER['REQUEST_SCHEME']) 
+    ? $_SERVER['REQUEST_SCHEME'] 
+    : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/general/forgot_password.php');
+exit;
+?>
