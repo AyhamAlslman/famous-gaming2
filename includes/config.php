@@ -10,6 +10,11 @@ if (!defined('SITE_ROOT_PATH')) {
     define('SITE_ROOT_PATH', dirname(__DIR__));
 }
 
+$composer_autoload = SITE_ROOT_PATH . '/vendor/autoload.php';
+if (is_readable($composer_autoload)) {
+    require_once $composer_autoload;
+}
+
 if (!defined('SITE_BASE_PATH')) {
     $document_root = isset($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : '';
     $project_root = realpath(SITE_ROOT_PATH);
@@ -37,10 +42,7 @@ if (!function_exists('site_url')) {
     }
 }
 
-// --- إعدادات البريد الإلكتروني (SMTP) باستخدام متغير البيئة ---
-// ملاحظة: تأكد من أن متغير البيئة 'FG_SMTP_PASSWORD' تم تعريفه في نظام التشغيل
-define('SMTP_PASSWORD', getenv('FG_SMTP_PASSWORD') ?: ''); 
-// -------------------------------------------------------------
+define('SMTP_PASSWORD', 'bkqo ilmd dhia ftqz');
 
 require_once __DIR__ . '/lang.php';
 

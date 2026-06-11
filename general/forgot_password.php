@@ -8,16 +8,13 @@ $page_title = t('auth_forgot_page_title');
 $error_msg = '';
 $success_msg = '';
 $email = '';
-$request = [];
 $request_submitted = false;
-$reset_link_expires_text = site_language() === 'ar' ? 'سيكون الرابط صالحاً لمدة 15 دقيقة.' : 'The link will be valid for 15 minutes.';
-$reset_open_link_text = site_language() === 'ar' ? 'فتح رابط إعادة التعيين' : 'Open reset link';
-$reset_sent_text = site_language() === 'ar'
-    ? 'إذا كان هناك حساب بهذا البريد، فقد تم إرسال رابط إعادة تعيين كلمة السر.'
-    : 'If an account with that email exists, a password reset link has been sent.';
-$reset_local_text = site_language() === 'ar'
-    ? 'تم إنشاء رابط إعادة التعيين. افتحه من أي جهاز متصل بنفس رابط الموقع.'
-    : 'Password reset link created. Open it from any device connected to this site.';
+$email_delivery_error_text = site_language() === 'ar'
+    ? 'تعذر إرسال رسالة إعادة التعيين الآن. حاول مرة أخرى لاحقًا.'
+    : 'The reset email could not be sent right now. Please try again later.';
+$reset_link_expires_text = site_language() === 'ar'
+    ? 'سيكون الرابط صالحًا لمدة 15 دقيقة.'
+    : 'The link will be valid for 15 minutes.';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
@@ -30,14 +27,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $request = request_site_user_password_reset($conn, $email);
             $request_code = (string)($request['code'] ?? '');
-            $request_submitted = true;
-            $success_msg = !empty($request['reset_url']) && empty($request['email_sent'])
-                ? $reset_local_text
-                : $reset_sent_text;
+            $email_delivery_failed = in_array($request_code, ['local_reset_link', 'send_failed', 'mail_not_configured'], true)
+                || (!empty($request['success']) && empty($request['email_sent']));
 
-            if (!empty($request['success'])) {
+            if (!empty($request['success']) && !empty($request['email_sent'])) {
+                $request_submitted = true;
+                $success_msg = (string)($request['message'] ?? t('auth_reset_success'));
                 error_log('Password reset requested for: ' . $email);
             } else {
+                $error_msg = $email_delivery_failed
+                    ? $email_delivery_error_text
+                    : (string)($request['message'] ?? t('booking_submit_error'));
                 error_log('Password reset failed for ' . $email . ': ' . $request_code);
             }
         }
@@ -62,12 +62,6 @@ include dirname(__DIR__) . '/includes/header.php';
                 <?php if ($request_submitted): ?>
                     <div class="message success"><?php echo htmlspecialchars($success_msg, ENT_QUOTES, 'UTF-8'); ?></div>
                     <p class="auth-help-text"><?php echo htmlspecialchars($reset_link_expires_text, ENT_QUOTES, 'UTF-8'); ?></p>
-
-                    <?php if (!empty($request['reset_url']) && empty($request['email_sent'])): ?>
-                        <a class="auth-side-action" href="<?php echo htmlspecialchars($request['reset_url'], ENT_QUOTES, 'UTF-8'); ?>">
-                            <?php echo htmlspecialchars($reset_open_link_text, ENT_QUOTES, 'UTF-8'); ?>
-                        </a>
-                    <?php endif; ?>
 
                     <a class="btn auth-submit-btn" href="<?php echo htmlspecialchars(site_url('general/login.php'), ENT_QUOTES, 'UTF-8'); ?>">
                         <?php echo t('nav_login'); ?>

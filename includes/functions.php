@@ -2106,6 +2106,9 @@ function ensure_phpmailer_loaded() {
 
 function site_password_reset_mailer_config() {
     $smtp_password = getenv('FG_SMTP_PASSWORD');
+    if (($smtp_password === false || $smtp_password === '') && defined('SMTP_PASSWORD')) {
+        $smtp_password = SMTP_PASSWORD;
+    }
     if ($smtp_password !== false) {
         // Google displays app passwords in groups; SMTP requires the 16 characters without spaces.
         $smtp_password = preg_replace('/\s+/', '', $smtp_password);
@@ -2262,7 +2265,7 @@ function send_site_password_reset_otp_email($user, $otp_code, &$error_message = 
 
     $config = site_password_reset_mailer_config();
     if (!site_password_reset_mailer_is_configured($config)) {
-        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'Email delivery is not available right now. Use the reset link shown on this page.';
+        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'Email delivery is not available right now. Please try again later.';
         return false;
     }
 
@@ -2381,7 +2384,7 @@ function request_site_user_password_reset_otp($conn, $email) {
     if (!send_site_password_reset_otp_email($user, $otp_code, $send_error)) {
         $language = function_exists('site_language') ? site_language() : 'en';
         return [
-            'success' => true,
+            'success' => false,
             'email_sent' => false,
             'user_id' => (int)$user['id'],
             'email' => $email,
@@ -2729,28 +2732,35 @@ function request_site_user_password_reset($conn, $email) {
     $send_error = null;
     $mail_is_ready = ensure_phpmailer_loaded() && site_password_reset_mailer_is_configured(site_password_reset_mailer_config());
 
+    $cleanup_password_reset_request = static function () use ($conn, $user, $email) {
+        $cleanup_stmt = mysqli_prepare($conn, "DELETE FROM password_resets WHERE user_id = ? AND email = ?");
+        if ($cleanup_stmt) {
+            mysqli_stmt_bind_param($cleanup_stmt, "is", $user['id'], $email);
+            mysqli_stmt_execute($cleanup_stmt);
+            mysqli_stmt_close($cleanup_stmt);
+        }
+    };
+
     if (!$mail_is_ready) {
+        $cleanup_password_reset_request();
+
         return [
-            'success' => true,
+            'success' => false,
             'email_sent' => false,
-            'code' => 'local_reset_link',
-            'reset_url' => $reset_url,
-            'message' => $language === 'ar'
-                ? 'تم إنشاء رابط إعادة التعيين. افتحه من أي جهاز متصل بنفس رابط الموقع.'
-                : 'Password reset link created. Open it from any device connected to this site.',
+            'code' => 'mail_not_configured',
+            'message' => function_exists('t') ? t('auth_reset_mail_not_configured') : 'Email delivery is not available right now. Please try again later.',
         ];
     }
 
     if (!send_site_password_reset_email($user, $reset_url, $send_error)) {
         error_log('Password reset email failed for ' . $email . ': ' . (string)$send_error);
+        $cleanup_password_reset_request();
+
         return [
-            'success' => true,
+            'success' => false,
             'email_sent' => false,
-            'code' => 'local_reset_link',
-            'reset_url' => $reset_url,
-            'message' => $language === 'ar'
-                ? 'تعذر إرسال البريد، لكن تم إنشاء رابط إعادة التعيين. افتحه من أي جهاز متصل بنفس رابط الموقع.'
-                : 'Email could not be sent, but the password reset link was created. Open it from any device connected to this site.',
+            'code' => 'send_failed',
+            'message' => function_exists('t') ? t('auth_reset_send_failed') : 'The reset email could not be sent right now. Please try again later.',
         ];
     }
 
@@ -2758,9 +2768,9 @@ function request_site_user_password_reset($conn, $email) {
         'success' => true,
         'email_sent' => true,
         'code' => 'sent',
-        'reset_url' => $reset_url,
         'message' => function_exists('t') ? t('auth_reset_success') : 'Password reset email sent successfully.',
     ];
+
 }
 
 function get_site_user_by_password_reset_token($conn, $token) {
@@ -2869,7 +2879,7 @@ function send_guest_support_reply_email($ticket, $reply, &$error_message = null)
 
     $config = site_password_reset_mailer_config();
     if (!site_password_reset_mailer_is_configured($config)) {
-        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'Email delivery is not available right now. Use the reset link shown on this page.';
+        $error_message = function_exists('t') ? t('auth_reset_mail_not_configured') : 'Email delivery is not available right now. Please try again later.';
         return false;
     }
 
