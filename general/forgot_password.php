@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $request = request_site_user_password_reset($conn, $email);
             $request_code = (string)($request['code'] ?? '');
-            $email_delivery_failed = in_array($request_code, ['local_reset_link', 'send_failed', 'mail_not_configured'], true)
+            $email_delivery_failed = in_array($request_code, ['send_failed', 'mail_not_configured'], true)
                 || (!empty($request['success']) && empty($request['email_sent']));
 
             if (!empty($request['success']) && !empty($request['email_sent'])) {
